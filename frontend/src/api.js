@@ -1,5 +1,4 @@
-// api.js
-const API_URL = "http://localhost:3006/product"; // hoặc URL backend của bạn
+const API_URL = "http://localhost:3006/product";
 
 export const getAllProducts = async () => {
   const res = await fetch(API_URL);
@@ -20,7 +19,6 @@ export const updateProduct = async (id, data) => {
   return res.ok ? await res.json() : null;
 };
 
-// ✅ Thêm createProduct
 export const createProduct = async (data) => {
   const res = await fetch(API_URL, {
     method: "POST",
