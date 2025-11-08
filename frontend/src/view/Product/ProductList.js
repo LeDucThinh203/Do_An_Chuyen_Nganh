@@ -1,29 +1,53 @@
 import React, { useEffect, useState } from "react";
 import { getAllProducts, deleteProduct } from "../../api";
 import { Link } from "react-router-dom";
+import Session from "../../Session/session";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(15); // số sản phẩm hiển thị ban đầu
+  const [visibleCount, setVisibleCount] = useState(15);
+  const isAdmin = Session.isAdmin(); // Kiểm tra role admin
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
-    const data = await getAllProducts();
-    setProducts(data);
+    try {
+      const data = await getAllProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error("Lấy danh sách sản phẩm thất bại:", err);
+    }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("🗑️ Bạn có chắc muốn xóa sản phẩm này?")) {
-      await deleteProduct(id);
-      setProducts(products.filter((p) => p.id !== id));
+      try {
+        await deleteProduct(id);
+        setProducts(products.filter((p) => p.id !== id));
+      } catch (err) {
+        console.error("Xóa sản phẩm thất bại:", err);
+      }
     }
   };
 
+  const handleAddToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existing = cart.find((item) => item.id === product.id);
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert(`🛒 Đã thêm "${product.name}" vào giỏ hàng!`);
+  };
+
   const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + 15); // load thêm 15 sản phẩm
+    setVisibleCount((prev) => prev + 15);
   };
 
   const visibleProducts = products.slice(0, visibleCount);
@@ -47,27 +71,28 @@ export default function ProductList() {
         </div>
       </div>
 
-      {/* Header + Thêm sản phẩm */}
+      {/* Header */}
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 mb-10">
         <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight uppercase">
           Sản phẩm mới nhất
         </h2>
-        <Link
-          to="/add"
-          className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
-        >
-          + Thêm sản phẩm
-        </Link>
+        {isAdmin && (
+          <Link
+            to="/add"
+            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
+          >
+            + Thêm sản phẩm
+          </Link>
+        )}
       </div>
 
-      {/* Grid sản phẩm */}
+      {/* Danh sách sản phẩm */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
         {visibleProducts.map((product) => (
           <div
             key={product.id}
             className="bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden flex flex-col"
           >
-            {/* Hình ảnh */}
             <div className="relative overflow-hidden h-64">
               <img
                 src={product.image}
@@ -79,7 +104,6 @@ export default function ProductList() {
               </div>
             </div>
 
-            {/* Nội dung */}
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
@@ -91,27 +115,39 @@ export default function ProductList() {
               </div>
 
               {/* Nút hành động */}
-              <div className="flex gap-3 mt-5">
-                <Link
-                  to={`/edit/${product.id}`}
-                  className="flex-1 text-center text-sm font-medium text-white bg-blue-500 px-4 py-2 rounded-full hover:bg-blue-600 transition"
-                >
-                  Sửa
-                </Link>
-
+              <div className="flex flex-col gap-2 mt-5">
+                {/* Nút thêm vào giỏ luôn hiển thị */}
                 <button
-                  onClick={() => handleDelete(product.id)}
-                  className="flex-1 text-center text-sm font-medium text-red-600 border border-red-600 px-4 py-2 rounded-full hover:bg-red-600 hover:text-white transition"
+                  onClick={() => handleAddToCart(product)}
+                  className="w-full text-center text-sm font-medium text-white bg-green-500 px-4 py-2 rounded-full hover:bg-green-600 transition"
                 >
-                  Xóa
+                  🛒 Thêm vào giỏ
                 </button>
+
+                {/* Admin mới thấy nút Sửa/Xóa */}
+                {isAdmin && (
+                  <div className="flex gap-3">
+                    <Link
+                      to={`/edit/${product.id}`}
+                      className="flex-1 text-center text-sm font-medium text-white bg-blue-500 px-4 py-2 rounded-full hover:bg-blue-600 transition"
+                    >
+                      Sửa
+                    </Link>
+
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="flex-1 text-center text-sm font-medium text-red-600 border border-red-600 px-4 py-2 rounded-full hover:bg-red-600 hover:text-white transition"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Nút Xem thêm */}
       {visibleCount < products.length && (
         <div className="flex justify-center mt-10">
           <button
@@ -123,7 +159,6 @@ export default function ProductList() {
         </div>
       )}
 
-      {/* Thông báo khi chưa có sản phẩm */}
       {products.length === 0 && (
         <div className="col-span-full text-center py-20 text-gray-400 text-lg">
           🛒 Chưa có sản phẩm nào. Hãy thêm mới ngay!
