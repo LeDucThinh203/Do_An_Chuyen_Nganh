@@ -41,9 +41,9 @@ router.get('/:id', accountController.getAccountById);
 
 /**
  * @swagger
- * /account:
+ * /account/register:
  *   post:
- *     summary: Tạo tài khoản mới
+ *     summary: Đăng ký tài khoản
  *     tags: [Account]
  *     requestBody:
  *       required: true
@@ -64,7 +64,59 @@ router.get('/:id', accountController.getAccountById);
  *       201:
  *         description: Tạo tài khoản thành công
  */
-router.post('/', accountController.createAccount);
+router.post('/register', accountController.register);
+
+/**
+ * @swagger
+ * /account/login:
+ *   post:
+ *     summary: Đăng nhập tài khoản
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đăng nhập thành công, trả về thông tin user
+ *       400:
+ *         description: Email hoặc mật khẩu không đúng
+ */
+router.post('/login', accountController.login);
+
+/**
+ * @swagger
+ * /account:
+ *   post:
+ *     summary: Tạo tài khoản mới (CRUD)
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Tạo tài khoản thành công
+ */
+router.post('/', accountController.register);
 
 /**
  * @swagger

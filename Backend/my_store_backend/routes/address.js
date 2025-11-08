@@ -54,13 +54,17 @@ router.get('/:id', addressController.getAddressById);
  *             properties:
  *               account_id:
  *                 type: integer
- *               city:
+ *               name:
  *                 type: string
- *               district:
+ *               phone:
  *                 type: string
- *               ward:
+ *               provinceName:
  *                 type: string
- *               street:
+ *               districtName:
+ *                 type: string
+ *               wardName:
+ *                 type: string
+ *               address_detail:
  *                 type: string
  *     responses:
  *       201:
@@ -89,13 +93,17 @@ router.post('/', addressController.createAddress);
  *             properties:
  *               account_id:
  *                 type: integer
- *               city:
+ *               name:
  *                 type: string
- *               district:
+ *               phone:
  *                 type: string
- *               ward:
+ *               provinceName:
  *                 type: string
- *               street:
+ *               districtName:
+ *                 type: string
+ *               wardName:
+ *                 type: string
+ *               address_detail:
  *                 type: string
  *     responses:
  *       200:
