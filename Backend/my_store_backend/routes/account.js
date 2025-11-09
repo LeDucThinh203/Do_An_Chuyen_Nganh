@@ -1,5 +1,6 @@
 import express from 'express';
 import * as accountController from '../controllers/accountController.js';
+
 const router = express.Router();
 
 /**
@@ -168,5 +169,59 @@ router.put('/:id', accountController.updateAccount);
  *         description: Xóa thành công
  */
 router.delete('/:id', accountController.deleteAccount);
+
+/**
+ * @swagger
+ * /account/forgot-password:
+ *   post:
+ *     summary: Gửi email quên mật khẩu
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email đặt lại mật khẩu đã được gửi
+ *       400:
+ *         description: Thiếu email
+ *       404:
+ *         description: Email không tồn tại
+ */
+router.post('/forgot-password', accountController.forgotPassword);
+
+/**
+ * @swagger
+ * /account/reset-password/{token}:
+ *   post:
+ *     summary: Đặt lại mật khẩu bằng token
+ *     tags: [Account]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         schema:
+ *           type: string
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đặt lại mật khẩu thành công
+ *       400:
+ *         description: Token không hợp lệ hoặc hết hạn
+ */
+router.post('/reset-password/:token', accountController.resetPassword);
 
 export default router;

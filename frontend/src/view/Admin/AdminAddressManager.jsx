@@ -9,6 +9,7 @@ export default function AdminAddressManager() {
   );
 
   const [addresses, setAddresses] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(2); // mặc định hiển thị 2 địa chỉ
   const [loading, setLoading] = useState(false);
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -129,86 +130,110 @@ export default function AdminAddressManager() {
     }
   };
 
+  const toggleVisible = () => {
+    setVisibleCount((prev) => (prev === 2 ? addresses.length : 2));
+  };
+
   if (!user)
     return <div className="text-red-500 font-bold">⚠️ Vui lòng đăng nhập</div>;
   if (user.role !== "admin")
     return <div className="text-red-500 font-bold">🚫 Bạn không có quyền truy cập trang này</div>;
 
   return (
-    <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
-      <h2 className="text-2xl font-bold text-center text-blue-600 mb-2">
+    <div className="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-md">
+      <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
         🏠 Quản lý địa chỉ (Admin)
       </h2>
 
       {msg && <p className="text-green-600">{msg}</p>}
       {err && <p className="text-red-600">{err}</p>}
 
-      {loading ? (
-        <p>Đang tải...</p>
-      ) : (
-        <ul className="space-y-4">
-          {addresses.map((addr) => (
-            <li key={addr.id} className="border p-4 rounded flex justify-between items-center">
-              <div>
-                <p><b>Họ tên:</b> {addr.name}</p>
-                <p><b>SĐT:</b> {addr.phone}</p>
-                <p><b>Địa chỉ:</b> {addr.address_detail}, {addr.wardName}, {addr.districtName}, {addr.provinceName}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(addr)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                >
-                  Sửa
-                </button>
-                <button
-                  onClick={() => handleDeleteAddress(addr.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                >
-                  Xóa
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Cột 1: danh sách địa chỉ */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Danh sách địa chỉ</h3>
+          {loading ? (
+            <p>Đang tải...</p>
+          ) : addresses.length === 0 ? (
+            <p className="text-gray-500">Chưa có địa chỉ nào.</p>
+          ) : (
+            <>
+              <ul className="space-y-4">
+                {addresses.slice(0, visibleCount).map((addr) => (
+                  <li key={addr.id} className="border p-4 rounded flex flex-col justify-between">
+                    <div className="mb-2">
+                      <p><b>Họ tên:</b> {addr.name}</p>
+                      <p><b>SĐT:</b> {addr.phone}</p>
+                      <p><b>Địa chỉ:</b> {addr.address_detail}, {addr.wardName}, {addr.districtName}, {addr.provinceName}</p>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleEdit(addr)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAddress(addr.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
 
-      {/* Form nhập địa chỉ */}
-      <form onSubmit={handleSubmit} className="space-y-3 border-t pt-4">
-        <h3 className="text-lg font-semibold text-blue-600">
-          {editingId ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}
-        </h3>
+              {addresses.length > 2 && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={toggleVisible}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    {visibleCount === 2 ? "Xem thêm" : "Thu gọn"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Họ tên" className="w-full p-2 border rounded" />
-        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Số điện thoại" className="w-full p-2 border rounded" />
+        {/* Cột 2: form thêm/sửa địa chỉ */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">{editingId ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}</h3>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input name="name" value={form.name} onChange={handleChange} placeholder="Họ tên" className="w-full p-2 border rounded" />
+            <input name="phone" value={form.phone} onChange={handleChange} placeholder="Số điện thoại" className="w-full p-2 border rounded" />
 
-        <select value={form.province} onChange={handleProvinceChange} className="w-full p-2 border rounded">
-          <option value="">Chọn tỉnh/thành phố</option>
-          {provinces.map((p) => (
-            <option key={p.code} value={p.code}>{p.name}</option>
-          ))}
-        </select>
+            <select value={form.province} onChange={handleProvinceChange} className="w-full p-2 border rounded">
+              <option value="">Chọn tỉnh/thành phố</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.code}>{p.name}</option>
+              ))}
+            </select>
 
-        <select value={form.district} onChange={handleDistrictChange} className="w-full p-2 border rounded" disabled={!districts.length}>
-          <option value="">Chọn quận/huyện</option>
-          {districts.map((d) => (
-            <option key={d.code} value={d.code}>{d.name}</option>
-          ))}
-        </select>
+            <select value={form.district} onChange={handleDistrictChange} className="w-full p-2 border rounded" disabled={!districts.length}>
+              <option value="">Chọn quận/huyện</option>
+              {districts.map((d) => (
+                <option key={d.code} value={d.code}>{d.name}</option>
+              ))}
+            </select>
 
-        <select value={form.ward} onChange={handleWardChange} className="w-full p-2 border rounded" disabled={!wards.length}>
-          <option value="">Chọn phường/xã</option>
-          {wards.map((w) => (
-            <option key={w.code} value={w.code}>{w.name}</option>
-          ))}
-        </select>
+            <select value={form.ward} onChange={handleWardChange} className="w-full p-2 border rounded" disabled={!wards.length}>
+              <option value="">Chọn phường/xã</option>
+              {wards.map((w) => (
+                <option key={w.code} value={w.code}>{w.name}</option>
+              ))}
+            </select>
 
-        <input name="address" value={form.address} onChange={handleChange} placeholder="Địa chỉ chi tiết" className="w-full p-2 border rounded" />
+            <input name="address" value={form.address} onChange={handleChange} placeholder="Địa chỉ chi tiết" className="w-full p-2 border rounded" />
 
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-          {editingId ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
-        </button>
-      </form>
+            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+              {editingId ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

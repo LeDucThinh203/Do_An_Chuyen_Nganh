@@ -5,12 +5,11 @@ import * as addressAPI from "../../api";
 export default function AddressManager() {
   const user = useMemo(() => Session.isLoggedIn() ? JSON.parse(localStorage.getItem("user")) : null, []);
 
-  // Danh sách địa chỉ
   const [addresses, setAddresses] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(2); // Mặc định hiển thị 2 địa chỉ
   const [loadingList, setLoadingList] = useState(false);
   const [errorList, setErrorList] = useState("");
 
-  // Form quản lý địa chỉ
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -29,7 +28,6 @@ export default function AddressManager() {
   const [successForm, setSuccessForm] = useState("");
   const [editingAddressId, setEditingAddressId] = useState(null);
 
-  // Load provinces
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingProvinces(true);
@@ -49,7 +47,6 @@ export default function AddressManager() {
     fetchProvinces();
   }, []);
 
-  // Load danh sách địa chỉ user
   const fetchAddresses = async () => {
     if (!user) return;
     setLoadingList(true);
@@ -70,7 +67,6 @@ export default function AddressManager() {
     fetchAddresses();
   }, [user]);
 
-  // Khi chọn province
   const handleProvinceChange = async (e) => {
     const provinceCode = e.target.value;
     setForm(prev => ({ ...prev, province: provinceCode, district: "", ward: "" }));
@@ -117,7 +113,6 @@ export default function AddressManager() {
   const handleWardChange = (e) => setForm(prev => ({ ...prev, ward: e.target.value }));
   const handleInputChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // Bấm sửa một địa chỉ
   const handleEditAddress = (addr) => {
     setEditingAddressId(addr.id);
     const provinceCode = provinces.find(p => p.name === addr.provinceName)?.code || "";
@@ -132,7 +127,6 @@ export default function AddressManager() {
     if (provinceCode) handleProvinceChange({ target: { value: provinceCode } });
   };
 
-  // Xóa địa chỉ
   const handleDeleteAddress = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
     try {
@@ -144,7 +138,6 @@ export default function AddressManager() {
     }
   };
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
@@ -182,123 +175,88 @@ export default function AddressManager() {
     }
   };
 
+  const toggleVisible = () => {
+    setVisibleCount(prev => (prev === 2 ? addresses.length : 2));
+  };
+
   if (!user) {
-    return <div className="text-red-500 font-bold">Vui lòng đăng nhập</div>;
+    return <div className="text-red-500 font-bold">⚠️ Vui lòng đăng nhập</div>;
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-xl space-y-6">
-      {/* Danh sách địa chỉ */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">Danh sách địa chỉ</h2>
-        {loadingList && <p>Đang tải...</p>}
-        {errorList && <p className="text-red-500">{errorList}</p>}
-        {!loadingList && addresses.length === 0 && <p className="text-gray-500">Bạn chưa có địa chỉ nào.</p>}
-        <ul className="space-y-4">
-          {addresses.map((addr) => (
-            <li key={addr.id} className="border p-4 rounded shadow-sm flex justify-between items-start">
-              <div>
-                <p><strong>Họ tên:</strong> {addr.name}</p>
-                <p><strong>Số điện thoại:</strong> {addr.phone}</p>
-                <p><strong>Địa chỉ:</strong> {`${addr.address_detail}, ${addr.wardName}, ${addr.districtName}, ${addr.provinceName}`}</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                  onClick={() => handleEditAddress(addr)}
-                >
-                  Sửa
-                </button>
-                <button
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                  onClick={() => handleDeleteAddress(addr.id)}
-                >
-                  Xóa
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div className="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-md">
+      <h2 className="text-2xl font-bold text-center text-blue-600 mb-6">
+        🏠 Quản lý địa chỉ
+      </h2>
 
-      {/* Form quản lý địa chỉ */}
-      <div>
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">
-          {editingAddressId ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}
-        </h2>
-        {errorForm && <div className="text-red-500 mb-3">{errorForm}</div>}
-        {successForm && <div className="text-green-500 mb-3">{successForm}</div>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Cột 1: danh sách địa chỉ */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Danh sách địa chỉ</h3>
+          {loadingList && <p>Đang tải...</p>}
+          {errorList && <p className="text-red-500">{errorList}</p>}
+          {addresses.length === 0 && !loadingList && <p className="text-gray-500">Bạn chưa có địa chỉ nào.</p>}
+          <ul className="space-y-4">
+            {addresses.slice(0, visibleCount).map(addr => (
+              <li key={addr.id} className="border p-4 rounded flex flex-col justify-between">
+                <div className="mb-2">
+                  <p><b>Họ tên:</b> {addr.name}</p>
+                  <p><b>SĐT:</b> {addr.phone}</p>
+                  <p><b>Địa chỉ:</b> {`${addr.address_detail}, ${addr.wardName}, ${addr.districtName}, ${addr.provinceName}`}</p>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handleEditAddress(addr)}
+                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAddress(addr.id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          {addresses.length > 2 && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={toggleVisible}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                {visibleCount === 2 ? "Xem thêm" : "Thu gọn"}
+              </button>
+            </div>
+          )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            name="name"
-            placeholder="Họ tên"
-            value={form.name}
-            onChange={handleInputChange}
-            className="form-input w-full border p-2 rounded"
-            required
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Số điện thoại"
-            value={form.phone}
-            onChange={handleInputChange}
-            className="form-input w-full border p-2 rounded"
-            required
-          />
-          <select
-            value={form.province}
-            onChange={handleProvinceChange}
-            className="form-select w-full border p-2 rounded"
-            required
-          >
-            <option value="">{loadingProvinces ? "Đang tải..." : "Chọn Tỉnh/Thành phố"}</option>
-            {provinces.map((p) => (
-              <option key={p.code} value={p.code}>{p.name}</option>
-            ))}
-          </select>
-          <select
-            value={form.district}
-            onChange={handleDistrictChange}
-            className="form-select w-full border p-2 rounded"
-            disabled={!districts.length || loadingDistricts}
-            required
-          >
-            <option value="">{loadingDistricts ? "Đang tải..." : "Chọn Quận/Huyện"}</option>
-            {districts.map((d) => (
-              <option key={d.code} value={d.code}>{d.name}</option>
-            ))}
-          </select>
-          <select
-            value={form.ward}
-            onChange={handleWardChange}
-            className="form-select w-full border p-2 rounded"
-            disabled={!wards.length || loadingWards}
-            required
-          >
-            <option value="">{loadingWards ? "Đang tải..." : "Chọn Phường/Xã"}</option>
-            {wards.map((w) => (
-              <option key={w.code} value={w.code}>{w.name}</option>
-            ))}
-          </select>
-          <input
-            type="text"
-            name="address"
-            placeholder="Địa chỉ chi tiết"
-            value={form.address}
-            onChange={handleInputChange}
-            className="form-input w-full border p-2 rounded"
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded"
-          >
-            {editingAddressId ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}
-          </button>
-        </form>
+        {/* Cột 2: form thêm/sửa */}
+        <div>
+          <h3 className="text-lg font-semibold mb-2">{editingAddressId ? "Sửa địa chỉ" : "Thêm địa chỉ mới"}</h3>
+          {errorForm && <div className="text-red-500 mb-3">{errorForm}</div>}
+          {successForm && <div className="text-green-500 mb-3">{successForm}</div>}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input name="name" value={form.name} onChange={handleInputChange} placeholder="Họ tên" className="w-full p-2 border rounded" required />
+            <input name="phone" value={form.phone} onChange={handleInputChange} placeholder="Số điện thoại" className="w-full p-2 border rounded" required />
+            <select value={form.province} onChange={handleProvinceChange} className="w-full p-2 border rounded" required>
+              <option value="">{loadingProvinces ? "Đang tải..." : "Chọn Tỉnh/Thành phố"}</option>
+              {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
+            </select>
+            <select value={form.district} onChange={handleDistrictChange} className="w-full p-2 border rounded" disabled={!districts.length || loadingDistricts} required>
+              <option value="">{loadingDistricts ? "Đang tải..." : "Chọn Quận/Huyện"}</option>
+              {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
+            </select>
+            <select value={form.ward} onChange={handleWardChange} className="w-full p-2 border rounded" disabled={!wards.length || loadingWards} required>
+              <option value="">{loadingWards ? "Đang tải..." : "Chọn Phường/Xã"}</option>
+              {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+            </select>
+            <input name="address" value={form.address} onChange={handleInputChange} placeholder="Địa chỉ chi tiết" className="w-full p-2 border rounded" required />
+            <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">{editingAddressId ? "Cập nhật địa chỉ" : "Lưu địa chỉ"}</button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -14,11 +14,16 @@ export default function Login({ setUser }) {
     setError("");
 
     try {
+      // Gọi API login, backend phải trả về {id, username, role, email}
       const user = await api.login({ email, password });
       if (user && user.id) {
-        Session.setUser(user.id, user.username, user.role);
-        setUser(user); // Cập nhật state App ngay
-        navigate("/"); // Chuyển về trang chủ
+        // Lưu email vào session
+        Session.setUser(user.id, user.username, user.role, user.email);
+
+        // Lưu state trong React nếu cần
+        setUser(user);
+
+        navigate("/");
       } else {
         setError("Email hoặc mật khẩu không đúng");
       }
@@ -30,8 +35,14 @@ export default function Login({ setUser }) {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Login</h2>
-        {error && <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>}
+        <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">
+          Login
+        </h2>
+
+        {error && (
+          <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{error}</div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-4">
           <input
             type="email"
@@ -56,10 +67,17 @@ export default function Login({ setUser }) {
             Login
           </button>
         </form>
+
+        <p className="mt-2 text-center">
+          <Link to="/forgot-password" className="text-blue-500 hover:underline">
+            Quên mật khẩu?
+          </Link>
+        </p>
+
         <p className="mt-4 text-center">
-          Don't have an account?{" "}
+          Chưa có tài khoản?{" "}
           <Link to="/register" className="text-green-600 font-semibold">
-            Register
+            Đăng ký
           </Link>
         </p>
       </div>
