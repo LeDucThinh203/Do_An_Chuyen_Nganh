@@ -57,6 +57,7 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
+
   
   // Ensure AI related tables exist
   await ensureAiSchema().catch((e) => console.error('AI schema init error:', e));
@@ -77,3 +78,5 @@ app.listen(PORT, '0.0.0.0', async () => {
     })
     .catch(e => console.warn('⚠️  Embedding generation warning:', e.message));
 });
+
+

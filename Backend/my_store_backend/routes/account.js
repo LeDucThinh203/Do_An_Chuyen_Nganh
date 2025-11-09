@@ -1,5 +1,6 @@
 import express from 'express';
 import * as accountController from '../controllers/accountController.js';
+
 const router = express.Router();
 
 /**
@@ -41,9 +42,9 @@ router.get('/:id', accountController.getAccountById);
 
 /**
  * @swagger
- * /account:
+ * /account/register:
  *   post:
- *     summary: Tạo tài khoản mới
+ *     summary: Đăng ký tài khoản
  *     tags: [Account]
  *     requestBody:
  *       required: true
@@ -64,7 +65,59 @@ router.get('/:id', accountController.getAccountById);
  *       201:
  *         description: Tạo tài khoản thành công
  */
-router.post('/', accountController.createAccount);
+router.post('/register', accountController.register);
+
+/**
+ * @swagger
+ * /account/login:
+ *   post:
+ *     summary: Đăng nhập tài khoản
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đăng nhập thành công, trả về thông tin user
+ *       400:
+ *         description: Email hoặc mật khẩu không đúng
+ */
+router.post('/login', accountController.login);
+
+/**
+ * @swagger
+ * /account:
+ *   post:
+ *     summary: Tạo tài khoản mới (CRUD)
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Tạo tài khoản thành công
+ */
+router.post('/', accountController.register);
 
 /**
  * @swagger
@@ -116,5 +169,59 @@ router.put('/:id', accountController.updateAccount);
  *         description: Xóa thành công
  */
 router.delete('/:id', accountController.deleteAccount);
+
+/**
+ * @swagger
+ * /account/forgot-password:
+ *   post:
+ *     summary: Gửi email quên mật khẩu
+ *     tags: [Account]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Email đặt lại mật khẩu đã được gửi
+ *       400:
+ *         description: Thiếu email
+ *       404:
+ *         description: Email không tồn tại
+ */
+router.post('/forgot-password', accountController.forgotPassword);
+
+/**
+ * @swagger
+ * /account/reset-password/{token}:
+ *   post:
+ *     summary: Đặt lại mật khẩu bằng token
+ *     tags: [Account]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         schema:
+ *           type: string
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Đặt lại mật khẩu thành công
+ *       400:
+ *         description: Token không hợp lệ hoặc hết hạn
+ */
+router.post('/reset-password/:token', accountController.resetPassword);
 
 export default router;
