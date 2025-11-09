@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Chat Tester</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --mid: #1f2937;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --brand: #22c55e;
+      --danger: #ef4444;
+      --bubble-user: #2563eb;
+      --bubble-assistant: #374151;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(180deg, #0b1220, #0f172a 30%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .container {
+      width: min(1100px, 95vw); height: min(760px, 92vh);
+      background: #0b1220; border: 1px solid #1f2937; border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      display: grid; grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+    header {
+      padding: 12px 16px; background: var(--panel); border-bottom: 1px solid #1f2937;
+      display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+    }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .controls .group { display: flex; gap: 8px; align-items: center; }
+    label { font-size: 12px; color: var(--muted); }
+    input, select { background: var(--mid); color: var(--text); border: 1px solid #374151; border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+    input:focus { outline: 2px solid #3b82f6; border-color: #3b82f6; }
+    button { background: var(--brand); color: #052e16; border: none; border-radius: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; }
+    button.secondary { background: #334155; color: var(--text); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    main { display: grid; grid-template-columns: 2.2fr 1fr; min-height: 0; }
+  .chat { position: relative; border-right: 1px solid #1f2937; background: radial-gradient(1200px 600px at 20% -10%, #172554, transparent 60%), radial-gradient(800px 600px at 90% 10%, #052e16, transparent 60%); display: grid; grid-template-rows: 1fr auto; min-height: 0; }
+
+  .messages { overflow: auto; padding: 20px 18px; min-height: 0; min-width: 0; }
+    .msg { display: flex; gap: 10px; margin: 10px 0; align-items: flex-end; }
+    .msg .avatar { width: 30px; height: 30px; border-radius: 50%; background: #0ea5e9; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+    .msg.user .avatar { background: var(--bubble-user); }
+    .msg.assistant .avatar { background: #16a34a; }
+    .bubble { max-width: 80%; padding: 10px 12px; border-radius: 12px; line-height: 1.45; white-space: pre-wrap; }
+    .msg.user .bubble { background: var(--bubble-user); color: #eaf2ff; border-top-right-radius: 4px; }
+    .msg.assistant .bubble { background: var(--bubble-assistant); color: var(--text); border-top-left-radius: 4px; }
+
+    .composer { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 12px; border-top: 1px solid #1f2937; background: var(--panel); }
+    textarea { width: 100%; min-height: 56px; max-height: 160px; resize: vertical; border-radius: 10px; padding: 10px 12px; background: var(--mid); color: var(--text); border: 1px solid #374151; font-size: 14px; }
+    .composer button { height: 56px; }
+
+    .scroll-bottom {
+      position: absolute; right: 14px; bottom: 84px; z-index: 5;
+      background: #0ea5e9; color: #04121f; font-weight: 700; border: 1px solid #164e63;
+      padding: 6px 10px; border-radius: 999px; cursor: pointer; opacity: 0; pointer-events: none;
+      transition: opacity .15s ease;
+    }
+
+  aside { background: var(--panel); display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+  .tool-log { border-top: 1px solid #1f2937; padding: 12px; overflow: auto; min-height: 0; max-height: 100%; }
+    .tool-log pre { background: #0b1220; border: 1px solid #1f2937; color: #d1d5db; padding: 10px; border-radius: 8px; font-size: 12px; overflow: auto; }
+    .stat { padding: 10px 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat .item { background: #0b1220; border: 1px solid #1f2937; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="controls">
+        <div class="group">
+          <label for="server">Server</label>
+          <input id="server" value="http://localhost:3006" size="26" />
+        </div>
+        <div class="group">
+          <label for="user">User ID</label>
+          <input id="user" value="39" size="6" />
+        </div>
+        <div class="group">
+          <label for="session">Session</label>
+          <input id="session" value="chat-" size="14" />
+          <button class="secondary" id="newSession">New</button>
+        </div>
+        <div class="group">
+          <button class="secondary" id="loadHistory">Load history</button>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="secondary" id="quick1">Gợi ý áo M dưới 100k</button>
+        <button class="secondary" id="quick2">Gợi ý giày 41 dưới 1 triệu</button>
+        <label style="margin-left:8px; color: var(--muted); font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+          <input id="fast" type="checkbox" /> Ưu tiên tốc độ
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <section class="chat">
+        <div id="messages" class="messages"></div>
+        <button id="scrollBottom" class="scroll-bottom" title="Cuộn xuống cuối">↓</button>
+        <div class="composer">
+          <textarea id="input" placeholder="Nhập tin nhắn... (Enter = gửi, Shift+Enter = xuống dòng)"></textarea>
+          <button id="send">Gửi</button>
+        </div>
+      </section>
+      <aside>
+        <div class="stat">
+          <div class="item">Tools called: <span id="toolCount">0</span></div>
+          <div class="item">Last status: <span id="status">Idle</span></div>
+        </div>
+        <div class="controls" style="padding: 0 12px 8px;">
+          <input id="customQuick" placeholder="Nhập tin nhắn nhanh..." size="30" />
+          <button class="secondary" id="sendCustom">Gửi nhanh</button>
+          <button class="secondary" id="addQuick">Thêm nút</button>
+        </div>
+        <div class="controls" id="customQuickList" style="padding: 0 12px 12px; flex-wrap: wrap;"></div>
+        <div class="tool-log">
+          <h4>Tool outputs</h4>
+          <div id="toolOutputs"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const messagesEl = $('messages');
+    const toolOutputsEl = $('toolOutputs');
+    const statusEl = $('status');
+  const toolCountEl = $('toolCount');
+  const customKey = 'ai_chat_custom_quicks';
+  let quicks = [];
+
+    let toolCount = 0;
+
+    function randomId(prefix='chat') {
+      return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function ensureSessionSeed() {
+      const s = $('session');
+      if (!s.value || s.value === 'chat-') s.value = randomId('chat');
+    }
+
+    function isNearBottom() {
+      const threshold = 80; // px
+      return (messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight) < threshold;
+    }
+
+    function updateScrollBtn() {
+      const visible = !isNearBottom();
+      const btn = $('scrollBottom');
+      if (!btn) return;
+      btn.style.opacity = visible ? '1' : '0';
+      btn.style.pointerEvents = visible ? 'auto' : 'none';
+    }
+
+    function addMsg(role, text) {
+      const autoscroll = isNearBottom();
+      const wrap = document.createElement('div');
+      wrap.className = `msg ${role}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = role === 'user' ? 'U' : 'A';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text || '';
+      wrap.appendChild(avatar);
+      wrap.appendChild(bubble);
+      messagesEl.appendChild(wrap);
+      if (autoscroll) {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+      updateScrollBtn();
+    }
+
+    function addToolLog(name, result) {
+      toolCount += 1; toolCountEl.textContent = toolCount;
+      const pre = document.createElement('pre');
+      pre.textContent = `${name}:\n` + JSON.stringify(result, null, 2);
+      toolOutputsEl.prepend(pre);
+    }
+
+    function saveQuicks() {
+      try { localStorage.setItem(customKey, JSON.stringify(quicks)); } catch {}
+    }
+    function loadQuicks() {
+      try {
+        const raw = localStorage.getItem(customKey);
+        quicks = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(quicks)) quicks = [];
+      } catch { quicks = []; }
+    }
+    function renderCustomQuicks() {
+      const list = $('customQuickList');
+      if (!list) return;
+      list.innerHTML = '';
+      quicks.forEach((q, idx) => {
+        const wrap = document.createElement('span');
+        wrap.style.display = 'inline-flex';
+        wrap.style.alignItems = 'center';
+        wrap.style.gap = '4px';
+        wrap.style.marginRight = '6px';
+
+        const btn = document.createElement('button');
+        btn.className = 'secondary';
+        btn.textContent = q;
+        btn.addEventListener('click', () => {
+          $('input').value = q;
+          $('send').click();
+        });
+
+        const del = document.createElement('button');
+        del.className = 'secondary';
+        del.style.background = '#7f1d1d';
+        del.style.color = '#fff';
+        del.textContent = '×';
+        del.title = 'Xóa';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          quicks.splice(idx, 1);
+          saveQuicks();
+          renderCustomQuicks();
+        });
+
+        wrap.appendChild(btn);
+        wrap.appendChild(del);
+        list.appendChild(wrap);
+      });
+    }
+
+    async function sendMessage(text) {
+      const server = $('server').value.trim().replace(/\/$/, '');
+      const userId = Number($('user').value.trim()) || null;
+      ensureSessionSeed();
+      const sessionId = $('session').value.trim();
+      const fast = $('fast').checked;
+
+      const payload = { message: text, userId, sessionId, fast };
+      statusEl.textContent = 'Sending...';
+      $('send').disabled = true;
+
+      try {
+        const res = await fetch(`${server}/ai/chat`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        // tools
+        if (Array.isArray(data.tools)) {
+          data.tools.forEach(t => addToolLog(t.name, t.result));
+        }
+
+        // assistant text
+        addMsg('assistant', data.text || '[No reply]');
+        statusEl.textContent = 'OK';
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = 'Error';
+        addMsg('assistant', `Lỗi gọi API: ${e.message}`);
+      } finally {
+        $('send').disabled = false;
+      }
+    }
+
+    async function loadHistory() {
+      const server = $('server').value.trim().replace(/\/$/, '');
+      ensureSessionSeed();
+      const sessionId = $('session').value.trim();
+      statusEl.textContent = 'Loading history...';
+      try {
+        const res = await fetch(`${server}/ai/history?sessionId=${encodeURIComponent(sessionId)}`);
+        const rows = await res.json();
+        // Clear current messages visual, then rebuild from history
+        messagesEl.innerHTML = '';
+        rows.forEach(r => {
+          if (r.role === 'user' || r.role === 'assistant') {
+            addMsg(r.role, r.content);
+          }
+        });
+        statusEl.textContent = 'History loaded';
+      } catch (e) {
+        statusEl.textContent = 'Load failed';
+        addMsg('assistant', `Lỗi tải lịch sử: ${e.message}`);
+      }
+    }
+
+    // Wire UI
+    $('send').addEventListener('click', () => {
+      const t = $('input');
+      const msg = (t.value || '').trim();
+      if (!msg) return;
+      addMsg('user', msg);
+      t.value = '';
+      sendMessage(msg);
+    });
+    $('input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        $('send').click();
+      }
+    });
+    $('scrollBottom').addEventListener('click', () => {
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      updateScrollBtn();
+    });
+    messagesEl.addEventListener('scroll', updateScrollBtn);
+    $('newSession').addEventListener('click', () => {
+      $('session').value = randomId('chat');
+      messagesEl.innerHTML = '';
+      toolOutputsEl.innerHTML = '';
+      toolCount = 0; toolCountEl.textContent = '0';
+      addMsg('assistant', 'Đã tạo session mới. Bạn muốn tư vấn sản phẩm gì?');
+    });
+    $('loadHistory').addEventListener('click', loadHistory);
+
+    $('quick1').addEventListener('click', () => {
+      $('input').value = 'Tư vấn áo dưới 100k size M';
+      $('send').click();
+    });
+    $('quick2').addEventListener('click', () => {
+      $('input').value = 'Gợi ý giày thể thao size 41 dưới 1 triệu';
+      $('send').click();
+    });
+
+    // Custom quicks
+    $('sendCustom').addEventListener('click', () => {
+      const v = ($('customQuick').value || '').trim();
+      if (!v) return;
+      $('input').value = v;
+      $('send').click();
+    });
+    $('addQuick').addEventListener('click', () => {
+      const v = ($('customQuick').value || '').trim();
+      if (!v) return;
+      if (!quicks.includes(v)) quicks.push(v);
+      $('customQuick').value = '';
+      saveQuicks();
+      renderCustomQuicks();
+    });
+
+    // Init
+    $('session').value = randomId('chat');
+    addMsg('assistant', 'Xin chào! Mình là trợ lý bán hàng. Hãy nhập nhu cầu của bạn (ngân sách, size, danh mục) để mình tư vấn nhé.');
+    loadQuicks();
+    renderCustomQuicks();
+    updateScrollBtn();
+  </script>
+</body>
+</html>
