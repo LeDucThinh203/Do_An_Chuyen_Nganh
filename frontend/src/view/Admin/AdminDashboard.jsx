@@ -4,7 +4,9 @@ import AdminInfo from "./AdminInfo";
 import AdminAddressManager from "./AdminAddressManager";
 import UserManager from "./UserManager";
 import ProductManager from "./ProductManager";
-import CategoryManager from "./categories/CategoryManager"; // import CategoryManager
+import CategoryManager from "./categories/CategoryManager";
+import OrderManager from "./OrderManager";
+import Revenue from "./Revenue"; // Thêm import Revenue
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -83,6 +85,23 @@ export default function AdminDashboard() {
           >
             Quản lý danh mục
           </button>
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "orderManager" ? "bg-blue-600 text-white" : "hover:bg-blue-200"
+            }`}
+            onClick={() => setActiveTab("orderManager")}
+          >
+            Quản lý đơn hàng
+          </button>
+          {/* Thêm nút Doanh thu */}
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "revenue" ? "bg-green-600 text-white" : "hover:bg-green-200"
+            }`}
+            onClick={() => setActiveTab("revenue")}
+          >
+            📊 Doanh thu
+          </button>
         </div>
       </div>
 
@@ -95,7 +114,9 @@ export default function AdminDashboard() {
         {activeTab === "address" && <AdminAddressManager />}
         {activeTab === "userManager" && <UserManager />}
         {activeTab === "product" && <ProductManager />}
-        {activeTab === "category" && <CategoryManager />} {/* render CategoryManager */}
+        {activeTab === "category" && <CategoryManager />}
+        {activeTab === "orderManager" && <OrderManager />}
+        {activeTab === "revenue" && <Revenue />} {/* Thêm Revenue component */}
       </div>
     </div>
   );

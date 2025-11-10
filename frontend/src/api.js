@@ -306,10 +306,77 @@ export const updateOrderStatus = async (id, data) => {
   return await safeJson(res);
 };
 
+// Hàm xóa đơn hàng mới - xóa order_details trước rồi mới xóa orders
 export const deleteOrder = async (id) => {
-  const res = await fetch(`${ORDER_API_URL}/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Xóa đơn hàng thất bại");
-  return true;
+  try {
+    console.log(`🔄 Bắt đầu xóa đơn hàng ID: ${id}`);
+    
+    // Bước 1: Lấy thông tin đơn hàng để có danh sách order_details
+    console.log(`📥 Lấy thông tin đơn hàng ${id}...`);
+    const order = await getOrderById(id);
+    
+    if (!order) {
+      throw new Error("Đơn hàng không tồn tại");
+    }
+    
+    console.log(`📋 Đơn hàng có ${order.order_details?.length || 0} chi tiết`);
+
+    // Bước 2: Xóa tất cả order_details của đơn hàng này
+    if (order.order_details && order.order_details.length > 0) {
+      console.log(`🗑️ Đang xóa ${order.order_details.length} chi tiết đơn hàng...`);
+      
+      for (const detail of order.order_details) {
+        try {
+          // Xóa từng order_detail
+          const deleteDetailRes = await fetch(`${ORDER_DETAILS_API_URL}/${detail.order_detail_id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+          });
+          
+          if (!deleteDetailRes.ok) {
+            console.warn(`⚠️ Không thể xóa order_detail ${detail.order_detail_id}`);
+          } else {
+            console.log(`✅ Đã xóa order_detail ${detail.order_detail_id}`);
+          }
+        } catch (detailError) {
+          console.warn(`⚠️ Lỗi khi xóa order_detail ${detail.order_detail_id}:`, detailError);
+        }
+      }
+    }
+
+    // Bước 3: Xóa đơn hàng chính
+    console.log(`🗑️ Đang xóa đơn hàng chính ${id}...`);
+    const deleteOrderRes = await fetch(`${ORDER_API_URL}/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    console.log(`📊 Response status: ${deleteOrderRes.status} ${deleteOrderRes.statusText}`);
+    
+    if (!deleteOrderRes.ok) {
+      let errorData = {};
+      try {
+        errorData = await deleteOrderRes.json();
+      } catch (jsonError) {
+        // Ignore JSON parse error
+      }
+      
+      if (deleteOrderRes.status === 404) {
+        throw new Error("Đơn hàng không tồn tại");
+      } else if (deleteOrderRes.status === 500) {
+        throw new Error("Lỗi server khi xóa đơn hàng");
+      } else {
+        throw new Error(errorData.error || `Xóa đơn hàng thất bại (${deleteOrderRes.status})`);
+      }
+    }
+    
+    console.log('✅ Xóa đơn hàng thành công');
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Lỗi trong hàm deleteOrder:', error);
+    throw error;
+  }
 };
 
 // ================= Order Details API =================
