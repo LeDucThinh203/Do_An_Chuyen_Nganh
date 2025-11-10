@@ -38,7 +38,7 @@ const swaggerOptions = {
     },
     servers: [{ url: SERVER_URL }],
   },
-  apis: [join(__dirname, 'routes/*.js')], // quét tất cả route gốc có comment @swagger
+  apis: [join(__dirname, 'routes/*.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);

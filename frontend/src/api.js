@@ -1,5 +1,3 @@
-// src/api.js
-
 // ================= Base =================
 const safeJson = async (res) => {
   try {
@@ -245,5 +243,153 @@ export const updateAddress = async (id, data) => {
 export const deleteAddress = async (id) => {
   const res = await fetch(`${ADDRESS_API_URL}/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Xóa địa chỉ thất bại");
+  return true;
+};
+
+// ================= ProductSize API =================
+const PRODUCT_SIZE_API_URL = "http://localhost:3006/product_sizes";
+
+export const getAllProductSizes = async () => {
+  const res = await fetch(PRODUCT_SIZE_API_URL);
+  if (!res.ok) throw new Error("Lấy product sizes thất bại");
+  return await safeJson(res);
+};
+
+export const createProductSize = async (data) => {
+  const res = await fetch(PRODUCT_SIZE_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Tạo product size thất bại");
+  return await safeJson(res);
+};
+
+export const deleteProductSize = async (id) => {
+  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Xóa product size thất bại");
+  return true;
+};
+
+// ================= Order API =================
+const ORDER_API_URL = "http://localhost:3006/orders";
+
+export const createOrder = async (data) => {
+  const res = await fetch(ORDER_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Tạo đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const getAllOrders = async () => {
+  const res = await fetch(ORDER_API_URL);
+  if (!res.ok) throw new Error("Lấy danh sách đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const getOrderById = async (id) => {
+  const res = await fetch(`${ORDER_API_URL}/${id}`);
+  if (!res.ok) throw new Error("Lấy thông tin đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const updateOrderStatus = async (id, data) => {
+  const res = await fetch(`${ORDER_API_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Cập nhật trạng thái đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const deleteOrder = async (id) => {
+  const res = await fetch(`${ORDER_API_URL}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Xóa đơn hàng thất bại");
+  return true;
+};
+
+// ================= Order Details API =================
+const ORDER_DETAILS_API_URL = "http://localhost:3006/order_details";
+
+export const getAllOrderDetails = async () => {
+  const res = await fetch(ORDER_DETAILS_API_URL);
+  if (!res.ok) throw new Error("Lấy danh sách chi tiết đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const getOrderDetailById = async (id) => {
+  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`);
+  if (!res.ok) throw new Error("Lấy thông tin chi tiết đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const createOrderDetail = async (data) => {
+  const res = await fetch(ORDER_DETAILS_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Tạo chi tiết đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const updateOrderDetail = async (id, data) => {
+  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Cập nhật chi tiết đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const deleteOrderDetail = async (id) => {
+  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Xóa chi tiết đơn hàng thất bại");
+  return true;
+};
+
+// ================= Rating API =================
+const RATING_API_URL = "http://localhost:3006/rating";
+
+export const getAllRatings = async () => {
+  const res = await fetch(RATING_API_URL);
+  if (!res.ok) throw new Error("Lấy danh sách đánh giá thất bại");
+  return await safeJson(res);
+};
+
+export const getRatingById = async (id) => {
+  const res = await fetch(`${RATING_API_URL}/${id}`);
+  if (!res.ok) throw new Error("Lấy thông tin đánh giá thất bại");
+  return await safeJson(res);
+};
+
+export const createRating = async (data) => {
+  const res = await fetch(RATING_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Tạo đánh giá thất bại");
+  return await safeJson(res);
+};
+
+export const updateRating = async (id, data) => {
+  const res = await fetch(`${RATING_API_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Cập nhật đánh giá thất bại");
+  return await safeJson(res);
+};
+
+export const deleteRating = async (id) => {
+  const res = await fetch(`${RATING_API_URL}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Xóa đánh giá thất bại");
   return true;
 };

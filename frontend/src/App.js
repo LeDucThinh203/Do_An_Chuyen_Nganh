@@ -10,6 +10,7 @@ import Header from "./view/Header/Header";
 import ProductList from "./view/Product/ProductList";
 import AddProduct from "./view/Product/AddProduct";
 import EditProduct from "./view/Product/EditProduct";
+import ProductDetail from "./view/Product/ProductDetail";
 
 // Category
 import CategoryList from "./view/Categories/CategoryList";
@@ -21,11 +22,15 @@ import Register from "./view/Account/Register";
 import ForgotPassword from "./view/Account/ForgotPassword";
 import ResetPassword from "./view/Account/ResetPassword";
 
-// Admin Dashboard
+// Admin
+import ProductManager from "./view/Admin/ProductManager";
 import AdminDashboard from "./view/Admin/AdminDashboard";
 
-// User Dashboard
+// User
 import UserDashboard from "./view/User/UserDashboard";
+
+// Order Success
+import OrderSuccess from "./view/Cart/OrderSuccess";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -76,6 +81,14 @@ function AppContent() {
     return children;
   };
 
+  const ConfirmationRoute = ({ children }) => {
+    if (!Session.isLoggedIn()) {
+      window.alert("Bạn cần đăng nhập để xác nhận đơn hàng!");
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
+
   // Kiểm tra route để không render header trên ProductList
   const showHeader = pathname !== "/";
 
@@ -85,24 +98,104 @@ function AppContent() {
       {showHeader && <Header user={user} handleLogout={handleLogout} />}
 
       {/* Main content */}
-      <div className={`pt-24 px-8 max-w-7xl mx-auto flex-grow ${pathname === "/" ? "" : ""}`}>
+      <div className="pt-24 px-8 max-w-7xl mx-auto flex-grow">
         <Suspense fallback={<p className="text-center mt-10">Đang tải...</p>}>
           <Routes>
+            {/* Public */}
             <Route path="/" element={<ProductList />} />
-            <Route path="/add" element={<AdminRoute><AddProduct /></AdminRoute>} />
-            <Route path="/edit/:id" element={<AdminRoute><EditProduct /></AdminRoute>} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<CheckoutRoute><Checkout /></CheckoutRoute>} />
-            <Route path="/order-confirmation" element={<Confirmation />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/user" element={<UserRoute><UserDashboard /></UserRoute>} />
-            <Route path="/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
-            <Route path="/categories/add" element={<AdminRoute><CategoryForm /></AdminRoute>} />
-            <Route path="/categories/edit/:id" element={<AdminRoute><CategoryForm /></AdminRoute>} />
+            <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route
+              path="/checkout"
+              element={
+                <CheckoutRoute>
+                  <Checkout />
+                </CheckoutRoute>
+              }
+            />
+            <Route
+              path="/order-confirmation"
+              element={
+                <ConfirmationRoute>
+                  <Confirmation />
+                </ConfirmationRoute>
+              }
+            />
+            <Route path="/order-success" element={<OrderSuccess />} />
+
+            {/* Admin */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/product-manager"
+              element={
+                <AdminRoute>
+                  <ProductManager />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/add"
+              element={
+                <AdminRoute>
+                  <AddProduct />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/edit/:id"
+              element={
+                <AdminRoute>
+                  <EditProduct />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <AdminRoute>
+                  <CategoryList />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/categories/add"
+              element={
+                <AdminRoute>
+                  <CategoryForm />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/categories/edit/:id"
+              element={
+                <AdminRoute>
+                  <CategoryForm />
+                </AdminRoute>
+              }
+            />
+
+            {/* User */}
+            <Route
+              path="/user"
+              element={
+                <UserRoute>
+                  <UserDashboard />
+                </UserRoute>
+              }
+            />
+
+            {/* 404 */}
             <Route path="*" element={<p className="text-center mt-10">404 - Page not found</p>} />
           </Routes>
         </Suspense>
