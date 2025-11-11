@@ -2,6 +2,15 @@ import { getChatModelWithTools, getFastModelWithTools } from '../services/ai/gem
 import { ensureEmbeddingsForProducts, semanticSearchProducts } from '../services/ai/vectorStore.js';
 import { saveMessage, getRecentMessages, recallLongTermMemory, upsertLongTermMemory } from '../services/ai/memory.js';
 import { toolDeclarations, toolsImpl } from '../services/ai/tools.js';
+import { 
+  SYSTEM_PROMPT, 
+  buildContextBlocks, 
+  formatConversationHistory,
+  PRODUCT_KEYWORDS,
+  OFF_TOPIC_KEYWORDS,
+  GREETING_KEYWORDS,
+  SMALL_TALK_KEYWORDS
+} from '../services/ai/prompts.js';
 
 // Helper: create a deterministic short session id if not provided
 const ensureSessionId = (sessionId, userId) => {
@@ -21,33 +30,57 @@ export const chat = async (req, res) => {
     // Speed-aware params
     const topK = Math.max(1, fast ? Math.min(inputTopK, 3) : inputTopK);
 
+    // Check if message is about products (skip for greetings and small talk)
+    const isProductQuery = (msg) => {
+      const lower = msg.toLowerCase();
+      
+      // Greetings and small talk - NO product search (check FIRST, highest priority)
+      if (GREETING_KEYWORDS.some(g => lower.includes(g)) && msg.length < 25) {
+        console.log(`[AI] Detected greeting: "${msg}"`);
+        return false;
+      }
+      if (SMALL_TALK_KEYWORDS.some(s => lower.includes(s)) && msg.length < 20) {
+        console.log(`[AI] Detected small talk: "${msg}"`);
+        return false;
+      }
+      
+      // Off-topic keywords - NO product search
+      if (OFF_TOPIC_KEYWORDS.some(k => lower.includes(k))) {
+        console.log(`[AI] Detected off-topic keyword in query: "${msg}"`);
+        return false;
+      }
+      
+      // Product-related keywords
+      const allProductKeywords = [
+        ...PRODUCT_KEYWORDS.categories,
+        ...PRODUCT_KEYWORDS.shopping,
+        ...PRODUCT_KEYWORDS.brands
+      ];
+      
+      return allProductKeywords.some(k => lower.includes(k)) || msg.length > 30;
+    };
+
+    const shouldSearchProducts = isProductQuery(message);
+    console.log(`[AI] Query: "${message}" -> shouldSearchProducts: ${shouldSearchProducts}`);
+
     // OPTIMIZATION 1: Run independent operations in parallel
     const [_, relevantProducts, recentHistory, longMem] = await Promise.all([
       // Ensure product embeddings cache (non-blocking, very small batch to avoid cold start delay)
       ensureEmbeddingsForProducts(fast ? 5 : 10).catch(e => console.warn('[AI] Embedding cache update failed:', e.message)),
-      // RAG: semantic retrieve relevant products
-      semanticSearchProducts(message, topK),
+      // RAG: semantic retrieve relevant products ONLY if needed
+      // Use topK=1 for exact matches, topK=3 for related products
+      shouldSearchProducts ? semanticSearchProducts(message, topK) : Promise.resolve([]),
       // Memory: recent chat history
       getRecentMessages(sid, fast ? 8 : 12),
       // Long-term memory (skip if anonymous user to save time)
       userId ? recallLongTermMemory(userId, message, 2) : Promise.resolve([])
     ]);
+    
+    console.log(`[AI] Initial RAG search returned ${relevantProducts.length} products`);
 
-    // OPTIMIZATION 2: Optimized system prompt (shorter, more focused)
-    const system = `Bạn là trợ lý bán hàng my_store. Quy tắc:
-- Trả lời tiếng Việt, ngắn gọn, thân thiện
-- Dùng tool khi cần dữ liệu chính xác (đơn hàng, tìm sản phẩm)
-- Tham chiếu sản phẩm từ dữ liệu RAG đã cung cấp
-- Nếu người dùng đề cập ngân sách/size/danh mục, gọi search_products với tham số phù hợp`;
-
-    const contextBlocks = [];
-    // OPTIMIZATION 3: Only include non-empty context
-    if (longMem?.length) contextBlocks.push(`Bối cảnh:\n- ${longMem.join('\n- ')}`);
-    if (relevantProducts?.length) {
-      // Shorter product descriptions for faster processing
-      const list = relevantProducts.map(p => `#${p.id}: ${p.name} - ${p.price}đ${p.description ? ' | ' + p.description.slice(0,100) : ''}`);
-      contextBlocks.push(`Sản phẩm (top ${relevantProducts.length}):\n${list.join('\n')}`);
-    }
+    // Build system prompt and context from prompts module
+    const system = SYSTEM_PROMPT;
+    const contextBlocks = buildContextBlocks(longMem, relevantProducts);
 
     // Prepare models (tools enabled): primary and fallback
     const fastModel = getFastModelWithTools(toolDeclarations);
@@ -93,12 +126,8 @@ export const chat = async (req, res) => {
     saveMessage({ session_id: sid, user_id: userId, role: 'user', content: message })
       .catch(e => console.warn('[AI] Failed to save user message:', e.message));
 
-    // OPTIMIZATION 6: Shorter conversation history for faster processing
-    const prev = recentHistory
-      .filter(m => m.role === 'user' || m.role === 'assistant')
-      .slice(-(fast ? 3 : 4)) // Reduced from 6
-      .map(m => `${m.role === 'assistant' ? 'AI' : 'U'}: ${(m.content || '').slice(0, 150)}`) // Shorter labels & truncate
-      .join('\n');
+    // OPTIMIZATION 6: Format conversation history
+    const prev = formatConversationHistory(recentHistory, fast);
 
     // Build contents for single-turn generation (Gemini v1beta: only user/model allowed in contents)
     const contents = [
@@ -120,6 +149,8 @@ export const chat = async (req, res) => {
     const seenCalls = new Set();
     let steps = 0;
     const maxToolSteps = fast ? 2 : 3;
+    let dynamicProducts = []; // Track products from tool calls
+    
     while (true) {
       const calls = typeof result?.response?.functionCalls === 'function' ? result.response.functionCalls() : [];
       const call = calls && calls.length ? calls[0] : null;
@@ -138,6 +169,22 @@ export const chat = async (req, res) => {
       if (impl) {
         try {
           toolResult = await impl(args || {});
+          
+          // If search_products was called, collect the products
+          if (name === 'search_products') {
+            console.log(`[AI] Tool result type: ${Array.isArray(toolResult) ? 'Array' : typeof toolResult}`);
+            console.log(`[AI] Tool result:`, JSON.stringify(toolResult).substring(0, 200));
+            
+            if (Array.isArray(toolResult)) {
+              console.log(`[AI] Tool search_products returned ${toolResult.length} products`);
+              dynamicProducts = toolResult;
+            } else if (toolResult?.products) {
+              console.log(`[AI] Tool search_products returned ${toolResult.products.length} products`);
+              dynamicProducts = toolResult.products;
+            } else {
+              console.log(`[AI] Tool search_products returned unexpected format`);
+            }
+          }
         } catch (e) {
           toolResult = { error: e.message };
         }
@@ -166,6 +213,19 @@ export const chat = async (req, res) => {
     const text = (typeof result?.response?.text === 'function' ? result.response.text() : '')
       || (result?.response?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('\n') || '');
 
+    // Merge products from initial RAG search and dynamic tool calls
+    const allProducts = [...relevantProducts];
+    if (dynamicProducts.length > 0) {
+      console.log(`[AI] Merging ${dynamicProducts.length} products from tool calls`);
+      // Add products from tool calls that aren't already in relevantProducts
+      dynamicProducts.forEach(dp => {
+        if (!allProducts.some(p => p.id === dp.id)) {
+          allProducts.push(dp);
+        }
+      });
+    }
+    console.log(`[AI] Final products count: ${allProducts.length} (${relevantProducts.length} from RAG + ${dynamicProducts.length} from tools)`);
+
     // OPTIMIZATION 7: Save messages and update memory async (non-blocking)
     const savePromises = [
       saveMessage({ session_id: sid, user_id: userId, role: 'assistant', content: text })
@@ -184,7 +244,7 @@ export const chat = async (req, res) => {
     // Don't await - let these complete in background
     Promise.all(savePromises);
 
-    return res.json({ sessionId: sid, text, tools: toolResponses, context: { products: relevantProducts } });
+    return res.json({ sessionId: sid, text, tools: toolResponses, context: { products: allProducts } });
   } catch (err) {
     console.error('[AI chat] error', err);
     const msg = (err?.message || '').toLowerCase();

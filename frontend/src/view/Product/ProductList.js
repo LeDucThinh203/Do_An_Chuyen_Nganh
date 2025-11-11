@@ -215,11 +215,23 @@ export default function ProductList() {
   );
 }
 
+// Resolve image URL for products:
+// - If image is an absolute URL (http/https) -> keep it
+// - If image starts with '/' -> treat as absolute path
+// - Otherwise, assume it's stored in frontend's `public/images` and prefix `/images/`
+const resolveImage = (img) => {
+  if (!img) return '/images/placeholder.png'; // optional fallback
+  const trimmed = String(img).trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('/')) return encodeURI(trimmed);
+  return `/images/${encodeURI(trimmed)}`;
+};
+
 const ProductCard = ({ product, handleAddToCart, handleDelete, isAdmin }) => (
   <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden flex flex-col">
     <div className="relative overflow-hidden h-64">
       <img
-        src={product.image}
+        src={resolveImage(product.image)}
         alt={product.name}
         className="w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-105"
       />

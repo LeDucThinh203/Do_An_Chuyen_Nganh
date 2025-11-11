@@ -247,3 +247,25 @@ export const deleteAddress = async (id) => {
   if (!res.ok) throw new Error("Xóa địa chỉ thất bại");
   return true;
 };
+
+// ================= AI Chat API =================
+const AI_API_URL = "http://localhost:3006/ai";
+
+export const aiChat = async ({ message, userId = null, sessionId = null, topK = 5, fast = false }) => {
+  const res = await fetch(`${AI_API_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, userId, sessionId, topK, fast })
+  });
+  if (!res.ok) {
+    const data = await safeJson(res);
+    throw new Error(data?.error || 'AI chat failed');
+  }
+  return await safeJson(res);
+};
+
+export const aiHistory = async (sessionId) => {
+  const res = await fetch(`${AI_API_URL}/history?sessionId=${encodeURIComponent(sessionId)}`);
+  if (!res.ok) throw new Error('Lấy lịch sử chat thất bại');
+  return await safeJson(res);
+};

@@ -1,5 +1,5 @@
 import db from '../../db.js';
-import { normalizeImage } from './vectorStore.js';
+import { semanticSearchProducts } from './vectorStore.js';
 
 // Tool declarations (for Gemini function calling)
 export const toolDeclarations = [
@@ -46,74 +46,54 @@ export const toolDeclarations = [
 // Tool implementations
 export const toolsImpl = {
   async search_products({ query, limit = 5, max_price = null, size = null, category = null }) {
-    // Heuristic category detection if not provided
-    const qText = String(query || '').toLowerCase();
-    const inferredCategory = !category && (qText.includes('giày') || qText.includes('giay')) ? 'Giày' : null;
-    const activeCategory = category || inferredCategory;
-
-    // OPTIMIZATION: Single optimized query with all filters
-    const where = [
-      '(p.name LIKE CONCAT("%", ?, "%") OR p.description LIKE CONCAT("%", ?, "%"))'
-    ];
-    const params = [query || '', query || ''];
+    console.log(`[Tool search_products] Called with query="${query}", limit=${limit}`);
     
-    if (max_price != null) { 
-      where.push('p.price <= ?'); 
-      params.push(Number(max_price)); 
-    }
-    if (size) { 
-      where.push('s.size = ?'); 
-      params.push(String(size)); 
-    }
-    if (activeCategory) { 
-      where.push('c.name LIKE CONCAT("%", ?, "%")'); 
-      params.push(String(activeCategory)); 
-    }
-
-    const maxCount = Math.min(Number(limit) || 5, 20); // Cap at 20 for performance
-
-    // Primary search
-    const sql = `
-      SELECT DISTINCT p.id, p.name, p.description, p.price, p.image
-      FROM product p
-      LEFT JOIN product_sizes ps ON ps.product_id = p.id
-      LEFT JOIN sizes s ON s.id = ps.size_id
-      LEFT JOIN category c ON c.id = p.category_id
-      WHERE ${where.join(' AND ')}
-      ORDER BY p.price ASC
-      LIMIT ?`;
+    // OPTIMIZATION: Use semantic search with brand filtering instead of simple SQL
+    // This ensures consistent behavior with initial RAG search
+    const baseLimit = Math.min(Number(limit) || 5, 20);
+    let results = await semanticSearchProducts(query, baseLimit);
     
-    const [rows] = await db.query(sql, [...params, maxCount]);
+    console.log(`[Tool search_products] semanticSearch returned ${results.length} products`);
     
-    // If we got enough results, return immediately
-    if (rows && rows.length >= Math.min(maxCount, 3)) {
-      return rows.map(r => ({ ...r, image: normalizeImage(r.image), suggestion_type: 'exact' }));
+    // Apply additional filters (price, size, category) if specified
+    if (max_price != null) {
+      console.log(`[Tool search_products] Filtering by max_price: ${max_price}`);
+      results = results.filter(p => p.price <= Number(max_price));
     }
-
-    // Fallback: relaxed search (remove price filter if present)
-    if (max_price != null && rows.length < maxCount) {
-      const relaxedWhere = where.filter(w => !w.includes('p.price'));
-      const relaxedParams = params.filter((_, i) => where[i] !== 'p.price <= ?');
-      
-      const [fallback] = await db.query(
-        `SELECT DISTINCT p.id, p.name, p.description, p.price, p.image
-         FROM product p
-         LEFT JOIN product_sizes ps ON ps.product_id = p.id
-         LEFT JOIN sizes s ON s.id = ps.size_id
-         LEFT JOIN category c ON c.id = p.category_id
-         WHERE ${relaxedWhere.join(' AND ')}
-         ORDER BY p.price ASC
-         LIMIT ?`,
-        [...relaxedParams, maxCount - rows.length]
-      );
-      
-      const combined = [...rows, ...(fallback || [])];
-      // Remove duplicates
-      const unique = Array.from(new Map(combined.map(p => [p.id, p])).values());
-      return unique.slice(0, maxCount).map(r => ({ ...r, image: normalizeImage(r.image), suggestion_type: r.id < rows.length ? 'exact' : 'relaxed' }));
+    
+    if (size) {
+      console.log(`[Tool search_products] Filtering by size: ${size}`);
+      const productIds = results.map(p => p.id);
+      if (productIds.length > 0) {
+        const placeholders = productIds.map(() => '?').join(',');
+        const [withSize] = await db.query(
+          `SELECT DISTINCT p.id FROM product p
+           JOIN product_sizes ps ON ps.product_id = p.id
+           JOIN sizes s ON s.id = ps.size_id
+           WHERE p.id IN (${placeholders}) AND s.size = ?`,
+          [...productIds, String(size)]
+        );
+        const sizeFilteredIds = new Set(withSize.map(r => r.id));
+        results = results.filter(p => sizeFilteredIds.has(p.id));
+      } else {
+        results = [];
+      }
     }
-
-    return rows.map(r => ({ ...r, image: normalizeImage(r.image), suggestion_type: 'exact' }));
+    
+    if (category) {
+      console.log(`[Tool search_products] Filtering by category: ${category}`);
+      // Category filter already handled by semanticSearch, but double-check
+      const categoryLower = String(category).toLowerCase();
+      results = results.filter(p => {
+        // Check if product has category info
+        const prodName = (p.name || '').toLowerCase();
+        const prodDesc = (p.description || '').toLowerCase();
+        return prodName.includes(categoryLower) || prodDesc.includes(categoryLower);
+      });
+    }
+    
+    console.log(`[Tool search_products] Returning ${results.length} products after filtering`);
+    return results.slice(0, baseLimit);
   },
 
   async get_order_status({ order_id }) {
