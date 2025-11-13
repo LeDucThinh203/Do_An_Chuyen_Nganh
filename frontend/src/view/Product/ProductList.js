@@ -31,7 +31,6 @@ export default function ProductList() {
   const [sizes, setSizes] = useState([]);
   const [productSizes, setProductSizes] = useState([]);
   const [searchName, setSearchName] = useState("");
-  const [visibleCounts, setVisibleCounts] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState({});
 
@@ -56,11 +55,6 @@ export default function ProductList() {
       setCategories(catData);
       setSizes(sizesData);
       setProductSizes(productSizesData);
-
-      const initialCounts = {};
-      catData.forEach((cat) => (initialCounts[cat.id] = 3));
-      initialCounts["uncategorized"] = 3;
-      setVisibleCounts(initialCounts);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
     }
@@ -124,14 +118,6 @@ export default function ProductList() {
     window.location.reload();
   };
 
-  const handleLoadMore = (catId) => {
-    setVisibleCounts((prev) => ({ ...prev, [catId]: prev[catId] + 3 }));
-  };
-
-  const handleCollapse = (catId) => {
-    setVisibleCounts((prev) => ({ ...prev, [catId]: 3 }));
-  };
-
   const handleSearch = (term) => {
     setSearchName(term);
     setIsSearching(term.trim() !== "");
@@ -145,27 +131,11 @@ export default function ProductList() {
     p.name.toLowerCase().includes(searchName.toLowerCase())
   );
 
-  // Phân loại sản phẩm theo danh mục (cả khi đang tìm kiếm)
+  // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
   const categorizedProducts = categories.map((cat) => {
-    let catProducts = [];
-    if (cat.description) {
-      const keywords = cat.description
-        .split(";")
-        .map((k) => k.trim().toLowerCase())
-        .filter((k) => k);
-      catProducts = filteredProducts.filter((p) =>
-        keywords.some((kw) => p.name.toLowerCase().includes(kw))
-      );
-    }
+    const catProducts = filteredProducts.filter((p) => p.category_id === cat.id);
     return { ...cat, products: catProducts };
-  });
-
-  const uncategorized = filteredProducts.filter(
-    (p) =>
-      !categorizedProducts.some((cat) =>
-        cat.products.some((prod) => prod.id === p.id)
-      )
-  );
+  }).filter(cat => cat.products.length > 0); // Chỉ giữ category có sản phẩm
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -175,6 +145,17 @@ export default function ProductList() {
         products={products}
         onSearch={handleSearch}
       />
+
+      {/* Add custom scrollbar hide style */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
 
       <div className="relative w-full h-64 sm:h-80 lg:h-[400px] overflow-hidden mt-20 mb-4">
         <video
@@ -214,86 +195,97 @@ export default function ProductList() {
         {categorizedProducts.map(
           (cat) =>
             cat.products.length > 0 && (
-              <div key={cat.id}>
-                <h2 className="text-3xl font-bold mb-6">{cat.name}</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {cat.products
-                    .slice(0, visibleCounts[cat.id] || 3)
-                    .map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        availableSizes={getAvailableSizes(product.id)}
-                        selectedSize={selectedSizes[product.id]}
-                        onSizeSelect={handleSizeSelect}
-                        handleAddToCart={handleAddToCart}
-                        handleDelete={handleDelete}
-                        handleImageClick={handleImageClick}
-                        isAdmin={isAdmin}
-                      />
-                    ))}
+              <div key={cat.id} className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold uppercase">{cat.name}</h2>
+                  <Link to={`/category/${cat.id}`} className="text-sm text-blue-600 hover:underline">
+                    Xem thêm
+                  </Link>
                 </div>
-                <div className="flex justify-center mt-5 gap-4">
-                  {visibleCounts[cat.id] < cat.products.length && (
+                
+                {/* Horizontal scrollable product list with arrows */}
+                <div className="relative overflow-hidden">
+                  {/* Left arrow */}
+                  {cat.products.length > 4 && (
                     <button
-                      onClick={() => handleLoadMore(cat.id)}
-                      className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
+                      onClick={() => {
+                        const container = document.getElementById(`category-${cat.id}`);
+                        if (!container) return;
+                        const row = container.querySelector('.product-row');
+                        const firstItem = row && row.children && row.children[0];
+                        if (!row || !firstItem) return;
+                        const styles = getComputedStyle(row);
+                        const gapRaw = styles.columnGap || styles.gap || '0';
+                        const gap = parseFloat(gapRaw) || 0;
+                        const itemWidth = firstItem.getBoundingClientRect().width + gap;
+                        const total = row.children.length;
+                        const maxStart = Math.max(0, total - 4);
+                        const currentIndex = Math.round(container.scrollLeft / itemWidth);
+                        const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
+                        container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
+                      }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                      aria-label="Scroll left"
                     >
-                      Xem thêm ▼
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
                     </button>
                   )}
-                  {visibleCounts[cat.id] > 3 && (
+                  
+                  {/* Right arrow */}
+                  {cat.products.length > 4 && (
                     <button
-                      onClick={() => handleCollapse(cat.id)}
-                      className="bg-gray-300 text-black px-6 py-2 rounded-full hover:bg-gray-400 transition"
+                      onClick={() => {
+                        const container = document.getElementById(`category-${cat.id}`);
+                        if (!container) return;
+                        const row = container.querySelector('.product-row');
+                        const firstItem = row && row.children && row.children[0];
+                        if (!row || !firstItem) return;
+                        const styles = getComputedStyle(row);
+                        const gapRaw = styles.columnGap || styles.gap || '0';
+                        const gap = parseFloat(gapRaw) || 0;
+                        const itemWidth = firstItem.getBoundingClientRect().width + gap;
+                        const total = row.children.length;
+                        const maxStart = Math.max(0, total - 4);
+                        const currentIndex = Math.round(container.scrollLeft / itemWidth);
+                        const nextIndex = Math.min(maxStart, currentIndex + 1);
+                        container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
+                      }}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                      aria-label="Scroll right"
                     >
-                      Thu gọn ▲
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </button>
                   )}
+
+                  <div 
+                    id={`category-${cat.id}`}
+                    className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
+                    style={{ maxWidth: '1048px' }}
+                  >
+                    <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
+                      {cat.products.map((product) => (
+                        <div key={product.id} className="w-64 flex-shrink-0 snap-start">
+                          <ProductCard
+                            product={product}
+                            availableSizes={getAvailableSizes(product.id)}
+                            selectedSize={selectedSizes[product.id]}
+                            onSizeSelect={handleSizeSelect}
+                            handleAddToCart={handleAddToCart}
+                            handleDelete={handleDelete}
+                            handleImageClick={handleImageClick}
+                            isAdmin={isAdmin}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )
-        )}
-
-        {uncategorized.length > 0 && (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Khác</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {uncategorized
-                .slice(0, visibleCounts["uncategorized"] || 3)
-                .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    availableSizes={getAvailableSizes(product.id)}
-                    selectedSize={selectedSizes[product.id]}
-                    onSizeSelect={handleSizeSelect}
-                    handleAddToCart={handleAddToCart}
-                    handleDelete={handleDelete}
-                    handleImageClick={handleImageClick}
-                    isAdmin={isAdmin}
-                  />
-                ))}
-            </div>
-            <div className="flex justify-center mt-5 gap-4">
-              {visibleCounts["uncategorized"] < uncategorized.length && (
-                <button
-                  onClick={() => handleLoadMore("uncategorized")}
-                  className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition"
-                >
-                  Xem thêm ▼
-                </button>
-              )}
-              {visibleCounts["uncategorized"] > 3 && (
-                <button
-                  onClick={() => handleCollapse("uncategorized")}
-                  className="bg-gray-300 text-black px-6 py-2 rounded-full hover:bg-gray-400 transition"
-                >
-                  Thu gọn ▲
-                </button>
-              )}
-            </div>
-          </div>
         )}
 
         {/* Nếu không tìm thấy sản phẩm */}
@@ -516,33 +508,45 @@ const ProductCard = ({
   handleDelete, 
   handleImageClick, 
   isAdmin 
-}) => (
+}) => {
+  const [overlayOpen, setOverlayOpen] = useState(false);
 
+  return (
   <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
     <div 
-      className="relative overflow-hidden aspect-square cursor-pointer group/image"
+      className="relative overflow-hidden aspect-square cursor-pointer group group/image"
       onClick={() => handleImageClick(product.id)}
+      onMouseEnter={() => setOverlayOpen(true)}
+      onMouseLeave={() => setOverlayOpen(false)}
+      onTouchStart={(e) => {
+        // Toggle overlay on mobile without navigating immediately
+        e.stopPropagation();
+        setOverlayOpen((v) => !v);
+      }}
     >
       <img
         src={resolveImage(product.image)}
         alt={product.name}
-        className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105"
+        className="peer w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105 group-hover:scale-105"
       />
-      {/* Quick add overlay on hover */}
-      {availableSizes.length > 0 && (
-        <div
-          className="absolute inset-x-2 bottom-2 rounded-xl bg-white/95 shadow-lg p-2.5 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 pointer-events-none group-hover/image:pointer-events-auto z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between text-gray-800 text-xs font-semibold mb-2">
-            <span>Thêm nhanh vào giỏ hàng</span>
-            <span className="text-lg">+</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+      {/* Quick add overlay on image hover (always render; hide pills if none) */}
+      <div
+        className={`absolute inset-x-2 bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto
+                   ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+                   group-hover/image:opacity-100 group-hover/image:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0
+                   peer-hover:opacity-100 peer-hover:translate-y-0 hover:opacity-100 hover:translate-y-0`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
+          <span>Thêm nhanh vào giỏ hàng</span>
+          <span className="text-base leading-none">+</span>
+        </div>
+        {availableSizes.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
             {availableSizes.map((sizeObj) => (
               <button
                 key={sizeObj.id}
-                className="px-2.5 py-1 text-xs bg-white border border-gray-300 rounded-full hover:border-black hover:bg-gray-50 transition"
+                className="px-3 py-1 text-[11px] bg-white text-gray-900 rounded-full shadow-sm hover:shadow border border-transparent hover:border-gray-300 hover:bg-gray-50 transition"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAddToCart(product, sizeObj.size);
@@ -552,13 +556,15 @@ const ProductCard = ({
               </button>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-[11px] text-white/90">Chưa có size khả dụng</div>
+        )}
+      </div>
     </div>
     <div className="p-3 flex-1 flex flex-col justify-between">
       <div>
         <h3 
-          className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight"
+          className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-10"
           onClick={() => handleImageClick(product.id)}
         >
           {product.name}
@@ -606,4 +612,5 @@ const ProductCard = ({
       </div>
     </div>
   </div>
-);
+  );
+};
