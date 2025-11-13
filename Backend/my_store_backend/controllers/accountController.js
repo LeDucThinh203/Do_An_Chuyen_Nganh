@@ -36,7 +36,6 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) return res.status(400).json({ error: 'Mật khẩu không đúng' });
 
-    // Trả về email để frontend lưu vào session
     res.json({
       id: account.id,
       username: account.username,
@@ -107,20 +106,38 @@ export const forgotPassword = async (req, res) => {
 
     await accountRepo.saveResetToken(account.id, token, expiryDate);
 
+    const resetLink = `http://localhost:3000/reset-password/${token}`;
+
+    // Giao diện email HTML đẹp
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; text-align:center; padding:30px; background-color:#f9f9f9;">
+        <h2 style="color:#1E40AF;">CoolShop - Khôi phục mật khẩu</h2>
+        <p>Xin chào <strong>${account.username}</strong>,</p>
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản của mình.</p>
+        <a href="${resetLink}" 
+          style="display:inline-block; padding:12px 24px; margin:20px 0; 
+                 background-color:#1E40AF; color:white; text-decoration:none; 
+                 font-weight:bold; border-radius:6px;">
+          Đặt lại mật khẩu
+        </a>
+        <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
+        <small style="color:#6B7280;">Liên kết chỉ có hiệu lực trong 15 phút.</small>
+      </div>
+    `;
+
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
 
-    const resetLink = `http://localhost:3000/reset-password/${token}`;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Khôi phục mật khẩu CoolShop',
-      html: `<p>Nhấn <a href="${resetLink}">vào đây</a> để đặt lại mật khẩu.</p>`,
+      html: emailHtml,
     });
 
-    res.json({ message: 'Email khôi phục mật khẩu đã gửi' });
+    res.json({ message: 'Email khôi phục mật khẩu đã gửi. Vui lòng kiểm tra hộp thư.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

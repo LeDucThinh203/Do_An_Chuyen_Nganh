@@ -185,10 +185,16 @@ export default function Checkout() {
 
         {/* Nút chọn form */}
         <div className="flex mb-4">
-          <button onClick={() => setUseSavedAddress(false)} className={`flex-1 py-2 rounded-l ${!useSavedAddress ? "bg-green-600 text-white" : "bg-gray-200"}`}>
+          <button 
+            onClick={() => setUseSavedAddress(false)} 
+            className={`flex-1 py-2 rounded-l ${!useSavedAddress ? "bg-green-600 text-white" : "bg-gray-200"}`}
+          >
             Thanh toán địa chỉ mới
           </button>
-          <button onClick={() => setUseSavedAddress(true)} className={`flex-1 py-2 rounded-r ${useSavedAddress ? "bg-green-600 text-white" : "bg-gray-200"}`}>
+          <button 
+            onClick={() => setUseSavedAddress(true)} 
+            className={`flex-1 py-2 rounded-r ${useSavedAddress ? "bg-green-600 text-white" : "bg-gray-200"}`}
+          >
             Thanh toán địa chỉ đã lưu
           </button>
         </div>
@@ -196,27 +202,74 @@ export default function Checkout() {
         {/* Form địa chỉ mới */}
         {!useSavedAddress && (
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input type="text" name="name" placeholder="Họ tên" value={form.name} onChange={handleInputChange} className="form-input w-full border p-2 rounded" required />
-            <input type="text" name="phone" placeholder="Số điện thoại" value={form.phone} onChange={handleInputChange} className="form-input w-full border p-2 rounded" required />
+            <input 
+              type="text" 
+              name="name" 
+              placeholder="Họ tên" 
+              value={form.name} 
+              onChange={handleInputChange} 
+              className="form-input w-full border p-2 rounded" 
+              required 
+            />
+            <input 
+              type="text" 
+              name="phone" 
+              placeholder="Số điện thoại" 
+              value={form.phone} 
+              onChange={handleInputChange} 
+              className="form-input w-full border p-2 rounded" 
+              required 
+            />
 
-            <select value={form.province} onChange={handleProvinceChange} className="form-select w-full border p-2 rounded" required>
+            <select 
+              value={form.province} 
+              onChange={handleProvinceChange} 
+              className="form-select w-full border p-2 rounded" 
+              required
+            >
               <option value="">Chọn Tỉnh/Thành phố</option>
               {provinces.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}
             </select>
 
-            <select value={form.district} onChange={handleDistrictChange} className="form-select w-full border p-2 rounded" disabled={!districts.length} required>
+            <select 
+              value={form.district} 
+              onChange={handleDistrictChange} 
+              className="form-select w-full border p-2 rounded" 
+              disabled={!districts.length} 
+              required
+            >
               <option value="">Chọn Quận/Huyện</option>
               {districts.map(d => <option key={d.code} value={d.code}>{d.name}</option>)}
             </select>
 
-            <select value={form.ward} onChange={handleWardChange} className="form-select w-full border p-2 rounded" disabled={!wards.length} required>
+            <select 
+              value={form.ward} 
+              onChange={handleWardChange} 
+              className="form-select w-full border p-2 rounded" 
+              disabled={!wards.length} 
+              required
+            >
               <option value="">Chọn Phường/Xã</option>
               {wards.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
             </select>
 
-            <textarea name="address" placeholder="Địa chỉ cụ thể" value={form.address} onChange={handleInputChange} className="w-full border p-2 rounded" rows={3} required />
+            <textarea 
+              name="address" 
+              placeholder="Địa chỉ cụ thể" 
+              value={form.address} 
+              onChange={handleInputChange} 
+              className="w-full border p-2 rounded" 
+              rows={3} 
+              required 
+            />
 
-            <select name="payment_method" value={form.payment_method} onChange={handleInputChange} className="form-select w-full border p-2 rounded" required>
+            <select 
+              name="payment_method" 
+              value={form.payment_method} 
+              onChange={handleInputChange} 
+              className="form-select w-full border p-2 rounded" 
+              required
+            >
               <option value="">Chọn phương thức thanh toán</option>
               <option value="cod">Thanh toán khi nhận hàng</option>
               <option value="bank">Thanh toán qua thẻ ngân hàng</option>
@@ -224,10 +277,17 @@ export default function Checkout() {
 
             {/* Nút xác nhận và quay lại cùng hàng */}
             <div className="flex gap-3">
-              <button type="button" className="flex-1 bg-gray-400 text-white py-2 rounded hover:bg-gray-500 transition" onClick={() => navigate("/cart")}>
+              <button 
+                type="button" 
+                className="flex-1 bg-gray-400 text-white py-2 rounded hover:bg-gray-500 transition" 
+                onClick={() => navigate("/cart")}
+              >
                 ← Quay lại giỏ hàng
               </button>
-              <button type="submit" className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">
+              <button 
+                type="submit" 
+                className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+              >
                 Xác nhận đơn hàng
               </button>
             </div>
@@ -250,7 +310,7 @@ export default function Checkout() {
                       <p className="text-gray-500 text-sm">{addr.address_detail}, {addr.wardName}, {addr.districtName}, {addr.provinceName}</p>
                     </div>
                     <button
-                      className="bg-blue-600 text-white px-3 py-1 rounded"
+                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition"
                       onClick={() => handleChooseAddress(addr)}
                     >
                       Chọn
@@ -264,22 +324,65 @@ export default function Checkout() {
       </div>
 
       {/* Danh sách sản phẩm */}
-      <div className="card shadow-lg p-6 rounded-xl">
+      <div className="card shadow-lg p-6 rounded-xl bg-white">
         <h3 className="text-xl font-bold text-blue-600 mb-4">Sản phẩm đã chọn</h3>
-        <div className="space-y-3">
-          {checkoutItems.map(item => (
-            <div key={item.id} className="flex items-center gap-3 border-b pb-2">
-              <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded" />
+        <div className="space-y-4">
+          {checkoutItems.map((item, index) => (
+            <div key={`${item.id}-${item.size || 'no-size'}-${index}`} className="flex items-center gap-4 border-b pb-4">
+              <img 
+                src={item.image} 
+                alt={item.name} 
+                className="w-20 h-20 object-cover rounded-lg border" 
+              />
               <div className="flex-1">
-                <p className="font-semibold">{item.name}</p>
-                <p className="text-gray-500">Số lượng: {item.quantity}</p>
-                <p className="text-red-600">Giá: {Number(item.price).toLocaleString()} ₫</p>
+                <p className="font-semibold text-gray-900">{item.name}</p>
+                
+                {/* Hiển thị size nếu có */}
+                {item.size && (
+                  <div className="mt-1">
+                    <span className="text-sm font-medium text-gray-700">Size: </span>
+                    <span className="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded border">
+                      {item.size}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-4">
+                    <p className="text-gray-500 text-sm">
+                      Số lượng: <span className="font-medium">{item.quantity}</span>
+                    </p>
+                    <p className="text-red-600 font-semibold">
+                      {Number(item.price).toLocaleString()} ₫
+                    </p>
+                  </div>
+                  <p className="text-green-600 font-bold">
+                    {(item.price * item.quantity).toLocaleString()} ₫
+                  </p>
+                </div>
               </div>
             </div>
           ))}
         </div>
-        <div className="text-end mt-4 font-bold text-green-600 text-lg">
-          Tổng tiền: {Number(total).toLocaleString()} ₫
+        
+        {/* Tổng tiền */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold text-gray-900">Tổng tiền:</span>
+            <span className="text-2xl font-bold text-green-600">
+              {Number(total).toLocaleString()} ₫
+            </span>
+          </div>
+        </div>
+
+        {/* Thông tin đơn hàng */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold text-gray-900 mb-2">Thông tin đơn hàng:</h4>
+          <div className="text-sm text-gray-600 space-y-1">
+            <p>• Số lượng sản phẩm: {checkoutItems.length}</p>
+            <p>• Tổng số lượng: {checkoutItems.reduce((sum, item) => sum + item.quantity, 0)}</p>
+            <p>• Phí vận chuyển: Miễn phí</p>
+          </div>
         </div>
       </div>
     </div>

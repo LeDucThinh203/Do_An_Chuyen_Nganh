@@ -9,7 +9,9 @@ import {
   PRODUCT_KEYWORDS,
   OFF_TOPIC_KEYWORDS,
   GREETING_KEYWORDS,
-  SMALL_TALK_KEYWORDS
+  SMALL_TALK_KEYWORDS,
+  isDeclineOrGoodbyeMessage,
+  getGoodbyeResponse
 } from '../services/ai/prompts.js';
 
 // Helper: create a deterministic short session id if not provided
@@ -26,6 +28,23 @@ export const chat = async (req, res) => {
       return res.status(400).json({ error: 'message is required' });
     }
     const sid = ensureSessionId(sessionId, userId);
+
+    // OPTIMIZATION 1: Early exit for decline/goodbye/thanks - DO NOT search products or call tools
+    if (isDeclineOrGoodbyeMessage(message)) {
+      console.log(`[AI] Detected decline/goodbye/thanks intent: "${message}"`);
+      const text = getGoodbyeResponse();
+      
+      // Save conversation without calling any tools
+      await saveMessage({ session_id: sid, user_id: userId, role: 'user', content: message });
+      await saveMessage({ session_id: sid, user_id: userId, role: 'assistant', content: text });
+      
+      return res.json({
+        sessionId: sid,
+        text,
+        tools: [],
+        context: { products: [], intent: 'goodbye' }
+      });
+    }
 
     // Speed-aware params
     const topK = Math.max(1, fast ? Math.min(inputTopK, 3) : inputTopK);

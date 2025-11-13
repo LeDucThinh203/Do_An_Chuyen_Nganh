@@ -133,11 +133,13 @@ CREATE TABLE IF NOT EXISTS `product` (
   `name` varchar(100) NOT NULL,
   `description` text,
   `price` decimal(10,2) NOT NULL,
+	`discount_percent` decimal(5,2) NOT NULL DEFAULT '0.00',
   `image` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `category_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `category_id` (`category_id`),
-  CONSTRAINT `product_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`)
+	CONSTRAINT `product_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`),
+	CONSTRAINT `product_discount_chk` CHECK (((`discount_percent` >= 0.00) and (`discount_percent` <= 100.00)))
 ) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table my_store.product: ~18 rows (approximately)
@@ -167,11 +169,13 @@ CREATE TABLE IF NOT EXISTS `product_sizes` (
   `id` int NOT NULL AUTO_INCREMENT,
   `product_id` int NOT NULL,
   `size_id` int NOT NULL,
+	`stock` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `product_id` (`product_id`),
   KEY `size_id` (`size_id`),
   CONSTRAINT `product_sizes_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `product_sizes_ibfk_2` FOREIGN KEY (`size_id`) REFERENCES `sizes` (`id`) ON DELETE CASCADE
+	CONSTRAINT `product_sizes_ibfk_2` FOREIGN KEY (`size_id`) REFERENCES `sizes` (`id`) ON DELETE CASCADE,
+	CONSTRAINT `product_sizes_stock_chk` CHECK ((`stock` >= 0))
 ) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table my_store.product_sizes: ~64 rows (approximately)
@@ -291,6 +295,33 @@ REPLACE INTO `sizes` (`id`, `size`) VALUES
 	(32, '11'),
 	(33, '12'),
 	(34, '5');
+
+-- ============================================
+-- Normalize product.image path values
+-- Ensure all product.image are prefixed with '/images/' (idempotent)
+-- ============================================
+
+SET @prev_safe_updates := @@SQL_SAFE_UPDATES;
+SET SQL_SAFE_UPDATES = 0;
+
+-- 1) Normalize Windows-style backslashes to POSIX slashes
+UPDATE product
+SET image = REPLACE(image, '\\', '/')
+WHERE image IS NOT NULL AND image LIKE '%\\%';
+
+-- 2) Add missing leading slash when path already starts with 'images/...'
+UPDATE product
+SET image = CONCAT('/', image)
+WHERE image IS NOT NULL AND image LIKE 'images/%';
+
+-- 3) Prepend '/images/' for bare filenames or other relative paths
+UPDATE product
+SET image = CONCAT('/images/', image)
+WHERE image IS NOT NULL AND TRIM(image) <> ''
+  AND image NOT LIKE '/images/%'
+  AND image NOT LIKE 'http%';
+
+SET SQL_SAFE_UPDATES = @prev_safe_updates;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

@@ -18,11 +18,42 @@ export const createRating = async ({ rating_value, comment, order_detail_id }) =
   return result.insertId;
 };
 
-export const updateRating = async (id, { rating_value, comment, order_detail_id }) => {
-  await db.query(
-    'UPDATE rating SET rating_value=?, comment=?, order_detail_id=? WHERE id=?',
-    [rating_value, comment, order_detail_id, id]
-  );
+// Partial update: only update fields provided.
+// Supports admin reply fields if the columns exist in DB: admin_reply, replied_by, replied_at
+export const updateRating = async (id, data) => {
+  const fields = [];
+  const values = [];
+
+  if (data.rating_value !== undefined) {
+    fields.push('rating_value=?');
+    values.push(data.rating_value);
+  }
+  if (data.comment !== undefined) {
+    fields.push('comment=?');
+    values.push(data.comment);
+  }
+  if (data.order_detail_id !== undefined) {
+    fields.push('order_detail_id=?');
+    values.push(data.order_detail_id);
+  }
+  if (data.admin_reply !== undefined) {
+    fields.push('admin_reply=?');
+    values.push(data.admin_reply);
+  }
+  if (data.replied_by !== undefined) {
+    fields.push('replied_by=?');
+    values.push(data.replied_by);
+  }
+  if (data.replied_at !== undefined) {
+    fields.push('replied_at=?');
+    values.push(data.replied_at);
+  }
+
+  if (fields.length === 0) return; // nothing to update
+
+  const sql = `UPDATE rating SET ${fields.join(', ')} WHERE id=?`;
+  values.push(id);
+  await db.query(sql, values);
 };
 
 export const deleteRating = async (id) => {

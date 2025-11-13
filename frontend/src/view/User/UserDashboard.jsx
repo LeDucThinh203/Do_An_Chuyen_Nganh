@@ -1,13 +1,15 @@
+// src/view/User/UserDashboard.js
 import React, { useState, useMemo } from "react";
 import Session from "../../Session/session";
 import UserInfo from "./UserInfo";
 import ChangePassword from "./ChangePassword";
 import ManageAddress from "./ManageAddress";
 import Address from "./Address";
+import OrderManager from "./OrderManager"; // Sửa từ './OrderManager' thành './OrderManager'
 
 export default function UserDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
-  const [activeTab, setActiveTab] = useState("info"); // info | password | manageAddress | addressList
+  const [activeTab, setActiveTab] = useState("info"); // info | password | manageAddress | addressList | orders
 
   if (!user)
     return (
@@ -31,6 +33,8 @@ export default function UserDashboard() {
         return <ManageAddress />;
       case "addressList":
         return <Address />;
+      case "orders":
+        return <OrderManager />;
       default:
         return null;
     }
@@ -82,6 +86,14 @@ export default function UserDashboard() {
             onClick={() => setActiveTab("addressList")}
           >
             Danh sách địa chỉ
+          </button>
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "orders" ? "bg-blue-600 text-white" : "hover:bg-blue-200"
+            }`}
+            onClick={() => setActiveTab("orders")}
+          >
+            Đơn hàng của tôi
           </button>
         </div>
       </div>

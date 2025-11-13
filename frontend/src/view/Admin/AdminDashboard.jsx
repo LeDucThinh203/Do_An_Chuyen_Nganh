@@ -1,12 +1,18 @@
 import React, { useState, useMemo } from "react";
+import Session from "../../Session/session";
 import AdminInfo from "./AdminInfo";
 import AdminAddressManager from "./AdminAddressManager";
 import UserManager from "./UserManager";
-import Session from "../../Session/session";
+import ProductManager from "./ProductManager";
+import CategoryManager from "./categories/CategoryManager";
+import OrderManager from "./OrderManager";
+import Revenue from "./Revenue"; // Thêm import Revenue
+import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
   const [activeTab, setActiveTab] = useState("info");
+  const navigate = useNavigate();
 
   if (!user)
     return (
@@ -22,25 +28,22 @@ export default function AdminDashboard() {
       </div>
     );
 
-  // Chiều cao header và top bar
-  const headerHeight = 80; // px, khớp với header chính
-  const topBarHeight = 72; // px
-  const gap = 32; // px khoảng cách từ header xuống top bar
+  const headerHeight = 80;
+  const topBarHeight = 72;
+  const gap = 32;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Bar nằm dưới header */}
+      {/* Top Bar */}
       <div
         className="bg-gray-100 shadow-md flex flex-col sm:flex-row sm:items-center justify-between p-4 fixed left-0 w-full z-40"
         style={{ top: `${headerHeight + gap}px`, height: `${topBarHeight}px` }}
       >
-        {/* Thông tin người dùng */}
         <div className="mb-2 sm:mb-0">
           <p className="font-bold">Tên người dùng: {user.username}</p>
-          <p className="text-sm text-gray-700">Email: {user.email || "Chưa có email"}</p>
+          <p className="text-sm text-gray-700">{user.email || "Chưa có email"}</p>
         </div>
 
-        {/* Các nút chức năng */}
         <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
           <button
             className={`p-2 rounded transition-colors ${
@@ -64,12 +67,45 @@ export default function AdminDashboard() {
             }`}
             onClick={() => setActiveTab("userManager")}
           >
-            Quản lý tài khoản người dùng
+            Quản lý tài khoản
+          </button>
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "product" ? "bg-blue-600 text-white" : "hover:bg-blue-200"
+            }`}
+            onClick={() => setActiveTab("product")}
+          >
+            Quản lý sản phẩm
+          </button>
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "category" ? "bg-blue-600 text-white" : "hover:bg-blue-200"
+            }`}
+            onClick={() => setActiveTab("category")}
+          >
+            Quản lý danh mục
+          </button>
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "orderManager" ? "bg-blue-600 text-white" : "hover:bg-blue-200"
+            }`}
+            onClick={() => setActiveTab("orderManager")}
+          >
+            Quản lý đơn hàng
+          </button>
+          {/* Thêm nút Doanh thu */}
+          <button
+            className={`p-2 rounded transition-colors ${
+              activeTab === "revenue" ? "bg-green-600 text-white" : "hover:bg-green-200"
+            }`}
+            onClick={() => setActiveTab("revenue")}
+          >
+            📊 Doanh thu
           </button>
         </div>
       </div>
 
-      {/* Nội dung chính với padding-top để tránh che Top Bar */}
+      {/* Nội dung chính */}
       <div
         className="p-6"
         style={{ paddingTop: `${headerHeight + topBarHeight + gap + 16}px` }}
@@ -77,6 +113,10 @@ export default function AdminDashboard() {
         {activeTab === "info" && <AdminInfo />}
         {activeTab === "address" && <AdminAddressManager />}
         {activeTab === "userManager" && <UserManager />}
+        {activeTab === "product" && <ProductManager />}
+        {activeTab === "category" && <CategoryManager />}
+        {activeTab === "orderManager" && <OrderManager />}
+        {activeTab === "revenue" && <Revenue />} {/* Thêm Revenue component */}
       </div>
     </div>
   );

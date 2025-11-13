@@ -39,7 +39,7 @@ const swaggerOptions = {
     },
     servers: [{ url: SERVER_URL }],
   },
-  apis: [join(__dirname, 'routes/*.js')], // quét tất cả route gốc có comment @swagger
+  apis: [join(__dirname, 'routes/*.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -57,6 +57,7 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
+
 
   
   // Ensure AI related tables exist
@@ -78,5 +79,8 @@ app.listen(PORT, '0.0.0.0', async () => {
     })
     .catch(e => console.warn('⚠️  Embedding generation warning:', e.message));
 });
+
+
+
 
 

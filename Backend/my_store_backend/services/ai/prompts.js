@@ -25,7 +25,12 @@ BẠN KHÔNG ĐƯỢC trả lời về:
 Khi gặp câu hỏi NGOÀI phạm vi, BẮT BUỘC trả lời:
 "Xin lỗi, tôi là trợ lý bán hàng đồ bóng đá của my_store. Tôi chỉ có thể hỗ trợ bạn về sản phẩm và mua sắm. Bạn có muốn xem áo đấu, giày đá banh hay các sản phẩm khác không? 😊"
 
-📦 XỬ LÝ SẢN PHẨM:
+� KHI KHÁCH TỪ CHỐI/CẢM ƠN/KẾT THÚC:
+- Nếu khách nói "không mua", "thôi", "cảm ơn", "bye" → ĐỪNG gợi ý thêm sản phẩm
+- ĐỪNG gọi tool search_products
+- CHỈ chào tạm biệt lịch sự và ngắn gọn
+
+�📦 XỬ LÝ SẢN PHẨM:
 - CHỈ đề cập sản phẩm khi có danh sách "Sản phẩm liên quan" được cung cấp
 - **THÔNG TIN SIZE**: Nếu sản phẩm có field "Sizes: ...", HÃY DÙNG thông tin này để trả lời về size. KHÔNG nói "không có thông tin size" nếu field Sizes đã có sẵn.
 - **QUAN TRỌNG**: Kiểm tra kỹ tên sản phẩm có KHỚP với yêu cầu của khách không:
@@ -152,3 +157,49 @@ export const SMALL_TALK_KEYWORDS = [
   'được', 'duoc', 'tốt', 'tot', 'bye', 
   'tạm biệt', 'tam biet'
 ];
+
+/**
+ * Intent Classification - Detect decline/goodbye/thanks
+ */
+const DECLINE_PATTERNS = [
+  /\b(không mua|ko mua|k mua|khong mua|không lấy|ko lấy|k lấy)\b/i,
+  /\b(thôi|thoi|khỏi|khoi|không cần|ko cần|k cần)\b/i,
+];
+
+const GOODBYE_PATTERNS = [
+  /\b(bye|tạm biệt|tam biet|hẹn gặp|hen gap|chào tạm biệt|chao tam biet)\b/i,
+];
+
+const THANKS_PATTERNS = [
+  /\b(cảm ơn|cam on|thank|thanks|tks|cám ơn|camon)\b/i,
+];
+
+/**
+ * Check if message is a decline/goodbye/thanks intent
+ * Returns true if user is ending conversation or declining to buy
+ */
+export function isDeclineOrGoodbyeMessage(message = '') {
+  const msg = String(message || '').toLowerCase().trim();
+  
+  // Empty or too short
+  if (msg.length < 2) return false;
+  
+  // Check all patterns
+  const isDecline = DECLINE_PATTERNS.some(re => re.test(msg));
+  const isGoodbye = GOODBYE_PATTERNS.some(re => re.test(msg));
+  const isThanks = THANKS_PATTERNS.some(re => re.test(msg));
+  
+  return isDecline || isGoodbye || isThanks;
+}
+
+/**
+ * Get polite goodbye response
+ */
+export function getGoodbyeResponse() {
+  const responses = [
+    'Cảm ơn bạn đã ghé thăm my_store! Hẹn gặp lại bạn lần sau. 😊',
+    'Cảm ơn bạn! Nếu cần gì hãy quay lại my_store nhé. Chúc bạn một ngày tốt lành! 👋',
+    'Rất vui được hỗ trợ bạn! Hẹn gặp lại. 😊',
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
+}
