@@ -32,6 +32,8 @@ import UserDashboard from "./view/User/UserDashboard";
 
 // Order Success
 import OrderSuccess from "./view/Cart/OrderSuccess";
+import VNPayReturn from "./view/Cart/VNPayReturn";
+import VNPayDebug from "./view/Cart/VNPayDebug";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -127,6 +129,8 @@ function AppContent() {
               }
             />
             <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/vnpay-return" element={<VNPayReturn />} />
+            <Route path="/vnpay-debug" element={<VNPayDebug />} />
 
             {/* Admin */}
             <Route

@@ -1,10 +1,28 @@
 // ================= Base =================
+import Session from './Session/session';
+
 const safeJson = async (res) => {
   try {
     return await res.json();
   } catch {
     return {};
   }
+};
+
+/**
+ * Helper function để tạo headers với JWT token
+ */
+const getAuthHeaders = () => {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+  
+  const token = Session.getToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
+  return headers;
 };
 
 // ================= Product API =================
@@ -25,7 +43,7 @@ export const getProductById = async (id) => {
 export const createProduct = async (data) => {
   const res = await fetch(PRODUCT_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo sản phẩm thất bại");
@@ -35,7 +53,7 @@ export const createProduct = async (data) => {
 export const updateProduct = async (id, data) => {
   const res = await fetch(`${PRODUCT_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật sản phẩm thất bại");
@@ -43,7 +61,10 @@ export const updateProduct = async (id, data) => {
 };
 
 export const deleteProduct = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${PRODUCT_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa sản phẩm thất bại");
   return true;
 };
@@ -156,13 +177,17 @@ export const register = async ({ email, username, password, role = "user" }) => 
 };
 
 export const getAllAccounts = async () => {
-  const res = await fetch(ACCOUNT_API_URL);
+  const res = await fetch(ACCOUNT_API_URL, {
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Lấy danh sách tài khoản thất bại");
   return await safeJson(res);
 };
 
 export const getAccountById = async (id) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/${id}`);
+  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, {
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Lấy thông tin tài khoản thất bại");
   return await safeJson(res);
 };
@@ -170,7 +195,7 @@ export const getAccountById = async (id) => {
 export const updateAccount = async (id, data) => {
   const res = await fetch(`${ACCOUNT_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật tài khoản thất bại");
@@ -178,7 +203,10 @@ export const updateAccount = async (id, data) => {
 };
 
 export const deleteAccount = async (id) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa tài khoản thất bại");
   return true;
 };
@@ -285,6 +313,16 @@ export const createProductSize = async (data) => {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo product size thất bại");
+  return await safeJson(res);
+};
+
+export const updateProductSize = async (id, data) => {
+  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Cập nhật product size thất bại");
   return await safeJson(res);
 };
 
@@ -482,5 +520,26 @@ export const deleteRating = async (id) => {
   const res = await fetch(`${RATING_API_URL}/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Xóa đánh giá thất bại");
   return true;
+};
+
+
+// ================= VNPay API =================
+const VNPAY_API_URL = "http://localhost:3006/vnpay";
+
+export const createVNPayPaymentUrl = async (data) => {
+  const res = await fetch(`${VNPAY_API_URL}/create_payment_url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Tạo link thanh toán VNPay thất bại");
+  return await safeJson(res);
+};
+
+export const verifyVNPayReturn = async (queryParams) => {
+  const queryString = new URLSearchParams(queryParams).toString();
+  const res = await fetch(`${VNPAY_API_URL}/vnpay_return?${queryString}`);
+  if (!res.ok) throw new Error("Xác thực thanh toán VNPay thất bại");
+  return await safeJson(res);
 };
 

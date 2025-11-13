@@ -69,6 +69,10 @@ export default function OrderManager() {
     setVisibleCount(prev => prev + 8);
   };
 
+  const collapseOrders = () => {
+    setVisibleCount(8);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -99,13 +103,29 @@ export default function OrderManager() {
 
   // Kiểm tra trạng thái thanh toán (nếu đã nhận hàng và COD thì coi như đã thanh toán)
   const getPaymentStatus = (order) => {
-    if (order.is_paid) {
+    // Đã thanh toán (is_paid = 1) hoặc thanh toán qua bank (VNPay)
+    if (order.is_paid || order.payment_method === 'bank') {
       return { text: 'Đã TT', color: 'text-green-600', canView: true };
     }
+    // COD và đã nhận hàng
     if (order.status === 'received' && order.payment_method === 'cod') {
       return { text: 'Đã TT', color: 'text-green-600', canView: true };
     }
     return { text: 'Chưa TT', color: 'text-red-600', canView: false };
+  };
+
+  // Hàm lấy thông tin ngân hàng từ payment_info
+  const getBankCode = (order) => {
+    if (order.payment_method !== 'bank' || !order.payment_info) {
+      return null;
+    }
+    try {
+      const paymentInfo = JSON.parse(order.payment_info);
+      return paymentInfo.vnpay_bank_code || null;
+    } catch (error) {
+      console.error('Error parsing payment_info:', error);
+      return null;
+    }
   };
 
   // Kiểm tra xem user có thể hủy đơn hàng không
@@ -143,6 +163,7 @@ export default function OrderManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {displayedOrders.map((order) => {
               const paymentStatus = getPaymentStatus(order);
+              const bankCode = getBankCode(order);
               return (
                 <div key={order.id} className="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                   {/* Header đơn hàng */}
@@ -185,7 +206,9 @@ export default function OrderManager() {
                         {order.address}
                       </p>
                       <div className="flex justify-between text-gray-500">
-                        <span>{order.payment_method === 'cod' ? 'COD' : 'Online'}</span>
+                        <span>
+                          {order.payment_method === 'cod' ? 'COD' : bankCode ? `Bank (${bankCode})` : 'Bank'}
+                        </span>
                         <span className={paymentStatus.color}>
                           {paymentStatus.text}
                         </span>
@@ -229,17 +252,32 @@ export default function OrderManager() {
             })}
           </div>
 
-          {/* Nút load more */}
-          {visibleCount < orders.length && (
-            <div className="flex justify-center mt-6">
+          {/* Nút load more và thu gọn */}
+          <div className="flex justify-center mt-6 gap-4">
+            {visibleCount < orders.length && (
               <button
                 onClick={loadMoreOrders}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
-                Xem thêm đơn hàng ({orders.length - visibleCount} đơn còn lại)
+                <span>Xem thêm đơn hàng ({orders.length - visibleCount} đơn còn lại)</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
               </button>
-            </div>
-          )}
+            )}
+            
+            {visibleCount > 8 && (
+              <button
+                onClick={collapseOrders}
+                className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path>
+                </svg>
+                <span>Thu gọn</span>
+              </button>
+            )}
+          </div>
 
           <div className="text-center text-gray-500 text-sm">
             Hiển thị {Math.min(visibleCount, orders.length)} trong tổng số {orders.length} đơn hàng
@@ -286,7 +324,13 @@ export default function OrderManager() {
                       </span>
                     </div>
                     <div>
-                      <strong>Phương thức TT:</strong> {selectedOrder.payment_method === 'cod' ? 'Thanh toán khi nhận hàng' : 'Thanh toán online'}
+                      <strong>Phương thức TT:</strong> {
+                        selectedOrder.payment_method === 'cod' 
+                          ? 'Thanh toán khi nhận hàng (COD)' 
+                          : getBankCode(selectedOrder) 
+                            ? `Thanh toán qua ngân hàng ${getBankCode(selectedOrder)} (VNPay)` 
+                            : 'Thanh toán qua ngân hàng (Bank)'
+                      }
                     </div>
                   </div>
                 </div>

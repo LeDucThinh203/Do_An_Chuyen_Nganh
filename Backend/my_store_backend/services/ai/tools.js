@@ -5,7 +5,7 @@ import { semanticSearchProducts } from './vectorStore.js';
 export const toolDeclarations = [
   {
     name: 'search_products',
-    description: 'Tìm sản phẩm theo tên/mô tả, có thể kèm bộ lọc giá tối đa, size và danh mục.',
+    description: 'Tìm sản phẩm theo tên/mô tả, trả về thông tin đầy đủ bao gồm giá, khuyến mãi (discount_percent), số lượng tồn kho (stock) theo từng size. Có thể kèm bộ lọc giá tối đa, size và danh mục.',
     parameters: {
       type: 'OBJECT',
       properties: {

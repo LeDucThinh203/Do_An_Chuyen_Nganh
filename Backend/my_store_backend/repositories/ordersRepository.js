@@ -37,6 +37,34 @@ export const createOrder = async (orderData) => {
     const orderId = result.insertId;
 
     if (order_details && order_details.length > 0) {
+      // Kiểm tra và giảm stock cho từng sản phẩm
+      for (const detail of order_details) {
+        const { product_sizes_id, quantity } = detail;
+        
+        // Lấy stock hiện tại
+        const [stockRows] = await conn.query(
+          'SELECT stock FROM product_sizes WHERE id = ?',
+          [product_sizes_id]
+        );
+        
+        if (!stockRows[0]) {
+          throw new Error(`Product size ID ${product_sizes_id} không tồn tại`);
+        }
+        
+        const currentStock = stockRows[0].stock;
+        
+        if (currentStock < quantity) {
+          throw new Error(`Không đủ hàng trong kho. Còn lại: ${currentStock}, yêu cầu: ${quantity}`);
+        }
+        
+        // Giảm stock
+        await conn.query(
+          'UPDATE product_sizes SET stock = stock - ? WHERE id = ?',
+          [quantity, product_sizes_id]
+        );
+      }
+      
+      // Insert order details
       const values = order_details.map(d => [orderId, d.product_sizes_id, d.quantity, d.price]);
       await conn.query('INSERT INTO order_details (order_id, product_sizes_id, quantity, price) VALUES ?', [values]);
     }
@@ -51,8 +79,41 @@ export const createOrder = async (orderData) => {
   }
 };
 
-export const updateOrderStatus = async (id, { status, is_paid }) => {
-  await db.query('UPDATE orders SET status=?, is_paid=? WHERE id=?', [status, is_paid ? 1 : 0, id]);
+export const updateOrderStatus = async (id, data) => {
+  const { status, is_paid, payment_method, payment_info } = data;
+  
+  // Xây dựng câu query động dựa trên các trường có trong data
+  const updateFields = [];
+  const updateValues = [];
+  
+  if (status !== undefined) {
+    updateFields.push('status = ?');
+    updateValues.push(status);
+  }
+  
+  if (is_paid !== undefined) {
+    updateFields.push('is_paid = ?');
+    updateValues.push(is_paid ? 1 : 0);
+  }
+  
+  if (payment_method !== undefined) {
+    updateFields.push('payment_method = ?');
+    updateValues.push(payment_method);
+  }
+  
+  if (payment_info !== undefined) {
+    updateFields.push('payment_info = ?');
+    updateValues.push(payment_info);
+  }
+  
+  if (updateFields.length === 0) {
+    throw new Error('No fields to update');
+  }
+  
+  updateValues.push(id); // Thêm id vào cuối cho WHERE clause
+  
+  const query = `UPDATE orders SET ${updateFields.join(', ')} WHERE id = ?`;
+  await db.query(query, updateValues);
 };
 
 export const deleteOrder = async (id) => {

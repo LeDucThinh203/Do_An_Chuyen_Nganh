@@ -271,8 +271,8 @@ export default function Checkout() {
               required
             >
               <option value="">Chọn phương thức thanh toán</option>
-              <option value="cod">Thanh toán khi nhận hàng</option>
-              <option value="bank">Thanh toán qua thẻ ngân hàng</option>
+              <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+              <option value="vnpay">Thanh toán qua VNPay</option>
             </select>
 
             {/* Nút xác nhận và quay lại cùng hàng */}

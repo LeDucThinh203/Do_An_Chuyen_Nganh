@@ -1,5 +1,6 @@
 import express from 'express';
 import * as productController from '../controllers/productController.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -45,8 +46,10 @@ router.get('/:id', productController.getProductById);
  * @swagger
  * /product:
  *   post:
- *     summary: Tạo sản phẩm mới
+ *     summary: Tạo sản phẩm mới (Admin only)
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -67,15 +70,21 @@ router.get('/:id', productController.getProductById);
  *     responses:
  *       201:
  *         description: Tạo sản phẩm thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.post('/', productController.createProduct);
+router.post('/', authenticate, requireAdmin, productController.createProduct);
 
 /**
  * @swagger
  * /product/{id}:
  *   put:
- *     summary: Cập nhật sản phẩm
+ *     summary: Cập nhật sản phẩm (Admin only)
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -102,15 +111,21 @@ router.post('/', productController.createProduct);
  *     responses:
  *       200:
  *         description: Cập nhật thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.put('/:id', productController.updateProduct);
+router.put('/:id', authenticate, requireAdmin, productController.updateProduct);
 
 /**
  * @swagger
  * /product/{id}:
  *   delete:
- *     summary: Xóa sản phẩm
+ *     summary: Xóa sản phẩm (Admin only)
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -121,7 +136,11 @@ router.put('/:id', productController.updateProduct);
  *     responses:
  *       200:
  *         description: Xóa thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.delete('/:id', productController.deleteProduct);
+router.delete('/:id', authenticate, requireAdmin, productController.deleteProduct);
 
 export default router;

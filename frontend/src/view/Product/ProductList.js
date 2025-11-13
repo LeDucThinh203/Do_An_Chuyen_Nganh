@@ -51,6 +51,9 @@ export default function ProductList() {
         getAllProductSizes()
       ]);
       
+      console.log('🔍 ProductSizes từ API:', productSizesData.slice(0, 3));
+      console.log('🔍 Sample warehouse values:', productSizesData.slice(0, 5).map(ps => ({ id: ps.id, warehouse: ps.warehouse })));
+      
       setProducts(prodData);
       setCategories(catData);
       setSizes(sizesData);
@@ -80,10 +83,18 @@ export default function ProductList() {
 
   const getAvailableSizes = (productId) => {
     const availableProductSizes = productSizes.filter(ps => ps.product_id === productId);
-    return availableProductSizes.map(ps => {
+    const result = availableProductSizes.map(ps => {
       const size = sizes.find(s => s.id === ps.size_id);
-      return size ? { id: ps.id, size: size.size } : null;
+      const stock = Number(ps.stock ?? 0);
+      if (productId === 60) console.log(`🔍 Size ${size?.size} stock:`, ps.stock, '→', stock);
+      return size ? { id: ps.id, size: size.size, stock } : null;
     }).filter(Boolean);
+    return result;
+  };
+
+  const getStockForSize = (productId, sizeName) => {
+    const match = productSizes.find(ps => ps.product_id === productId && (sizes.find(s => s.id === ps.size_id)?.size === sizeName));
+    return Number(match?.stock ?? 0);
   };
 
   const handleAddToCart = (product, sizeOverride = null) => {
@@ -94,16 +105,34 @@ export default function ProductList() {
       return;
     }
 
+    const stock = getStockForSize(product.id, selectedSize);
+    if (stock <= 0) {
+      alert("❌ Size này đã hết hàng. Vui lòng chọn size khác.");
+      return;
+    }
+
+    // Tính giá sau giảm
+    const discount = Number(product.discount_percent || 0);
+    const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingItem = cart.find(item => 
       item.id === product.id && item.size === selectedSize
     );
 
     if (existingItem) {
+      // Kiểm tra không vượt quá stock
+      if (existingItem.quantity >= stock) {
+        alert(`❌ Bạn đã thêm tối đa ${stock} sản phẩm size ${selectedSize} (đã hết trong kho)!`);
+        return;
+      }
       existingItem.quantity += 1;
     } else {
       cart.push({ 
         ...product, 
+        price: finalPrice, // Lưu giá đã giảm
+        original_price: product.price, // Lưu giá gốc để tham khảo
+        discount_percent: discount,
         size: selectedSize,
         quantity: 1 
       });
@@ -130,6 +159,9 @@ export default function ProductList() {
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchName.toLowerCase())
   );
+
+  // Featured products: those having discount_percent > 0
+  const featuredProducts = filteredProducts.filter((p) => Number(p.discount_percent || 0) > 0);
 
   // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
   const categorizedProducts = categories.map((cat) => {
@@ -184,8 +216,96 @@ export default function ProductList() {
         </div>
       )}
 
-      {/* Khi đang tìm kiếm, hiển thị theo danh mục */}
+      {/* Hàng đầu: Sản phẩm nổi bật (khuyến mãi) */}
       <div className="max-w-7xl mx-auto px-4 pb-20 space-y-10">
+        {featuredProducts.length > 0 && (
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
+            </div>
+
+            <div className="relative overflow-hidden">
+              {featuredProducts.length > 4 && (
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('category-featured');
+                    if (!container) return;
+                    const row = container.querySelector('.product-row');
+                    const firstItem = row && row.children && row.children[0];
+                    if (!row || !firstItem) return;
+                    const styles = getComputedStyle(row);
+                    const gapRaw = styles.columnGap || styles.gap || '0';
+                    const gap = parseFloat(gapRaw) || 0;
+                    const itemWidth = firstItem.getBoundingClientRect().width + gap;
+                    const total = row.children.length;
+                    const maxStart = Math.max(0, total - 4);
+                    const currentIndex = Math.round(container.scrollLeft / itemWidth);
+                    const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
+                    container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
+                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+
+              {featuredProducts.length > 4 && (
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('category-featured');
+                    if (!container) return;
+                    const row = container.querySelector('.product-row');
+                    const firstItem = row && row.children && row.children[0];
+                    if (!row || !firstItem) return;
+                    const styles = getComputedStyle(row);
+                    const gapRaw = styles.columnGap || styles.gap || '0';
+                    const gap = parseFloat(gapRaw) || 0;
+                    const itemWidth = firstItem.getBoundingClientRect().width + gap;
+                    const total = row.children.length;
+                    const maxStart = Math.max(0, total - 4);
+                    const currentIndex = Math.round(container.scrollLeft / itemWidth);
+                    const nextIndex = Math.min(maxStart, currentIndex + 1);
+                    container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
+                  }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+
+              <div 
+                id={`category-featured`}
+                className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
+                style={{ maxWidth: '1048px' }}
+              >
+                <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
+                  {featuredProducts.map((product) => (
+                    <div key={product.id} className="w-64 flex-shrink-0 snap-start">
+                      <ProductCard
+                        product={product}
+                        availableSizes={getAvailableSizes(product.id)}
+                        selectedSize={selectedSizes[product.id]}
+                        onSizeSelect={handleSizeSelect}
+                        handleAddToCart={handleAddToCart}
+                        handleDelete={handleDelete}
+                        handleImageClick={handleImageClick}
+                        isAdmin={isAdmin}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Khi đang tìm kiếm, hiển thị theo danh mục */}
         {isSearching && (
           <h2 className="text-3xl font-bold mb-6">
             Kết quả tìm kiếm cho "{searchName}"
@@ -408,7 +528,7 @@ function Header({ user, handleLogout, products = [], onSearch }) {
                       const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
                       return (
                         <div className="flex items-baseline gap-2">
-                          <span className="text-red-600 font-semibold">
+                          <span className={`${discount > 0 ? 'text-red-600 font-semibold' : 'text-gray-900 font-normal'}`}>
                             {Math.round(finalPrice).toLocaleString()} đ
                           </span>
                           {discount > 0 && (
@@ -511,87 +631,91 @@ const ProductCard = ({
 }) => {
   const [overlayOpen, setOverlayOpen] = useState(false);
 
+  const price = Number(product.price || 0);
+  const discount = Number(product.discount_percent || 0);
+  const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
+
   return (
-  <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
-    <div 
-      className="relative overflow-hidden aspect-square cursor-pointer group group/image"
-      onClick={() => handleImageClick(product.id)}
-      onMouseEnter={() => setOverlayOpen(true)}
-      onMouseLeave={() => setOverlayOpen(false)}
-      onTouchStart={(e) => {
-        // Toggle overlay on mobile without navigating immediately
-        e.stopPropagation();
-        setOverlayOpen((v) => !v);
-      }}
-    >
-      <img
-        src={resolveImage(product.image)}
-        alt={product.name}
-        className="peer w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105 group-hover:scale-105"
-      />
-      {/* Quick add overlay on image hover (always render; hide pills if none) */}
-      <div
-        className={`absolute inset-x-2 bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto
-                   ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
-                   group-hover/image:opacity-100 group-hover/image:translate-y-0 group-hover:opacity-100 group-hover:translate-y-0
-                   peer-hover:opacity-100 peer-hover:translate-y-0 hover:opacity-100 hover:translate-y-0`}
-        onClick={(e) => e.stopPropagation()}
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+      <div 
+        className="relative overflow-hidden aspect-square cursor-pointer group group/image"
+        onClick={() => handleImageClick(product.id)}
+        onMouseEnter={() => setOverlayOpen(true)}
+        onMouseLeave={() => setOverlayOpen(false)}
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          setOverlayOpen((v) => !v);
+        }}
       >
-        <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
-          <span>Thêm nhanh vào giỏ hàng</span>
-          <span className="text-base leading-none">+</span>
-        </div>
-        {availableSizes.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {availableSizes.map((sizeObj) => (
-              <button
-                key={sizeObj.id}
-                className="px-3 py-1 text-[11px] bg-white text-gray-900 rounded-full shadow-sm hover:shadow border border-transparent hover:border-gray-300 hover:bg-gray-50 transition"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(product, sizeObj.size);
-                }}
-              >
-                {sizeObj.size}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-[11px] text-white/90">Chưa có size khả dụng</div>
-        )}
-      </div>
-    </div>
-    <div className="p-3 flex-1 flex flex-col justify-between">
-      <div>
-        <h3 
-          className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-10"
-          onClick={() => handleImageClick(product.id)}
+        <img
+          src={resolveImage(product.image)}
+          alt={product.name}
+          className="peer w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105"
+        />
+        <div
+          className={`absolute inset-x-2 bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} group-hover/image:opacity-100 group-hover/image:translate-y-0`}
+          onClick={(e) => e.stopPropagation()}
         >
-          {product.name}
-        </h3>
-        {/* Hiển thị giá như hình: giá sau khuyến mãi, badge -xx%, giá gốc gạch */}
-        {(() => {
-          const price = Number(product.price || 0);
-          const discount = Number(product.discount_percent || 0);
-          const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
-          return (
-            <div className="mt-1">
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-base font-bold text-gray-900">{Math.round(finalPrice).toLocaleString()}đ</span>
-                {discount > 0 && (
-                  <>
-                    <span className="text-xs text-gray-400 line-through">{Math.round(price).toLocaleString()}đ</span>
-                  </>
-                )}
-              </div>
+          <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
+            <span>Thêm nhanh vào giỏ hàng</span>
+            <span className="text-base leading-none">+</span>
+          </div>
+          {availableSizes.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {availableSizes.map((sizeObj) => {
+                const out = Number(sizeObj.stock) <= 0;
+                return (
+                  <button
+                    key={sizeObj.id}
+                    className={`px-3 py-1 text-[11px] rounded-full shadow-sm border transition ${out ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60' : 'bg-white text-gray-900 hover:shadow hover:border-gray-300 hover:bg-gray-50'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (out) return;
+                      handleAddToCart(product, sizeObj.size);
+                    }}
+                    aria-disabled={out}
+                    title={out ? 'Hết hàng' : `Còn ${sizeObj.stock}`}
+                  >
+                    {sizeObj.size}
+                  </button>
+                );
+              })}
             </div>
-          );
-        })()}
+          ) : (
+            <div className="text-[11px] text-white/90">Chưa có size khả dụng</div>
+          )}
+        </div>
       </div>
-      
-      <div className="flex flex-col gap-2 mt-2">
+
+      <div className="p-3 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 
+            className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-10"
+            onClick={() => handleImageClick(product.id)}
+          >
+            {product.name}
+          </h3>
+          <div className="mt-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-base ${discount > 0 ? 'font-extrabold text-red-600' : 'font-normal text-gray-900'}`}>
+                {Math.round(finalPrice).toLocaleString()}đ
+              </span>
+              {discount > 0 && (
+                <>
+                  <span className="text-xs font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                    -{Number.isFinite(discount) ? discount : 0}%
+                  </span>
+                  <span className="text-xs text-gray-400 line-through">
+                    {Math.round(price).toLocaleString()}đ
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-2">
             <Link
               to={`/edit/${product.id}`}
               className="flex-1 text-center text-xs font-medium text-white bg-blue-500 px-3 py-1.5 rounded-full hover:bg-blue-600 transition"
@@ -603,7 +727,7 @@ const ProductCard = ({
                 e.stopPropagation();
                 handleDelete(product.id);
               }}
-              className="flex-1 text-center text-xs font-medium text-red-600 border border-red-600 px-3 py-1.5 rounded-full hover:bg-red-600 hover:text-white transition"
+              className="flex-1 text-center text-xs font-medium text-white bg-red-500 px-3 py-1.5 rounded-full hover:bg-red-600 transition"
             >
               Xóa
             </button>
@@ -611,6 +735,5 @@ const ProductCard = ({
         )}
       </div>
     </div>
-  </div>
   );
 };

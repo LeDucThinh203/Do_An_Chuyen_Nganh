@@ -1,14 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { getAllProductSizes, getAllSizes } from "../../api";
 
 export default function Cart() {
   const [cart, setCart] = useState([]);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [sizes, setSizes] = useState([]);
+  const [productSizes, setProductSizes] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(storedCart);
+    (async () => {
+      try {
+        const [sizesData, psData] = await Promise.all([
+          getAllSizes(),
+          getAllProductSizes()
+        ]);
+        setSizes(sizesData);
+        setProductSizes(psData);
+      } catch (e) {
+        console.error("Không thể tải tồn kho:", e);
+      }
+    })();
   }, []);
 
   const handleRemove = (id, size = "") => {
@@ -22,8 +37,11 @@ export default function Cart() {
   const handleQuantityChange = (id, size, delta) => {
     const newCart = cart.map((item) => {
       if (item.id === id && item.size === size) {
+        const stock = getStockForItem(item);
         const newQuantity = item.quantity + delta;
-        return { ...item, quantity: newQuantity > 0 ? newQuantity : 1 };
+        // Không cho giảm xuống dưới 1, không cho tăng vượt stock
+        const finalQuantity = Math.max(1, Math.min(newQuantity, stock));
+        return { ...item, quantity: finalQuantity };
       }
       return item;
     });
@@ -31,15 +49,25 @@ export default function Cart() {
     localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
+  const getStockForItem = (item) => {
+    const matched = productSizes.find(ps => ps.product_id === item.id && (sizes.find(s => s.id === ps.size_id)?.size === (item.size || '')));
+    return Number(matched?.stock ?? 0);
+  };
+
+  const isOutOfStock = (item) => getStockForItem(item) <= 0;
+
+  const purchasableItems = cart.filter(i => !isOutOfStock(i));
+
   const handleCheckout = () => {
-    localStorage.setItem("checkout_items", JSON.stringify(cart));
+    if (purchasableItems.length === 0) {
+      alert("Giỏ hàng chỉ toàn sản phẩm hết hàng. Vui lòng xóa hoặc chọn sản phẩm khác.");
+      return;
+    }
+    localStorage.setItem("checkout_items", JSON.stringify(purchasableItems));
     navigate("/checkout");
   };
 
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const totalPrice = purchasableItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const visibleCart = cart.slice(0, visibleCount);
 
@@ -70,10 +98,12 @@ export default function Cart() {
       <h1 className="text-3xl font-bold mb-6 text-center">🛒 Giỏ hàng của bạn</h1>
       
       <div className="space-y-4">
-        {groupedCartArray.map((item) => (
+        {groupedCartArray.map((item) => {
+          const out = isOutOfStock(item);
+          return (
           <div
             key={`${item.id}-${item.size || 'no-size'}`}
-            className="flex flex-col sm:flex-row items-center gap-4 bg-white p-6 rounded-lg shadow-md border border-gray-200"
+            className={`flex flex-col sm:flex-row items-center gap-4 bg-white p-6 rounded-lg shadow-md border border-gray-200 ${out ? 'opacity-60' : ''}`}
           >
             <img
               src={item.image}
@@ -93,30 +123,49 @@ export default function Cart() {
                   <span className="text-sm text-gray-900 bg-gray-100 px-2 py-1 rounded border">
                     {item.size}
                   </span>
+                  {out && (
+                    <span className="ml-2 text-xs font-semibold text-red-600">Hết hàng</span>
+                  )}
                 </div>
               )}
               
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-700">Đơn giá:</span>
-                  <span className="text-red-600 font-semibold">
-                    {Number(item.price).toLocaleString()} ₫
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`font-semibold ${out ? 'text-gray-500' : 'text-red-600'}`}>
+                      {Number(item.price).toLocaleString()} ₫
+                    </span>
+                    {item.original_price && item.original_price !== item.price && (
+                      <>
+                        <span className="text-sm text-gray-400 line-through">
+                          {Number(item.original_price).toLocaleString()} ₫
+                        </span>
+                        {item.discount_percent > 0 && (
+                          <span className="text-xs bg-red-600 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                            -{item.discount_percent}%
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-gray-700">Số lượng:</span>
-                  <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
+                  <div className={`flex items-center gap-2 border border-gray-300 rounded-lg ${out ? 'opacity-50' : ''}`}>
                     <button
-                      onClick={() => handleQuantityChange(item.id, item.size, -1)}
+                      onClick={() => !out && handleQuantityChange(item.id, item.size, -1)}
                       className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition rounded-l"
+                      disabled={out}
                     >
                       -
                     </button>
                     <span className="px-3 py-1 min-w-8 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => handleQuantityChange(item.id, item.size, 1)}
+                      onClick={() => !out && handleQuantityChange(item.id, item.size, 1)}
                       className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition rounded-r"
+                      disabled={out}
                     >
                       +
                     </button>
@@ -128,8 +177,8 @@ export default function Cart() {
             <div className="flex flex-col items-end gap-3 min-w-[120px]">
               <div className="text-right">
                 <span className="text-sm font-medium text-gray-700">Tổng:</span>
-                <p className="text-lg font-bold text-red-600">
-                  {(item.price * item.quantity).toLocaleString()} ₫
+                <p className={`text-lg font-bold ${out ? 'text-gray-500' : 'text-red-600'}`}>
+                  {((out ? 0 : item.price * item.quantity)).toLocaleString()} ₫
                 </p>
               </div>
               
@@ -144,7 +193,8 @@ export default function Cart() {
               </button>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {visibleCount < cart.length && (
@@ -176,11 +226,15 @@ export default function Cart() {
           </Link>
           <button
             onClick={handleCheckout}
-            className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-medium text-center"
+            className={`px-8 py-3 rounded-lg transition font-medium text-center ${purchasableItems.length === 0 ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}
+            disabled={purchasableItems.length === 0}
           >
             Thanh toán sản phẩm đã chọn →
           </button>
         </div>
+        {cart.length > 0 && purchasableItems.length < cart.length && (
+          <p className="mt-3 text-sm text-gray-500">Một số sản phẩm đã hết hàng và sẽ không được thanh toán.</p>
+        )}
       </div>
 
       {/* Footer copyright */}

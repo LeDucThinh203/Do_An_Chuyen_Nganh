@@ -128,14 +128,15 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   
   // Fetch candidates with LIKE prefilter
   const [candidates] = await db.query(
-    `SELECT p.id, p.name, p.description, p.price, p.image, p.category_id, pe.embedding,
-            GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes
+    `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding,
+            GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
+            GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.stock) ORDER BY s.id SEPARATOR ', ') as stock_by_size
      FROM product p
      LEFT JOIN product_embeddings pe ON pe.product_id = p.id
      LEFT JOIN product_sizes ps ON ps.product_id = p.id
      LEFT JOIN sizes s ON s.id = ps.size_id
      ${likeConditions ? `WHERE ${likeConditions}` : ''}
-     GROUP BY p.id, p.name, p.description, p.price, p.image, p.category_id, pe.embedding
+     GROUP BY p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding
      LIMIT 100`,
     likeParams
   );
@@ -298,10 +299,15 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   
   if (categoryId) {
     const [relatedByCategory] = await db.query(
-      `SELECT p.id, p.name, p.description, p.price, p.image, pe.embedding
+      `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, pe.embedding,
+              GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
+              GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.stock) ORDER BY s.id SEPARATOR ', ') as stock_by_size
        FROM product p
        LEFT JOIN product_embeddings pe ON pe.product_id = p.id
+       LEFT JOIN product_sizes ps ON ps.product_id = p.id
+       LEFT JOIN sizes s ON s.id = ps.size_id
        WHERE p.category_id = ?
+       GROUP BY p.id, p.name, p.description, p.price, p.discount_percent, p.image, pe.embedding
        ORDER BY p.price ASC
        LIMIT ?`,
       [categoryId, topK]

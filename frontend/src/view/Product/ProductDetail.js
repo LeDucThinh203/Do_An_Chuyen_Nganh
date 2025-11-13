@@ -21,6 +21,7 @@ export default function ProductDetail() {
   const [sizes, setSizes] = useState([]);
   const [productSizes, setProductSizes] = useState([]);
   const [selectedSize, setSelectedSize] = useState("");
+  const [adminSelectedSizeId, setAdminSelectedSizeId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -28,21 +29,35 @@ export default function ProductDetail() {
   const [ratings, setRatings] = useState([]);
   const [userRating, setUserRating] = useState({ rating_value: 5, comment: "" });
   const [eligibleOrderDetailId, setEligibleOrderDetailId] = useState(null);
-  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const [currentUser] = useState(() => JSON.parse(localStorage.getItem("user")));
   const isUser = currentUser?.role === "user";
 
   const fetchProductDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const [productData, sizesData, productSizesData, ratingsData, accountsData, orderDetailsData, ordersData] = await Promise.all([
+      setError("");
+      const [productData, sizesData, productSizesData, ratingsData, orderDetailsData, ordersData] = await Promise.all([
         getProductById(id),
         getAllSizes(),
         getAllProductSizes(),
         getAllRatings(),
-        getAllAccounts(),
         getAllOrderDetails(),
         getAllOrders()
       ]);
+      
+      if (!productData) {
+        setError("Sản phẩm không tồn tại");
+        setLoading(false);
+        return;
+      }
+      
+      // Lấy accounts sau nếu cần (để tránh lỗi 403 với user thường)
+      let accountsData = [];
+      try {
+        accountsData = await getAllAccounts();
+      } catch (err) {
+        console.log("Không thể lấy danh sách tài khoản (có thể do quyền hạn)");
+      }
       
       setProduct(productData);
       setSizes(sizesData);
@@ -93,12 +108,12 @@ export default function ProductDetail() {
       }
       
     } catch (err) {
-      setError("Không thể tải thông tin sản phẩm");
-      console.error("Lỗi:", err);
+      console.error("Chi tiết lỗi:", err);
+      setError(`Lỗi: ${err.message || "Không thể tải thông tin sản phẩm"}`);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   useEffect(() => {
     fetchProductDetail();
@@ -139,6 +154,20 @@ export default function ProductDetail() {
       alert("Vui lòng chọn size!");
       return;
     }
+    // Kiểm tra tồn kho theo size đã chọn
+    const ps = productSizes.find(ps => {
+      const size = sizes.find((s) => s.id === ps.size_id);
+      return size?.size === selectedSize;
+    });
+    const stock = Number(ps?.stock ?? 0);
+    if (stock <= 0) {
+      alert("❌ Size này đã hết hàng, không thể thêm vào giỏ.");
+      return;
+    }
+
+    // Tính giá sau giảm
+    const discount = Number(product.discount_percent || 0);
+    const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
 
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingItem = cart.find(item => 
@@ -146,10 +175,18 @@ export default function ProductDetail() {
     );
 
     if (existingItem) {
+      // Kiểm tra không vượt quá stock
+      if (existingItem.quantity >= stock) {
+        alert(`❌ Bạn đã thêm tối đa ${stock} sản phẩm size ${selectedSize} (đã hết trong kho)!`);
+        return;
+      }
       existingItem.quantity += 1;
     } else {
       cart.push({
         ...product,
+        price: finalPrice, // Lưu giá đã giảm
+        original_price: product.price, // Lưu giá gốc để tham khảo
+        discount_percent: discount,
         size: selectedSize,
         quantity: 1
       });
@@ -160,7 +197,7 @@ export default function ProductDetail() {
   };
 
   const handleAddSize = async () => {
-    if (!selectedSize) {
+    if (!adminSelectedSizeId) {
       alert("Vui lòng chọn size!");
       return;
     }
@@ -168,7 +205,7 @@ export default function ProductDetail() {
     try {
       await createProductSize({
         product_id: parseInt(id),
-        size_id: parseInt(selectedSize)
+        size_id: parseInt(adminSelectedSizeId)
       });
       
       // Cập nhật lại danh sách size
@@ -203,8 +240,44 @@ export default function ProductDetail() {
   const isAdmin = JSON.parse(localStorage.getItem("user"))?.role === "admin";
 
   if (loading) return <div className="text-center py-10">Đang tải...</div>;
-  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
-  if (!product) return <div className="text-center py-10">Sản phẩm không tồn tại</div>;
+  if (error) return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition"
+      >
+        ← Quay lại
+      </button>
+      <div className="text-center py-10 text-red-500">
+        <p className="text-xl font-semibold mb-2">⚠️ {error}</p>
+        <button
+          onClick={() => navigate('/')}
+          className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          Về trang chủ
+        </button>
+      </div>
+    </div>
+  );
+  if (!product) return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition"
+      >
+        ← Quay lại
+      </button>
+      <div className="text-center py-10">
+        <p className="text-xl">Sản phẩm không tồn tại</p>
+        <button
+          onClick={() => navigate('/')}
+          className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          Về trang chủ
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -231,26 +304,60 @@ export default function ProductDetail() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
 
           <div className="mb-6">
-            <span className="text-2xl font-bold text-red-600">
-              {Number(product.price).toLocaleString()} ₫
-            </span>
+            {Number(product.discount_percent || 0) > 0 ? (
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-bold text-red-600">
+                  {Number(product.price * (1 - product.discount_percent / 100)).toLocaleString()} ₫
+                </span>
+                <span className="text-lg text-gray-500 line-through">
+                  {Number(product.price).toLocaleString()} ₫
+                </span>
+                <span className="text-sm bg-red-600 text-white px-2 py-1 rounded-full font-semibold">
+                  -{Number(product.discount_percent)}%
+                </span>
+              </div>
+            ) : (
+              <span className="text-2xl font-bold text-red-600">
+                {Number(product.price).toLocaleString()} ₫
+              </span>
+            )}
           </div>
 
           {/* Chọn size */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Chọn size:</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Chọn size:</h3>
+              {selectedSize && (
+                <span className="text-sm text-gray-600">
+                  Số lượng còn: <span className="font-medium text-gray-900">
+                    {(() => {
+                      const ps = productSizes.find(p => {
+                        const s = sizes.find(sz => sz.id === p.size_id);
+                        return s?.size === selectedSize;
+                      });
+                      return Number(ps?.stock ?? 0);
+                    })()}
+                  </span>
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {productSizes.map((ps) => {
                 const size = sizes.find((s) => s.id === ps.size_id);
+                const stock = Number(ps?.stock ?? 0);
+                const out = stock <= 0;
                 return (
                   <div key={ps.id} className="relative">
                     <button
                       className={`px-4 py-2 border rounded-lg transition ${
                         selectedSize === size?.size
                           ? "bg-black text-white border-black"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-black"
+                          : out
+                            ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed opacity-60"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-black"
                       }`}
                       onClick={() => setSelectedSize(size?.size)}
+                      title={out ? 'Hết hàng' : `Còn ${stock}`}
                     >
                       {size?.size}
                     </button>
@@ -271,8 +378,8 @@ export default function ProductDetail() {
             {isAdmin && (
               <div className="flex gap-2 mb-4">
                 <select
-                  value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
+                  value={adminSelectedSizeId}
+                  onChange={(e) => setAdminSelectedSizeId(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 flex-1"
                 >
                   <option value="">Chọn size</option>

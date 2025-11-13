@@ -173,28 +173,79 @@ const ChatWidget = () => {
                       {message.products && message.products.length > 0 && (
                         <div className="message-products">
                           {message.products.map((product, pIndex) => (
-                            <div key={pIndex} className="product-card">
+                            <div key={pIndex} className="product-card" style={{ 
+                              display: 'flex', 
+                              flexDirection: 'column',
+                              gap: '8px',
+                              padding: '12px',
+                              border: '1px solid #e0e0e0',
+                              borderRadius: '8px',
+                              backgroundColor: '#fff'
+                            }}>
                               {product.image && (
                                 <img 
                                   src={product.image} 
                                   alt={product.name}
                                   className="product-image"
+                                  style={{
+                                    width: '100%',
+                                    height: 'auto',
+                                    borderRadius: '6px',
+                                    objectFit: 'cover'
+                                  }}
                                   onError={(e) => {
                                     console.error('Image load error:', product.image);
                                     e.target.style.display = 'none';
                                   }}
                                 />
                               )}
-                              <div className="product-info">
-                                <h4>{product.name}</h4>
-                                <p className="product-price">
-                                  {product.price?.toLocaleString('vi-VN')}đ
-                                </p>
-                                {product.description && (
-                                  <p className="product-desc">
-                                    {product.description.slice(0, 100)}...
-                                  </p>
-                                )}
+                              <div className="product-info" style={{ padding: '4px 0' }}>
+                                <h4 style={{ 
+                                  margin: '0 0 8px 0',
+                                  fontSize: '0.95em',
+                                  color: '#333',
+                                  lineHeight: '1.3'
+                                }}>{product.name}</h4>
+                                <div className="product-price" style={{ marginTop: '6px' }}>
+                                  {product.discount_percent > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ 
+                                          textDecoration: 'line-through', 
+                                          color: '#999', 
+                                          fontSize: '0.85em'
+                                        }}>
+                                          {product.price?.toLocaleString('vi-VN')}đ
+                                        </span>
+                                        <span style={{ 
+                                          backgroundColor: '#ff4444', 
+                                          color: 'white', 
+                                          padding: '2px 8px', 
+                                          borderRadius: '12px',
+                                          fontSize: '0.8em',
+                                          fontWeight: 'bold'
+                                        }}>
+                                          -{product.discount_percent}%
+                                        </span>
+                                      </div>
+                                      <span style={{ 
+                                        color: '#ff4444', 
+                                        fontWeight: 'bold',
+                                        fontSize: '1.15em'
+                                      }}>
+                                        {Math.round(product.price * (100 - product.discount_percent) / 100).toLocaleString('vi-VN')}đ
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span style={{ 
+                                      fontWeight: 'bold',
+                                      fontSize: '1.1em',
+                                      color: '#333'
+                                    }}>
+                                      {product.price?.toLocaleString('vi-VN')}đ
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ))}

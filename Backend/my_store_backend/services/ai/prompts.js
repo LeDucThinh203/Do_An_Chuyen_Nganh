@@ -32,7 +32,12 @@ Khi gặp câu hỏi NGOÀI phạm vi, BẮT BUỘC trả lời:
 
 �📦 XỬ LÝ SẢN PHẨM:
 - CHỈ đề cập sản phẩm khi có danh sách "Sản phẩm liên quan" được cung cấp
-- **THÔNG TIN SIZE**: Nếu sản phẩm có field "Sizes: ...", HÃY DÙNG thông tin này để trả lời về size. KHÔNG nói "không có thông tin size" nếu field Sizes đã có sẵn.
+- **THÔNG TIN KHUYẾN MÃI**: Nếu sản phẩm có discount (Giảm X%), HÃY NHẮc khách hàng về ưu đãi này và giá sau giảm
+- **THÔNG TIN TỒN KHO**: 
+  * Nếu size "HẾT HÀNG" → Thông báo size đó tạm hết, gợi ý size khác còn hàng
+  * Nếu size "sắp hết" (< 5 sản phẩm) → Khuyên khách đặt hàng sớm
+  * CHỈ giới thiệu các size CÒN HÀNG
+- **THÔNG TIN SIZE**: Nếu sản phẩm có field "Sizes: ..." hoặc "Tồn kho: ...", HÃY DÙNG thông tin này để trả lời về size. KHÔNG nói "không có thông tin size" nếu field đã có sẵn.
 - **QUAN TRỌNG**: Kiểm tra kỹ tên sản phẩm có KHỚP với yêu cầu của khách không:
   * Nếu khách hỏi "giày" → CHỈ giới thiệu sản phẩm có từ "giày" trong tên
   * Nếu khách hỏi "áo" → CHỈ giới thiệu sản phẩm có từ "áo" trong tên
@@ -63,21 +68,48 @@ export const buildContextBlocks = (longMem, relevantProducts) => {
     // Check if we have exact match
     const hasExactMatch = relevantProducts.some(p => p.matchType === 'exact');
     
-    // Shorter product descriptions for faster processing
+    // Format product info with discount and stock
     const list = relevantProducts.map(p => {
-      const baseInfo = `#${p.id}: ${p.name} - ${p.price}đ`;
-      const sizeInfo = p.sizes ? ` | Sizes: ${p.sizes}` : '';
-      const descInfo = p.description ? ' | ' + p.description.slice(0, 100) : '';
-      return baseInfo + sizeInfo + descInfo;
+      // Base info
+      let info = `#${p.id}: ${p.name}`;
+      
+      // Price with discount
+      if (p.discount_percent && p.discount_percent > 0) {
+        const discountedPrice = Math.round(p.price * (100 - p.discount_percent) / 100);
+        info += ` - Giá gốc: ${p.price}đ | Giảm ${p.discount_percent}% → Còn ${discountedPrice}đ`;
+      } else {
+        info += ` - ${p.price}đ`;
+      }
+      
+      // Stock by size (format: "S:10, M:5, L:0")
+      if (p.stock_by_size) {
+        const stockInfo = p.stock_by_size.split(', ').map(pair => {
+          const [size, stock] = pair.split(':');
+          const stockNum = parseInt(stock) || 0;
+          if (stockNum === 0) return `${size}: HẾT HÀNG`;
+          if (stockNum < 5) return `${size}: CÒN ${stockNum} (sắp hết)`;
+          return `${size}: ${stockNum}`;
+        }).join(', ');
+        info += ` | Tồn kho: ${stockInfo}`;
+      } else if (p.sizes) {
+        info += ` | Sizes: ${p.sizes}`;
+      }
+      
+      // Short description
+      if (p.description) {
+        info += ' | ' + p.description.slice(0, 100);
+      }
+      
+      return info;
     });
     
     if (hasExactMatch) {
       contextBlocks.push(
-        `Sản phẩm TÌM THẤY CHÍNH XÁC (ảnh đã TỰ ĐỘNG hiển thị):\n${list.join('\n')}\n\nHÃY CHỈ giới thiệu sản phẩm này, KHÔNG đề cập sản phẩm khác.`
+        `Sản phẩm TÌM THẤY CHÍNH XÁC (ảnh đã TỰ ĐỘNG hiển thị):\n${list.join('\n')}\n\nHÃY CHỈ giới thiệu sản phẩm này, KHÔNG đề cập sản phẩm khác. NHỚ thông báo về khuyến mãi (nếu có) và các size có sẵn.`
       );
     } else {
       contextBlocks.push(
-        `Sản phẩm liên quan/gợi ý (ảnh đã TỰ ĐỘNG hiển thị):\n${list.join('\n')}\n\nKhông tìm thấy chính xác sản phẩm yêu cầu. Đây là các sản phẩm tương tự bạn có thể quan tâm.`
+        `Sản phẩm liên quan/gợi ý (ảnh đã TỰ ĐỘNG hiển thị):\n${list.join('\n')}\n\nKhông tìm thấy chính xác sản phẩm yêu cầu. Đây là các sản phẩm tương tự bạn có thể quan tâm. NHỚ thông báo về khuyến mãi (nếu có).`
       );
     }
   }
