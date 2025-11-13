@@ -51,8 +51,41 @@ export const createOrder = async (orderData) => {
   }
 };
 
-export const updateOrderStatus = async (id, { status, is_paid }) => {
-  await db.query('UPDATE orders SET status=?, is_paid=? WHERE id=?', [status, is_paid ? 1 : 0, id]);
+export const updateOrderStatus = async (id, data) => {
+  const { status, is_paid, payment_method, payment_info } = data;
+  
+  // Xây dựng câu query động dựa trên các trường có trong data
+  const updateFields = [];
+  const updateValues = [];
+  
+  if (status !== undefined) {
+    updateFields.push('status = ?');
+    updateValues.push(status);
+  }
+  
+  if (is_paid !== undefined) {
+    updateFields.push('is_paid = ?');
+    updateValues.push(is_paid ? 1 : 0);
+  }
+  
+  if (payment_method !== undefined) {
+    updateFields.push('payment_method = ?');
+    updateValues.push(payment_method);
+  }
+  
+  if (payment_info !== undefined) {
+    updateFields.push('payment_info = ?');
+    updateValues.push(payment_info);
+  }
+  
+  if (updateFields.length === 0) {
+    throw new Error('No fields to update');
+  }
+  
+  updateValues.push(id); // Thêm id vào cuối cho WHERE clause
+  
+  const query = `UPDATE orders SET ${updateFields.join(', ')} WHERE id = ?`;
+  await db.query(query, updateValues);
 };
 
 export const deleteOrder = async (id) => {

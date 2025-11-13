@@ -1,15 +1,26 @@
 /**
  * Session helper cho frontend (React/JS)
- * Sử dụng localStorage để lưu thông tin người dùng
+ * Sử dụng localStorage để lưu thông tin người dùng và JWT token
  */
 const Session = {
-  setUser(id, username, role = "user", email = "") {
+  setUser(id, username, role = "user", email = "", token = "") {
     const user = { id, username, role, email };
     localStorage.setItem("user", JSON.stringify(user));
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+  },
+
+  getToken() {
+    return localStorage.getItem("token");
+  },
+
+  setToken(token) {
+    localStorage.setItem("token", token);
   },
 
   isLoggedIn() {
-    return localStorage.getItem("user") !== null;
+    return localStorage.getItem("user") !== null && localStorage.getItem("token") !== null;
   },
 
   isAdmin() {
@@ -43,6 +54,7 @@ const Session = {
 
   logout() {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
   }
 };
 

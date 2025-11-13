@@ -59,6 +59,20 @@ export default function Revenue() {
     return dates;
   }
 
+  // Hàm lấy thông tin ngân hàng từ payment_info
+  const getBankCode = (order) => {
+    if (order.payment_method !== 'bank' || !order.payment_info) {
+      return null;
+    }
+    try {
+      const paymentInfo = JSON.parse(order.payment_info);
+      return paymentInfo.vnpay_bank_code || null;
+    } catch (error) {
+      console.error('Error parsing payment_info:', error);
+      return null;
+    }
+  };
+
   // Hàm tính doanh thu và thống kê
   const calculateRevenueAndStats = (orders, week) => {
     const weekDates = getDatesOfWeek(week);
@@ -72,18 +86,20 @@ export default function Revenue() {
       return orderDate >= startDate && orderDate <= endDate;
     });
 
-    // Đơn hàng đã nhận (tính doanh thu)
-    const receivedOrders = weeklyOrders.filter(order => order.status === 'received');
+    // Đơn hàng chờ xác nhận - Sắp xếp mới nhất lên đầu
+    const pendingOrders = weeklyOrders
+      .filter(order => order.status === 'pending')
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-    // Đơn hàng chờ xác nhận
-    const pendingOrders = weeklyOrders.filter(order => order.status === 'pending');
-    
-    // Đơn hàng đã thanh toán
-    const paidOrders = weeklyOrders.filter(order => 
-      order.is_paid || (order.status === 'received' && order.payment_method === 'cod')
-    );
+    // Đơn hàng đã thanh toán - Sắp xếp mới nhất lên đầu
+    const paidOrders = weeklyOrders
+      .filter(order => order.is_paid || (order.status === 'received' && order.payment_method === 'cod'))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-    // Tính doanh thu theo ngày (chỉ từ đơn hàng đã nhận)
+    // Đơn hàng đã nhận = Tất cả đơn hàng trong tuần (bao gồm cả chờ xác nhận và đã thanh toán)
+    const receivedOrders = weeklyOrders;
+
+    // Tính doanh thu theo ngày (tất cả đơn hàng)
     const dailyRevenue = {};
     weekDates.forEach(date => {
       const dateKey = date.toISOString().split('T')[0];
@@ -114,7 +130,7 @@ export default function Revenue() {
       // Doanh thu
       weeklyRevenue: totalRevenue,
       dailyRevenue,
-      totalOrders: receivedOrders.length,
+      totalOrders: pendingOrders.length + paidOrders.length, // Tổng = Chờ xác nhận + Đã thanh toán
       averageOrderValue: receivedOrders.length > 0 ? totalRevenue / receivedOrders.length : 0,
       
       // Thống kê
@@ -279,7 +295,7 @@ export default function Revenue() {
   // Lấy tên sản phẩm từ order details
   const getProductNames = (order) => {
     if (!order.order_details || order.order_details.length === 0) {
-      return ['Không có thông tin sản phẩm'];
+      return [];
     }
     
     return order.order_details.map(detail => {
@@ -351,8 +367,8 @@ export default function Revenue() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900 text-sm">#{order.id}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{order.name}</p>
-                  <p className="text-xs text-gray-500">{order.phone}</p>
+                  <p className="text-xs text-gray-600 mt-1">Tên: {order.name}</p>
+                  <p className="text-xs text-gray-500">SĐT: {order.phone}</p>
                 </div>
                 <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2">
                   Chờ
@@ -360,7 +376,7 @@ export default function Revenue() {
               </div>
               
               <div className="mb-3">
-                <p className="text-xs font-medium text-gray-700 mb-1">Sản phẩm:</p>
+                {/* <p className="text-xs font-medium text-gray-700 mb-1">Sản phẩm:</p> */}
                 <div className="text-xs text-gray-600 space-y-1 max-h-20 overflow-y-auto">
                   {getProductNames(order).slice(0, 3).map((product, idx) => (
                     <div key={idx} className="flex items-start">
@@ -382,7 +398,7 @@ export default function Revenue() {
                 </span>
                 <div className="text-right">
                   <span className="text-xs text-gray-500 block">
-                    {order.payment_method === 'cod' ? 'COD' : 'Online'}
+                    {order.payment_method === 'cod' ? 'COD' : getBankCode(order) ? `Bank (${getBankCode(order)})` : 'Bank'}
                   </span>
                   <span className="text-xs text-gray-400">
                     {formatDate(order.created_at)}
@@ -454,8 +470,8 @@ export default function Revenue() {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900 text-sm">#{order.id}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{order.name}</p>
-                  <p className="text-xs text-gray-500">{order.phone}</p>
+                  <p className="text-xs text-gray-600 mt-1">Tên:{order.name}</p>
+                  <p className="text-xs text-gray-500">SĐT: {order.phone}</p>
                 </div>
                 <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ml-2">
                   Đã TT
@@ -463,7 +479,7 @@ export default function Revenue() {
               </div>
               
               <div className="mb-3">
-                <p className="text-xs font-medium text-gray-700 mb-1">Sản phẩm:</p>
+                {/* <p className="text-xs font-medium text-gray-700 mb-1">Sản phẩm:</p> */}
                 <div className="text-xs text-gray-600 space-y-1 max-h-20 overflow-y-auto">
                   {getProductNames(order).slice(0, 3).map((product, idx) => (
                     <div key={idx} className="flex items-start">
@@ -485,7 +501,7 @@ export default function Revenue() {
                 </span>
                 <div className="text-right">
                   <span className="text-xs text-gray-500 block">
-                    {order.payment_method === 'cod' ? 'COD' : 'Online'}
+                    {order.payment_method === 'cod' ? 'COD' : getBankCode(order) ? `Bank (${getBankCode(order)})` : 'Bank'}
                   </span>
                   <span className="text-xs text-gray-400">
                     {order.status === 'received' ? 'Đã nhận' : 'Đang xử lý'}

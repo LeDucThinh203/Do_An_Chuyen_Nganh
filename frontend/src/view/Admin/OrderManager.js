@@ -104,13 +104,29 @@ export default function OrderManager() {
 
   // Kiểm tra trạng thái thanh toán (nếu đã nhận hàng và COD thì coi như đã thanh toán)
   const getPaymentStatus = (order) => {
-    if (order.is_paid) {
+    // Đã thanh toán (is_paid = 1) hoặc thanh toán qua bank (VNPay)
+    if (order.is_paid || order.payment_method === 'bank') {
       return { text: 'Đã TT', color: 'text-green-600' };
     }
+    // COD và đã nhận hàng
     if (order.status === 'received' && order.payment_method === 'cod') {
       return { text: 'Đã TT', color: 'text-green-600' };
     }
     return { text: 'Chưa TT', color: 'text-red-600' };
+  };
+
+  // Hàm lấy thông tin ngân hàng từ payment_info
+  const getBankCode = (order) => {
+    if (order.payment_method !== 'bank' || !order.payment_info) {
+      return null;
+    }
+    try {
+      const paymentInfo = JSON.parse(order.payment_info);
+      return paymentInfo.vnpay_bank_code || null;
+    } catch (error) {
+      console.error('Error parsing payment_info:', error);
+      return null;
+    }
   };
 
   // Lọc đơn hàng theo trạng thái và từ khóa tìm kiếm
@@ -309,13 +325,10 @@ export default function OrderManager() {
                             {formatDateTime(order.created_at)}
                           </div>
                           <div className="text-xs text-gray-400">
-                            {order.payment_method === 'cod' ? 'COD' : 'Online'} • 
+                            {order.payment_method === 'cod' ? 'COD' : getBankCode(order) ? `Bank (${getBankCode(order)})` : 'Bank'} • 
                             <span className={`ml-1 ${paymentStatus.color}`}>
                               {paymentStatus.text}
                             </span>
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {getTotalItems(order)} sản phẩm
                           </div>
                         </div>
                       </td>
@@ -384,7 +397,13 @@ export default function OrderManager() {
                   <p className="font-semibold">Đơn hàng #{updateModal.order.id}</p>
                   <p className="text-sm text-gray-600">Khách hàng: {updateModal.order.name}</p>
                   <p className="text-sm text-gray-600">Tổng tiền: {Number(updateModal.order.total_amount).toLocaleString()} ₫</p>
-                  <p className="text-sm text-gray-600">Phương thức: {updateModal.order.payment_method === 'cod' ? 'COD' : 'Online'}</p>
+                  <p className="text-sm text-gray-600">Phương thức: {
+                    updateModal.order.payment_method === 'cod' 
+                      ? 'COD' 
+                      : getBankCode(updateModal.order) 
+                        ? `Bank (${getBankCode(updateModal.order)})` 
+                        : 'Bank'
+                  }</p>
                   <p className="text-sm text-gray-600">
                     Trạng thái hiện tại: 
                     <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${getStatusColor(updateModal.order.status)}`}>

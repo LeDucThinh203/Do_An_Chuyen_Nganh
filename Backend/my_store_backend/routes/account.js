@@ -1,5 +1,6 @@
 import express from 'express';
 import * as accountController from '../controllers/accountController.js';
+import { authenticate, requireAdmin, requireSelfOrAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -16,11 +17,17 @@ const router = express.Router();
  *   get:
  *     summary: Lấy tất cả tài khoản
  *     tags: [Account]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Danh sách tài khoản
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền truy cập
  */
-router.get('/', accountController.getAllAccounts);
+router.get('/', authenticate, requireAdmin, accountController.getAllAccounts);
 
 /**
  * @swagger
@@ -28,6 +35,8 @@ router.get('/', accountController.getAllAccounts);
  *   get:
  *     summary: Lấy tài khoản theo ID
  *     tags: [Account]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -37,8 +46,12 @@ router.get('/', accountController.getAllAccounts);
  *     responses:
  *       200:
  *         description: Thông tin tài khoản
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền truy cập
  */
-router.get('/:id', accountController.getAccountById);
+router.get('/:id', authenticate, requireSelfOrAdmin, accountController.getAccountById);
 
 /**
  * @swagger
@@ -125,6 +138,8 @@ router.post('/', accountController.register);
  *   put:
  *     summary: Cập nhật tài khoản
  *     tags: [Account]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -149,8 +164,12 @@ router.post('/', accountController.register);
  *     responses:
  *       200:
  *         description: Cập nhật thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền truy cập
  */
-router.put('/:id', accountController.updateAccount);
+router.put('/:id', authenticate, requireSelfOrAdmin, accountController.updateAccount);
 
 /**
  * @swagger
@@ -158,6 +177,8 @@ router.put('/:id', accountController.updateAccount);
  *   delete:
  *     summary: Xóa tài khoản
  *     tags: [Account]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -167,8 +188,12 @@ router.put('/:id', accountController.updateAccount);
  *     responses:
  *       200:
  *         description: Xóa thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền truy cập
  */
-router.delete('/:id', accountController.deleteAccount);
+router.delete('/:id', authenticate, requireAdmin, accountController.deleteAccount);
 
 /**
  * @swagger

@@ -34,9 +34,22 @@ const swaggerOptions = {
     info: {
       title: "My Store API",
       version: "1.0.0",
-      description: "API CRUD cho database my_store",
+      description: "API CRUD cho database my_store với JWT Authentication",
     },
     servers: [{ url: SERVER_URL }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Nhập JWT token vào đây (không cần thêm "Bearer ")'
+        }
+      }
+    },
+    security: [{
+      bearerAuth: []
+    }]
   },
   apis: [join(__dirname, 'routes/*.js')],
 };

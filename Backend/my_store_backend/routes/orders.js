@@ -1,5 +1,6 @@
 import express from 'express';
 import * as ordersController from '../controllers/ordersController.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -89,8 +90,10 @@ router.post('/', ordersController.createOrder);
  * @swagger
  * /orders/{id}:
  *   put:
- *     summary: Cập nhật trạng thái đơn hàng
+ *     summary: Cập nhật trạng thái đơn hàng (Admin only)
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -112,15 +115,21 @@ router.post('/', ordersController.createOrder);
  *     responses:
  *       200:
  *         description: Cập nhật thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.put('/:id', ordersController.updateOrderStatus);
+router.put('/:id', authenticate, requireAdmin, ordersController.updateOrderStatus);
 
 /**
  * @swagger
  * /orders/{id}:
  *   delete:
- *     summary: Xóa đơn hàng
+ *     summary: Xóa đơn hàng (Admin only)
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -131,7 +140,11 @@ router.put('/:id', ordersController.updateOrderStatus);
  *     responses:
  *       200:
  *         description: Xóa thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.delete('/:id', ordersController.deleteOrder);
+router.delete('/:id', authenticate, requireAdmin, ordersController.deleteOrder);
 
 export default router;

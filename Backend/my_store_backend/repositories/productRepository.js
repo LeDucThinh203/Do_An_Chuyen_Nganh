@@ -10,18 +10,49 @@ export const getProductById = async (id) => {
   return rows[0] || null;
 };
 
-export const createProduct = async ({ name, description, price, image, category_id }) => {
+export const createProduct = async ({ name, description, price, image, category_id, khuyen_mai = 0 }) => {
   const [result] = await db.query(
-    'INSERT INTO product (name, description, price, image, category_id) VALUES (?, ?, ?, ?, ?)',
-    [name, description, price, image, category_id]
+    'INSERT INTO product (name, description, price, image, category_id, khuyen_mai) VALUES (?, ?, ?, ?, ?, ?)',
+    [name, description, price, image, category_id, khuyen_mai]
   );
   return result.insertId;
 };
 
-export const updateProduct = async (id, { name, description, price, image, category_id }) => {
+export const updateProduct = async (id, data) => {
+  const fields = [];
+  const values = [];
+  
+  if (data.name !== undefined) {
+    fields.push('name=?');
+    values.push(data.name);
+  }
+  if (data.description !== undefined) {
+    fields.push('description=?');
+    values.push(data.description);
+  }
+  if (data.price !== undefined) {
+    fields.push('price=?');
+    values.push(data.price);
+  }
+  if (data.image !== undefined) {
+    fields.push('image=?');
+    values.push(data.image);
+  }
+  if (data.category_id !== undefined) {
+    fields.push('category_id=?');
+    values.push(data.category_id);
+  }
+  if (data.khuyen_mai !== undefined) {
+    fields.push('khuyen_mai=?');
+    values.push(data.khuyen_mai);
+  }
+  
+  if (fields.length === 0) return;
+  
+  values.push(id);
   await db.query(
-    'UPDATE product SET name=?, description=?, price=?, image=?, category_id=? WHERE id=?',
-    [name, description, price, image, category_id, id]
+    `UPDATE product SET ${fields.join(', ')} WHERE id=?`,
+    values
   );
 };
 

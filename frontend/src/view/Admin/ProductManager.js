@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
   getAllProducts,
   deleteProduct,
+  updateProduct,
   getAllSizes,
   getAllProductSizes,
   createProductSize,
+  updateProductSize,
   deleteProductSize,
 } from "../../api.js";
 
@@ -14,6 +16,8 @@ export default function ProductManager() {
   const [sizes, setSizes] = useState([]);
   const [productSizes, setProductSizes] = useState([]);
   const [selectedSize, setSelectedSize] = useState({});
+  const [editingWarehouse, setEditingWarehouse] = useState({});
+  const [editingDiscount, setEditingDiscount] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(6);
   const navigate = useNavigate();
@@ -68,9 +72,39 @@ export default function ProductManager() {
     }
   };
 
+  const handleUpdateWarehouse = async (productSizeId, warehouse) => {
+    try {
+      await updateProductSize(productSizeId, { warehouse: Number(warehouse) });
+      const updatedProductSizes = await getAllProductSizes();
+      setProductSizes(updatedProductSizes);
+      setEditingWarehouse((prev) => ({ ...prev, [productSizeId]: undefined }));
+      alert("✅ Cập nhật số lượng kho thành công!");
+    } catch (err) {
+      console.error("Cập nhật kho thất bại:", err);
+      alert("❌ Cập nhật kho thất bại!");
+    }
+  };
+
+  const handleUpdateDiscount = async (productId, khuyenMai) => {
+    try {
+      await updateProduct(productId, { khuyen_mai: Number(khuyenMai) });
+      const updatedProducts = await getAllProducts();
+      setProducts(updatedProducts);
+      setEditingDiscount((prev) => ({ ...prev, [productId]: undefined }));
+      alert("✅ Cập nhật khuyến mãi thành công!");
+    } catch (err) {
+      console.error("Cập nhật khuyến mãi thất bại:", err);
+      alert("❌ Cập nhật khuyến mãi thất bại!");
+    }
+  };
+
   const truncate = (text, max = 60) => {
     if (!text) return "";
     return text.length > max ? text.slice(0, max) + "..." : text;
+  };
+
+  const calculateDiscountedPrice = (price, discount) => {
+    return price - (price * discount / 100);
   };
 
   const filteredProducts = products.filter((p) =>
@@ -121,32 +155,101 @@ export default function ProductManager() {
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-semibold text-lg">{product.name}</h3>
-                  <p className="text-gray-500 text-sm">{truncate(product.description)}</p>
-                  <p className="text-red-600 font-bold mt-2">
-                    {Number(product.price).toLocaleString()} ₫
-                  </p>
-
-                  {/* Sizes */}
+                  
+                  {/* Price section with discount */}
                   <div className="mt-2">
-                    <h4 className="font-medium">Sizes:</h4>
-                    <div className="flex flex-wrap gap-2 mt-1">
+                    {product.khuyen_mai > 0 ? (
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-400 line-through text-sm">
+                            {Number(product.price).toLocaleString()} ₫
+                          </span>
+                          <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                            -{product.khuyen_mai}%
+                          </span>
+                        </div>
+                        <p className="text-red-600 font-bold text-lg">
+                          {calculateDiscountedPrice(product.price, product.khuyen_mai).toLocaleString()} ₫
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-red-600 font-bold">
+                        {Number(product.price).toLocaleString()} ₫
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Discount editor */}
+                  <div className="mt-2 flex gap-2 items-center">
+                    <label className="text-sm font-medium">Khuyến mãi:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editingDiscount[product.id] ?? product.khuyen_mai ?? 0}
+                      onChange={(e) =>
+                        setEditingDiscount((prev) => ({
+                          ...prev,
+                          [product.id]: e.target.value,
+                        }))
+                      }
+                      className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+                    />
+                    <span className="text-sm">%</span>
+                    {editingDiscount[product.id] !== undefined && (
+                      <button
+                        onClick={() => handleUpdateDiscount(product.id, editingDiscount[product.id])}
+                        className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                      >
+                        Lưu
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sizes with warehouse */}
+                  <div className="mt-3">
+                    <h4 className="font-medium">Sizes & Kho:</h4>
+                    <div className="flex flex-col gap-2 mt-1">
                       {sizesOfProduct.length > 0
                         ? sizesOfProduct.map((ps) => (
                             <div
                               key={ps.id}
-                              className="flex items-center gap-1 bg-gray-200 px-2 py-1 rounded-full"
+                              className="flex items-center gap-2 bg-gray-100 px-2 py-2 rounded"
                             >
-                              <span>{ps.size}</span>
+                              <span className="font-medium min-w-[40px]">{ps.size}</span>
+                              <div className="flex items-center gap-1 flex-1">
+                                <span className="text-xs text-gray-600">Kho:</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingWarehouse[ps.id] ?? ps.warehouse ?? 0}
+                                  onChange={(e) =>
+                                    setEditingWarehouse((prev) => ({
+                                      ...prev,
+                                      [ps.id]: e.target.value,
+                                    }))
+                                  }
+                                  className="w-16 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                                />
+                                {editingWarehouse[ps.id] !== undefined && (
+                                  <button
+                                    onClick={() => handleUpdateWarehouse(ps.id, editingWarehouse[ps.id])}
+                                    className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs hover:bg-blue-600"
+                                  >
+                                    Lưu
+                                  </button>
+                                )}
+                              </div>
                               <button
                                 onClick={() => handleRemoveSize(ps.id)}
-                                className="text-red-500 hover:text-red-700 font-bold"
+                                className="text-red-500 hover:text-red-700 font-bold ml-auto"
                               >
                                 ×
                               </button>
                             </div>
                           ))
                         : (
-                          <span className="text-gray-500">Chưa có size</span>
+                          <span className="text-gray-500 text-sm">Chưa có size</span>
                         )}
                     </div>
                   </div>

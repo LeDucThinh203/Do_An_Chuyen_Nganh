@@ -466,85 +466,106 @@ const ProductCard = ({
   handleDelete, 
   handleImageClick, 
   isAdmin 
-}) => (
-  <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition overflow-hidden flex flex-col">
-    <div 
-      className="relative overflow-hidden h-64 cursor-pointer"
-      onClick={() => handleImageClick(product.id)}
-    >
-      <img
-        src={product.image}
-        alt={product.name}
-        className="w-full h-full object-cover transition-transform duration-500 ease-in-out hover:scale-105"
-      />
-      <div className="absolute top-3 right-3 bg-black text-white text-xs px-3 py-1 rounded-full">
-        {Number(product.price).toLocaleString()} ₫
+}) => {
+  const discountedPrice = product.khuyen_mai > 0 
+    ? product.price - (product.price * product.khuyen_mai / 100)
+    : product.price;
+
+  return (
+    <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col relative group">
+      {/* Badge NEW nếu sản phẩm mới */}
+      <div className="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full z-10">
+        NEW
       </div>
-    </div>
-    <div className="p-5 flex-1 flex flex-col justify-between">
-      <div>
-        <h3 
-          className="text-lg font-semibold text-gray-900 mb-2 truncate cursor-pointer hover:text-blue-600"
-          onClick={() => handleImageClick(product.id)}
-        >
-          {product.name}
-        </h3>
-        <p className="text-gray-500 text-sm line-clamp-3 mb-3">
-          {product.description || "Không có mô tả"}
-        </p>
+
+      {/* Image Container */}
+      <div 
+        className="relative overflow-hidden cursor-pointer bg-gray-100"
+        onClick={() => handleImageClick(product.id)}
+      >
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-80 object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
+        />
         
-        {/* Chọn size */}
-        {availableSizes.length > 0 && (
-          <div className="mb-3">
-            <p className="text-sm font-medium text-gray-700 mb-2">Chọn size:</p>
-            <div className="flex flex-wrap gap-2">
-              {availableSizes.map((sizeObj) => (
-                <button
-                  key={sizeObj.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSizeSelect(product.id, sizeObj.size);
-                  }}
-                  className={`px-3 py-1 text-xs border rounded-full transition ${
-                    selectedSize === sizeObj.size
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                  }`}
-                >
-                  {sizeObj.size}
-                </button>
-              ))}
-            </div>
-            {selectedSize && (
-              <p className="text-xs text-green-600 mt-1">
-                Đã chọn: <span className="font-medium">{selectedSize}</span>
-              </p>
+        {/* Overlay nút Add to Cart khi hover */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart(product);
+            }}
+            disabled={availableSizes.length > 0 && !selectedSize}
+            className={`w-full text-center text-sm font-medium px-4 py-3 rounded-lg transition ${
+              availableSizes.length > 0 && !selectedSize
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-white text-black hover:bg-gray-100"
+            }`}
+          >
+            {availableSizes.length > 0 && !selectedSize ? "Chọn size" : "Thêm nhanh vào giỏ hàng +"}
+          </button>
+        </div>
+      </div>
+
+      {/* Size Selection - Đặt ngay dưới hình ảnh */}
+      {availableSizes.length > 0 && (
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-2">
+            {availableSizes.map((sizeObj) => (
+              <button
+                key={sizeObj.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSizeSelect(product.id, sizeObj.size);
+                }}
+                className={`min-w-[45px] px-3 py-2 text-sm font-medium border rounded-md transition ${
+                  selectedSize === sizeObj.size
+                    ? "bg-black text-white border-black"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-black hover:bg-gray-50"
+                }`}
+              >
+                {sizeObj.size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Product Info */}
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 
+            className="text-base font-medium text-gray-900 mb-2 cursor-pointer hover:text-blue-600 line-clamp-2"
+            onClick={() => handleImageClick(product.id)}
+          >
+            {product.name}
+          </h3>
+          
+          {/* Price Section */}
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg font-bold text-gray-900">
+              {discountedPrice.toLocaleString()}₫
+            </span>
+            {product.khuyen_mai > 0 && (
+              <>
+                <span className="text-sm font-bold text-white bg-red-500 px-2 py-0.5 rounded">
+                  -{product.khuyen_mai}%
+                </span>
+                <span className="text-sm text-gray-400 line-through">
+                  {Number(product.price).toLocaleString()}₫
+                </span>
+              </>
             )}
           </div>
-        )}
-      </div>
-      
-      <div className="flex flex-col gap-2 mt-3">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddToCart(product);
-          }}
-          disabled={availableSizes.length > 0 && !selectedSize}
-          className={`w-full text-center text-sm font-medium text-white px-4 py-2 rounded-full transition ${
-            availableSizes.length > 0 && !selectedSize
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-500 hover:bg-green-600"
-          }`}
-        >
-          {availableSizes.length > 0 && !selectedSize ? "⚠️ Chọn size" : "🛒 Thêm vào giỏ"}
-        </button>
+        </div>
         
+        {/* Admin Actions */}
         {isAdmin && (
-          <div className="flex gap-3">
+          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
             <Link
               to={`/edit/${product.id}`}
-              className="flex-1 text-center text-sm font-medium text-white bg-blue-500 px-4 py-2 rounded-full hover:bg-blue-600 transition"
+              className="flex-1 text-center text-sm font-medium text-white bg-blue-500 px-3 py-2 rounded-lg hover:bg-blue-600 transition"
             >
               Sửa
             </Link>
@@ -553,7 +574,7 @@ const ProductCard = ({
                 e.stopPropagation();
                 handleDelete(product.id);
               }}
-              className="flex-1 text-center text-sm font-medium text-red-600 border border-red-600 px-4 py-2 rounded-full hover:bg-red-600 hover:text-white transition"
+              className="flex-1 text-center text-sm font-medium text-white bg-red-500 px-3 py-2 rounded-lg hover:bg-red-600 transition"
             >
               Xóa
             </button>
@@ -561,8 +582,8 @@ const ProductCard = ({
         )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Session = {
   setUser(id, username, role = "user", email = "") {

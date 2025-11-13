@@ -1,5 +1,6 @@
 import express from 'express';
 import * as categoryController from '../controllers/categoryController.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -44,8 +45,10 @@ router.get('/:id', categoryController.getCategoryById);
  * @swagger
  * /category:
  *   post:
- *     summary: Tạo danh mục mới
+ *     summary: Tạo danh mục mới (Admin only)
  *     tags: [Category]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -60,15 +63,21 @@ router.get('/:id', categoryController.getCategoryById);
  *     responses:
  *       201:
  *         description: Tạo danh mục thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.post('/', categoryController.createCategory);
+router.post('/', authenticate, requireAdmin, categoryController.createCategory);
 
 /**
  * @swagger
  * /category/{id}:
  *   put:
- *     summary: Cập nhật danh mục
+ *     summary: Cập nhật danh mục (Admin only)
  *     tags: [Category]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -89,15 +98,21 @@ router.post('/', categoryController.createCategory);
  *     responses:
  *       200:
  *         description: Cập nhật thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.put('/:id', categoryController.updateCategory);
+router.put('/:id', authenticate, requireAdmin, categoryController.updateCategory);
 
 /**
  * @swagger
  * /category/{id}:
  *   delete:
- *     summary: Xóa danh mục
+ *     summary: Xóa danh mục (Admin only)
  *     tags: [Category]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -107,7 +122,11 @@ router.put('/:id', categoryController.updateCategory);
  *     responses:
  *       200:
  *         description: Xóa thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
  */
-router.delete('/:id', categoryController.deleteCategory);
+router.delete('/:id', authenticate, requireAdmin, categoryController.deleteCategory);
 
 export default router;

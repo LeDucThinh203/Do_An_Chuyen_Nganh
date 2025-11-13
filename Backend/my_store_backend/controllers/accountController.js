@@ -2,6 +2,7 @@ import * as accountRepo from '../repositories/accountRepository.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { generateToken } from '../middleware/auth.js';
 
 /** ================= Đăng ký tài khoản ================= */
 export const register = async (req, res) => {
@@ -16,7 +17,17 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const id = await accountRepo.createAccount({ email, username, password: hashedPassword, role: role || 'user' });
 
-    res.status(201).json({ id, email, username, role: role || 'user' });
+    // Tạo JWT token
+    const userRole = role || 'user';
+    const token = generateToken({ id, email, username, role: userRole });
+
+    res.status(201).json({ 
+      id, 
+      email, 
+      username, 
+      role: userRole,
+      token 
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -36,11 +47,20 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) return res.status(400).json({ error: 'Mật khẩu không đúng' });
 
+    // Tạo JWT token
+    const token = generateToken({
+      id: account.id,
+      email: account.email,
+      username: account.username,
+      role: account.role
+    });
+
     res.json({
       id: account.id,
       username: account.username,
       role: account.role,
-      email: account.email
+      email: account.email,
+      token
     });
   } catch (err) {
     console.error(err);
