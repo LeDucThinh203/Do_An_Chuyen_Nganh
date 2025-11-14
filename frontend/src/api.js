@@ -46,7 +46,10 @@ export const createProduct = async (data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Tạo sản phẩm thất bại");
+  if (!res.ok) {
+    const errorData = await safeJson(res);
+    throw new Error(errorData.error || "Tạo sản phẩm thất bại");
+  }
   return await safeJson(res);
 };
 
@@ -87,7 +90,7 @@ export const getCategoryById = async (id) => {
 export const createCategory = async (data) => {
   const res = await fetch(CATEGORY_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo danh mục thất bại");
@@ -97,7 +100,7 @@ export const createCategory = async (data) => {
 export const updateCategory = async (id, data) => {
   const res = await fetch(`${CATEGORY_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật danh mục thất bại");
@@ -105,7 +108,10 @@ export const updateCategory = async (id, data) => {
 };
 
 export const deleteCategory = async (id) => {
-  const res = await fetch(`${CATEGORY_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${CATEGORY_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa danh mục thất bại");
   return true;
 };
@@ -128,7 +134,7 @@ export const getSizeById = async (id) => {
 export const createSize = async (data) => {
   const res = await fetch(SIZE_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo size thất bại");
@@ -138,7 +144,7 @@ export const createSize = async (data) => {
 export const updateSize = async (id, data) => {
   const res = await fetch(`${SIZE_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật size thất bại");
@@ -146,7 +152,10 @@ export const updateSize = async (id, data) => {
 };
 
 export const deleteSize = async (id) => {
-  const res = await fetch(`${SIZE_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${SIZE_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa size thất bại");
   return true;
 };
@@ -251,7 +260,7 @@ export const getAddressById = async (id) => {
 export const createAddress = async (data) => {
   const res = await fetch(ADDRESS_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo địa chỉ thất bại");
@@ -261,7 +270,7 @@ export const createAddress = async (data) => {
 export const updateAddress = async (id, data) => {
   const res = await fetch(`${ADDRESS_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật địa chỉ thất bại");
@@ -269,7 +278,10 @@ export const updateAddress = async (id, data) => {
 };
 
 export const deleteAddress = async (id) => {
-  const res = await fetch(`${ADDRESS_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${ADDRESS_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa địa chỉ thất bại");
   return true;
 };
@@ -309,7 +321,7 @@ export const getAllProductSizes = async () => {
 export const createProductSize = async (data) => {
   const res = await fetch(PRODUCT_SIZE_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo product size thất bại");
@@ -319,7 +331,7 @@ export const createProductSize = async (data) => {
 export const updateProductSize = async (id, data) => {
   const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật product size thất bại");
@@ -327,7 +339,10 @@ export const updateProductSize = async (id, data) => {
 };
 
 export const deleteProductSize = async (id) => {
-  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa product size thất bại");
   return true;
 };
@@ -336,13 +351,32 @@ export const deleteProductSize = async (id) => {
 const ORDER_API_URL = "http://localhost:3006/orders";
 
 export const createOrder = async (data) => {
+  console.log("📤 createOrder API call with data:", data);
+  
   const res = await fetch(ORDER_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Tạo đơn hàng thất bại");
-  return await safeJson(res);
+  
+  console.log("📥 createOrder response status:", res.status, res.statusText);
+  
+  if (!res.ok) {
+    let errorData;
+    try {
+      errorData = await res.json();
+      console.error("❌ Server error response:", errorData);
+    } catch (e) {
+      const text = await res.text();
+      console.error("❌ Server error text:", text);
+      throw new Error(`Tạo đơn hàng thất bại (${res.status}): ${text}`);
+    }
+    throw new Error(errorData.error || errorData.message || "Tạo đơn hàng thất bại");
+  }
+  
+  const result = await safeJson(res);
+  console.log("✅ createOrder success:", result);
+  return result;
 };
 
 export const getAllOrders = async () => {
@@ -360,7 +394,7 @@ export const getOrderById = async (id) => {
 export const updateOrderStatus = async (id, data) => {
   const res = await fetch(`${ORDER_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật trạng thái đơn hàng thất bại");
@@ -391,7 +425,7 @@ export const deleteOrder = async (id) => {
           // Xóa từng order_detail
           const deleteDetailRes = await fetch(`${ORDER_DETAILS_API_URL}/${detail.order_detail_id}`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" }
+            headers: getAuthHeaders()
           });
           
           if (!deleteDetailRes.ok) {
@@ -409,7 +443,7 @@ export const deleteOrder = async (id) => {
     console.log(`🗑️ Đang xóa đơn hàng chính ${id}...`);
     const deleteOrderRes = await fetch(`${ORDER_API_URL}/${id}`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" }
+      headers: getAuthHeaders()
     });
     
     console.log(`📊 Response status: ${deleteOrderRes.status} ${deleteOrderRes.statusText}`);
@@ -458,7 +492,7 @@ export const getOrderDetailById = async (id) => {
 export const createOrderDetail = async (data) => {
   const res = await fetch(ORDER_DETAILS_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo chi tiết đơn hàng thất bại");
@@ -468,7 +502,7 @@ export const createOrderDetail = async (data) => {
 export const updateOrderDetail = async (id, data) => {
   const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật chi tiết đơn hàng thất bại");
@@ -476,7 +510,10 @@ export const updateOrderDetail = async (id, data) => {
 };
 
 export const deleteOrderDetail = async (id) => {
-  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa chi tiết đơn hàng thất bại");
   return true;
 };
@@ -499,7 +536,7 @@ export const getRatingById = async (id) => {
 export const createRating = async (data) => {
   const res = await fetch(RATING_API_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo đánh giá thất bại");
@@ -509,7 +546,7 @@ export const createRating = async (data) => {
 export const updateRating = async (id, data) => {
   const res = await fetch(`${RATING_API_URL}/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật đánh giá thất bại");
@@ -517,7 +554,10 @@ export const updateRating = async (id, data) => {
 };
 
 export const deleteRating = async (id) => {
-  const res = await fetch(`${RATING_API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${RATING_API_URL}/${id}`, { 
+    method: "DELETE",
+    headers: getAuthHeaders()
+  });
   if (!res.ok) throw new Error("Xóa đánh giá thất bại");
   return true;
 };
@@ -540,6 +580,20 @@ export const verifyVNPayReturn = async (queryParams) => {
   const queryString = new URLSearchParams(queryParams).toString();
   const res = await fetch(`${VNPAY_API_URL}/vnpay_return?${queryString}`);
   if (!res.ok) throw new Error("Xác thực thanh toán VNPay thất bại");
+  return await safeJson(res);
+};
+
+export const updateOrderPaymentStatus = async (orderId, isPaid, paymentInfo) => {
+  const res = await fetch(`${VNPAY_API_URL}/update_payment_status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      orderId,
+      is_paid: isPaid,
+      payment_info: paymentInfo
+    }),
+  });
+  if (!res.ok) throw new Error("Cập nhật trạng thái thanh toán thất bại");
   return await safeJson(res);
 };
 

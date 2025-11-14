@@ -43,11 +43,9 @@ export default function Confirmation() {
   const findProductSizeId = (productId, sizeName) => {
     if (!productId || !sizeName) return null;
     
-    // Tìm size_id từ tên size
     const size = sizes.find(s => s.size === sizeName);
     if (!size) return null;
     
-    // Tìm product_sizes_id từ product_id và size_id
     const productSize = productSizes.find(ps => 
       ps.product_id === productId && ps.size_id === size.id
     );
@@ -69,8 +67,7 @@ export default function Confirmation() {
     
     try {
       // Chuẩn bị dữ liệu order_details từ cart items
-      const orderDetails = orderData.items.map(item => {
-        // Tìm product_sizes_id dựa trên product_id và size
+      const orderDetails = orderData.items.map((item) => {
         const productSizesId = findProductSizeId(item.id, item.size);
         
         if (!productSizesId) {
@@ -84,7 +81,6 @@ export default function Confirmation() {
         };
       });
 
-      // Kiểm tra xem có order details hợp lệ không
       if (orderDetails.length === 0) {
         throw new Error("Không có sản phẩm hợp lệ để đặt hàng");
       }
@@ -96,24 +92,22 @@ export default function Confirmation() {
         account_id: user?.id || null,
         total_amount: orderData.total,
         payment_method: orderData.payment_method || 'cod',
-        is_paid: false, // Mặc định chưa thanh toán
+        is_paid: false,
         order_details: orderDetails
       };
 
-      console.log("Order payload:", orderPayload); // Debug log
-
-      // Gọi API để tạo order
       const result = await createOrder(orderPayload);
       
       if (result && result.id) {
-        console.log("Order created successfully:", result); // Debug log
-        
         // Kiểm tra phương thức thanh toán
         if (orderData.payment_method === 'vnpay') {
           // Tạo URL thanh toán VNPay
           try {
+            // Tạo orderId unique với timestamp + random
+            const uniqueOrderId = `${result.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+            
             const vnpayData = {
-              orderId: result.id.toString(),
+              orderId: uniqueOrderId,
               amount: orderData.total,
               orderInfo: `Thanh toan don hang #${result.id}`,
               orderType: 'billpayment',
@@ -132,7 +126,7 @@ export default function Confirmation() {
               
               // Chuyển hướng đến VNPay
               window.location.href = vnpayResponse.data.paymentUrl;
-              return; // Dừng xử lý tiếp
+              return;
             } else {
               throw new Error("Không thể tạo link thanh toán VNPay");
             }
@@ -143,14 +137,12 @@ export default function Confirmation() {
             return;
           }
         } else {
-          // Thanh toán COD hoặc Bank - chuyển đến trang thành công
-          // Xóa dữ liệu tạm sau khi tạo order thành công
+          // Thanh toán COD hoặc Bank
           localStorage.removeItem("last_order");
           localStorage.removeItem("cart");
           localStorage.removeItem("checkout_items");
           localStorage.removeItem("checkout_form");
           
-          // Chuyển đến trang thông báo thành công
           navigate("/order-success", { 
             state: { 
               orderId: result.id,
@@ -163,7 +155,7 @@ export default function Confirmation() {
       }
       
     } catch (err) {
-      console.error("Lỗi khi tạo đơn hàng:", err);
+      console.error("Error:", err);
       setError(err.message || "Lưu đơn hàng thất bại. Vui lòng thử lại!");
     } finally {
       setLoading(false);

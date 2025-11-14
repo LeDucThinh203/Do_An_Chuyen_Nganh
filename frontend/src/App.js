@@ -14,8 +14,8 @@ import EditProduct from "./view/Product/EditProduct";
 import ProductDetail from "./view/Product/ProductDetail";
 
 // Category
-import CategoryList from "./view/Categories/CategoryList";
-import CategoryForm from "./view/Categories/CategoryForm";
+import CategoryManager from "./view/Admin/categories/CategoryManager";
+import CategoryForm from "./view/Admin/categories/CategoryForm";
 
 // Auth
 import Login from "./view/Account/Login";
@@ -169,7 +169,7 @@ function AppContent() {
               path="/categories"
               element={
                 <AdminRoute>
-                  <CategoryList />
+                  <CategoryManager />
                 </AdminRoute>
               }
             />

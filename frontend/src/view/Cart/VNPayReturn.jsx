@@ -1,7 +1,7 @@
 // src/view/Cart/VNPayReturn.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { verifyVNPayReturn, updateOrderStatus } from "../../api";
+import { updateOrderPaymentStatus } from "../../api";
 
 export default function VNPayReturn() {
   const [searchParams] = useSearchParams();
@@ -53,25 +53,31 @@ export default function VNPayReturn() {
         // Nếu thanh toán thành công, cập nhật đơn hàng
         if (result.success && result.code === '00') {
           try {
-            await updateOrderStatus(orderId, {
-              is_paid: 1,  // Set is_paid = 1 (true) khi thanh toán thành công
-              payment_method: 'bank',  // Đổi payment_method từ vnpay thành bank
-              payment_info: JSON.stringify({
-                vnpay_transaction_no: params.vnp_TransactionNo,
-                vnpay_bank_code: params.vnp_BankCode,
-                vnpay_pay_date: params.vnp_PayDate,
-                vnpay_response_code: params.vnp_ResponseCode
-              })
+            const orderId = result.data.orderId;
+            
+            // Cập nhật trạng thái thanh toán đơn hàng
+            const paymentInfo = JSON.stringify({
+              transactionNo: result.data.transactionNo,
+              bankCode: result.data.bankCode,
+              payDate: result.data.payDate,
+              amount: result.data.amount,
+              responseCode: result.data.responseCode
             });
             
-            // Xóa pending order ID
-            localStorage.removeItem('pending_order_id');
-            localStorage.removeItem('cart'); // Xóa giỏ hàng sau khi thanh toán thành công
+            await updateOrderPaymentStatus(orderId, true, paymentInfo);
             
-            console.log("Order updated successfully");
+            console.log(`✅ Order #${orderId} payment status updated successfully`);
+            
+            // Xóa localStorage sau khi thanh toán thành công
+            localStorage.removeItem("last_order");
+            localStorage.removeItem("cart");
+            localStorage.removeItem("checkout_items");
+            localStorage.removeItem("checkout_form");
+            localStorage.removeItem("pending_order_id");
+            
           } catch (updateError) {
-            console.error("Error updating order:", updateError);
-            // Không set error vì thanh toán đã thành công
+            console.error("❌ Error updating order payment status:", updateError);
+            // Không throw error, vẫn hiển thị success cho user
           }
         }
 

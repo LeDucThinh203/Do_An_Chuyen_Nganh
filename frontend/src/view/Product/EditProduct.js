@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { getAllProducts, updateProduct } from "../../api";
+import { getAllProducts, updateProduct, getAllCategories } from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     loadProduct();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getAllCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Lỗi tải danh mục:", error);
+    }
+  };
 
   const loadProduct = async () => {
     try {
@@ -31,8 +42,8 @@ export default function EditProduct() {
   };
 
   const handleSave = async () => {
-    if (!product.name || !product.price) {
-      alert("⚠️ Tên và giá không được để trống!");
+    if (!product.name || !product.price || !product.category_id) {
+      alert("⚠️ Vui lòng điền đầy đủ thông tin sản phẩm!");
       return;
     }
 
@@ -46,6 +57,7 @@ export default function EditProduct() {
       price: parseFloat(product.price),
       description: product.description,
       image: imagePath,
+      category_id: parseInt(product.category_id),
     };
 
     try {
@@ -87,6 +99,20 @@ export default function EditProduct() {
             onChange={(e) => setProduct({ ...product, price: e.target.value })}
             placeholder="Giá (VNĐ)"
           />
+          
+          <select
+            className="w-full border p-3 rounded mb-2"
+            value={product.category_id || ""}
+            onChange={(e) => setProduct({ ...product, category_id: e.target.value })}
+          >
+            <option value="">-- Chọn danh mục --</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+          
           <textarea
             className="w-full border p-3 rounded mb-2 h-48 resize-none"
             value={product.description}

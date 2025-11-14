@@ -143,8 +143,8 @@ router.put('/:id', authenticate, requireAdmin, ordersController.updateOrderStatu
  *       401:
  *         description: Chưa xác thực
  *       403:
- *         description: Không có quyền admin
+ *         description: Không có quyền hủy đơn hàng hoặc đơn hàng không ở trạng thái pending
  */
-router.delete('/:id', authenticate, requireAdmin, ordersController.deleteOrder);
+router.delete('/:id', authenticate, ordersController.deleteOrder);
 
 export default router;

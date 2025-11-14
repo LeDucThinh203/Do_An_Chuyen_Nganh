@@ -16,4 +16,7 @@ router.get('/vnpay_return', vnpayController.vnpayReturn);
 // IPN callback từ VNPay
 router.get('/vnpay_ipn', vnpayController.vnpayIPN);
 
+// Update order payment status (public endpoint)
+router.post('/update_payment_status', vnpayController.updateOrderPaymentStatus);
+
 export default router;

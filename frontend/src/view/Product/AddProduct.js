@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { createProduct } from "../../api";
+import React, { useState, useEffect } from "react";
+import { createProduct, getAllCategories } from "../../api";
 import { useNavigate } from "react-router-dom";
 
 export default function AddProduct() {
@@ -7,14 +7,32 @@ export default function AddProduct() {
     name: "",
     price: "",
     description: "",
+    category_id: "",
     imageFile: null,
     imagePreview: "",
   });
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getAllCategories();
+      setCategories(data);
+      if (data.length > 0) {
+        setProduct(prev => ({ ...prev, category_id: data[0].id }));
+      }
+    } catch (err) {
+      console.error("Lỗi tải danh mục:", err);
+    }
+  };
+
   const handleAdd = async () => {
-    if (!product.name || !product.price) {
-      alert("⚠️ Tên và giá sản phẩm không được để trống!");
+    if (!product.name || !product.price || !product.category_id) {
+      alert("⚠️ Vui lòng điền đầy đủ thông tin sản phẩm!");
       return;
     }
 
@@ -30,6 +48,7 @@ export default function AddProduct() {
       price: parseFloat(product.price),
       description: product.description,
       image: imagePath,
+      category_id: parseInt(product.category_id),
     };
 
     try {
@@ -41,8 +60,14 @@ export default function AddProduct() {
         alert("❌ Lỗi khi thêm sản phẩm!");
       }
     } catch (error) {
-      console.error(error);
-      alert("❌ Lỗi khi thêm sản phẩm!");
+      console.error("Lỗi thêm sản phẩm:", error);
+      if (error.message.includes("403") || error.message.includes("admin")) {
+        alert("❌ Bạn cần đăng nhập với tài khoản Admin để thêm sản phẩm!");
+      } else if (error.message.includes("401") || error.message.includes("token")) {
+        alert("❌ Phiên đăng nhập hết hạn! Vui lòng đăng nhập lại.");
+      } else {
+        alert("❌ Lỗi khi thêm sản phẩm: " + error.message);
+      }
     }
   };
 
@@ -66,6 +91,20 @@ export default function AddProduct() {
         value={product.price}
         onChange={(e) => setProduct({ ...product, price: e.target.value })}
       />
+      
+      <select
+        className="w-full border p-2 rounded mb-3"
+        value={product.category_id}
+        onChange={(e) => setProduct({ ...product, category_id: e.target.value })}
+      >
+        <option value="">-- Chọn danh mục --</option>
+        {categories.map((cat) => (
+          <option key={cat.id} value={cat.id}>
+            {cat.name}
+          </option>
+        ))}
+      </select>
+      
       <textarea
         placeholder="Mô tả sản phẩm"
         className="w-full border p-2 rounded mb-3"

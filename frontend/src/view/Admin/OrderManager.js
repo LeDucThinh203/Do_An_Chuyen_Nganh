@@ -104,7 +104,11 @@ export default function OrderManager() {
 
   // Kiểm tra trạng thái thanh toán (nếu đã nhận hàng và COD thì coi như đã thanh toán)
   const getPaymentStatus = (order) => {
-    // Đã thanh toán (is_paid = 1) hoặc thanh toán qua bank (VNPay)
+    // Đã thanh toán qua VNPay (hoặc đã chọn VNPay)
+    if (order.payment_method === 'vnpay') {
+      return { text: 'Đã TT', color: 'text-green-600' };
+    }
+    // Đã thanh toán (is_paid = 1) hoặc thanh toán qua bank
     if (order.is_paid || order.payment_method === 'bank') {
       return { text: 'Đã TT', color: 'text-green-600' };
     }
@@ -117,12 +121,12 @@ export default function OrderManager() {
 
   // Hàm lấy thông tin ngân hàng từ payment_info
   const getBankCode = (order) => {
-    if (order.payment_method !== 'bank' || !order.payment_info) {
+    if ((order.payment_method !== 'bank' && order.payment_method !== 'vnpay') || !order.payment_info) {
       return null;
     }
     try {
       const paymentInfo = JSON.parse(order.payment_info);
-      return paymentInfo.vnpay_bank_code || null;
+      return paymentInfo.bankCode || paymentInfo.vnpay_bank_code || null;
     } catch (error) {
       console.error('Error parsing payment_info:', error);
       return null;
@@ -325,7 +329,11 @@ export default function OrderManager() {
                             {formatDateTime(order.created_at)}
                           </div>
                           <div className="text-xs text-gray-400">
-                            {order.payment_method === 'cod' ? 'COD' : getBankCode(order) ? `Bank (${getBankCode(order)})` : 'Bank'} • 
+                            {order.payment_method === 'cod' 
+                              ? 'COD' 
+                              : (order.payment_method === 'vnpay' 
+                                  ? (getBankCode(order) ? `Bank (VN Pay - ${getBankCode(order)})` : 'Bank (VN Pay)') 
+                                  : (getBankCode(order) ? `Bank (${getBankCode(order)})` : 'Bank'))} • 
                             <span className={`ml-1 ${paymentStatus.color}`}>
                               {paymentStatus.text}
                             </span>

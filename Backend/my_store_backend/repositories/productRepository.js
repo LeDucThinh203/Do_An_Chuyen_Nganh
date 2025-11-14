@@ -10,10 +10,10 @@ export const getProductById = async (id) => {
   return rows[0] || null;
 };
 
-export const createProduct = async ({ name, description, price, image, category_id, khuyen_mai = 0 }) => {
+export const createProduct = async ({ name, description, price, image, category_id, discount_percent = 0 }) => {
   const [result] = await db.query(
-    'INSERT INTO product (name, description, price, image, category_id, khuyen_mai) VALUES (?, ?, ?, ?, ?, ?)',
-    [name, description, price, image, category_id, khuyen_mai]
+    'INSERT INTO product (name, description, price, image, category_id, discount_percent) VALUES (?, ?, ?, ?, ?, ?)',
+    [name, description, price, image, category_id, discount_percent]
   );
   return result.insertId;
 };
@@ -42,9 +42,9 @@ export const updateProduct = async (id, data) => {
     fields.push('category_id=?');
     values.push(data.category_id);
   }
-  if (data.khuyen_mai !== undefined) {
-    fields.push('khuyen_mai=?');
-    values.push(data.khuyen_mai);
+  if (data.discount_percent !== undefined) {
+    fields.push('discount_percent=?');
+    values.push(data.discount_percent);
   }
   
   if (fields.length === 0) return;

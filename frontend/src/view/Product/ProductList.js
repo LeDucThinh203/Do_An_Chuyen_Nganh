@@ -657,29 +657,48 @@ const ProductCard = ({
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
-            <span>Thêm nhanh vào giỏ hàng</span>
-            <span className="text-base leading-none">+</span>
+            <span>Chọn size</span>
           </div>
           {availableSizes.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {availableSizes.map((sizeObj) => {
-                const out = Number(sizeObj.stock) <= 0;
-                return (
-                  <button
-                    key={sizeObj.id}
-                    className={`px-3 py-1 text-[11px] rounded-full shadow-sm border transition ${out ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60' : 'bg-white text-gray-900 hover:shadow hover:border-gray-300 hover:bg-gray-50'}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (out) return;
-                      handleAddToCart(product, sizeObj.size);
-                    }}
-                    aria-disabled={out}
-                    title={out ? 'Hết hàng' : `Còn ${sizeObj.stock}`}
-                  >
-                    {sizeObj.size}
-                  </button>
-                );
-              })}
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((sizeObj) => {
+                  const out = Number(sizeObj.stock) <= 0;
+                  const isSelected = selectedSize === sizeObj.size;
+                  return (
+                    <button
+                      key={sizeObj.id}
+                      className={`px-3 py-1 text-[11px] rounded-full shadow-sm border transition ${
+                        out 
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-60' 
+                          : isSelected
+                            ? 'bg-yellow-400 text-gray-900 border-yellow-500 font-bold'
+                            : 'bg-white text-gray-900 hover:shadow hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (out) return;
+                        onSizeSelect(product.id, sizeObj.size);
+                      }}
+                      aria-disabled={out}
+                      title={out ? 'Hết hàng' : `Còn ${sizeObj.stock}`}
+                    >
+                      {sizeObj.size}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedSize && (
+                <button
+                  className="w-full bg-white text-indigo-600 font-semibold text-xs py-2 rounded-full hover:bg-gray-100 transition shadow-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
+                  }}
+                >
+                  ➕ Thêm vào giỏ hàng
+                </button>
+              )}
             </div>
           ) : (
             <div className="text-[11px] text-white/90">Chưa có size khả dụng</div>
