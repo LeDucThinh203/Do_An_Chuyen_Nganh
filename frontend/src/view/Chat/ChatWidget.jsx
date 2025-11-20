@@ -128,7 +128,7 @@ const ChatWidget = () => {
                 </svg>
               </div>
               <div className="chat-title">
-                <h3>AI Trợ Lý</h3>
+                <h3>Chat AI</h3>
                 <span className="chat-status">Online</span>
               </div>
             </div>
@@ -167,7 +167,7 @@ const ChatWidget = () => {
                 {messages.map((message, index) => (
                   <div key={index} className={`message ${message.type}`}>
                     <div className="message-content">
-                      <p>{message.text}</p>
+                      <p style={{ whiteSpace: 'pre-line' }}>{message.text}</p>
                       
                       {/* Hiển thị hình ảnh sản phẩm nếu có */}
                       {message.products && message.products.length > 0 && (

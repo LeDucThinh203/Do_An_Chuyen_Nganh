@@ -1,6 +1,7 @@
 import { getChatModelWithTools, getFastModelWithTools } from '../services/ai/gemini.js';
 import { ensureEmbeddingsForProducts, semanticSearchProducts } from '../services/ai/vectorStore.js';
 import { saveMessage, getRecentMessages, recallLongTermMemory, upsertLongTermMemory } from '../services/ai/memory.js';
+import { deleteOrderTracking, getOrderTracking } from '../services/ai/memory.js';
 import { toolDeclarations, toolsImpl } from '../services/ai/tools.js';
 import { 
   SYSTEM_PROMPT, 
@@ -27,12 +28,19 @@ export const chat = async (req, res) => {
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ error: 'message is required' });
     }
+    
+    console.log(`[AI] Request: userId=${userId}, message="${message}"`);
+    
     const sid = ensureSessionId(sessionId, userId);
 
     // OPTIMIZATION 1: Early exit for decline/goodbye/thanks - DO NOT search products or call tools
     if (isDeclineOrGoodbyeMessage(message)) {
       console.log(`[AI] Detected decline/goodbye/thanks intent: "${message}"`);
       const text = getGoodbyeResponse();
+      
+      // CRITICAL: Delete order tracking when user declines to buy
+      await deleteOrderTracking(sid);
+      console.log(`[AI] Deleted order tracking for session ${sid} (user declined)`);
       
       // Save conversation without calling any tools
       await saveMessage({ session_id: sid, user_id: userId, role: 'user', content: message });
@@ -79,27 +87,39 @@ export const chat = async (req, res) => {
       return allProductKeywords.some(k => lower.includes(k)) || msg.length > 30;
     };
 
-    const shouldSearchProducts = isProductQuery(message);
-    console.log(`[AI] Query: "${message}" -> shouldSearchProducts: ${shouldSearchProducts}`);
-
     // OPTIMIZATION 1: Run independent operations in parallel
-    const [_, relevantProducts, recentHistory, longMem] = await Promise.all([
+    const [_, recentHistory, longMem, orderTracking] = await Promise.all([
       // Ensure product embeddings cache (non-blocking, very small batch to avoid cold start delay)
       ensureEmbeddingsForProducts(fast ? 5 : 10).catch(e => console.warn('[AI] Embedding cache update failed:', e.message)),
-      // RAG: semantic retrieve relevant products ONLY if needed
-      // Use topK=1 for exact matches, topK=3 for related products
-      shouldSearchProducts ? semanticSearchProducts(message, topK) : Promise.resolve([]),
-      // Memory: recent chat history
-      getRecentMessages(sid, fast ? 8 : 12),
+      // Memory: recent chat history (more messages to remember size/quantity choices)
+      getRecentMessages(sid, fast ? 10 : 15),
       // Long-term memory (skip if anonymous user to save time)
-      userId ? recallLongTermMemory(userId, message, 2) : Promise.resolve([])
+      userId ? recallLongTermMemory(userId, message, 2) : Promise.resolve([]),
+      // Get current order tracking (if any)
+      getOrderTracking(sid)
     ]);
+    
+    // Check if we're in order creation flow (has order tracking)
+    const isOrderFlow = orderTracking !== null;
+    
+    // Check if message is about products (skip for greetings, small talk, and ORDER FLOW)
+    const shouldSearchProducts = !isOrderFlow && isProductQuery(message);
+    console.log(`[AI] Query: "${message}" -> shouldSearchProducts: ${shouldSearchProducts}, isOrderFlow: ${isOrderFlow}`);
+    
+    // RAG: semantic retrieve relevant products ONLY if needed (skip in order flow)
+    const relevantProducts = shouldSearchProducts ? await semanticSearchProducts(message, topK) : [];
     
     console.log(`[AI] Initial RAG search returned ${relevantProducts.length} products`);
 
     // Build system prompt and context from prompts module
     const system = SYSTEM_PROMPT;
-    const contextBlocks = buildContextBlocks(longMem, relevantProducts);
+    const contextBlocks = buildContextBlocks(longMem, relevantProducts, userId);
+    
+    // CRITICAL: Add order tracking to context if exists
+    if (orderTracking) {
+      contextBlocks.unshift(orderTracking); // Add at the beginning for high priority
+      console.log(`[AI] Loaded order tracking: ${orderTracking}`);
+    }
 
     // Prepare models (tools enabled): primary and fallback
     const fastModel = getFastModelWithTools(toolDeclarations);
@@ -172,51 +192,85 @@ export const chat = async (req, res) => {
     
     while (true) {
       const calls = typeof result?.response?.functionCalls === 'function' ? result.response.functionCalls() : [];
-      const call = calls && calls.length ? calls[0] : null;
-      if (!call) break;
+      if (!calls || calls.length === 0) break;
       if (steps >= maxToolSteps) break;
 
-      const { name, args } = call;
-      const signature = JSON.stringify({ name, args });
-      if (seenCalls.has(signature)) {
-        break;
-      }
-      seenCalls.add(signature);
-      steps += 1;
-      const impl = toolsImpl[name];
-      let toolResult;
-      if (impl) {
-        try {
-          toolResult = await impl(args || {});
-          
-          // If search_products was called, collect the products
-          if (name === 'search_products') {
-            console.log(`[AI] Tool result type: ${Array.isArray(toolResult) ? 'Array' : typeof toolResult}`);
-            console.log(`[AI] Tool result:`, JSON.stringify(toolResult).substring(0, 200));
-            
-            if (Array.isArray(toolResult)) {
-              console.log(`[AI] Tool search_products returned ${toolResult.length} products`);
-              dynamicProducts = toolResult;
-            } else if (toolResult?.products) {
-              console.log(`[AI] Tool search_products returned ${toolResult.products.length} products`);
-              dynamicProducts = toolResult.products;
-            } else {
-              console.log(`[AI] Tool search_products returned unexpected format`);
-            }
-          }
-        } catch (e) {
-          toolResult = { error: e.message };
+      // IMPORTANT: Process ALL function calls in parallel, not just the first one
+      const functionResponseParts = [];
+      
+      for (const call of calls) {
+        const { name, args } = call;
+        const signature = JSON.stringify({ name, args });
+        
+        // Skip duplicate calls
+        if (seenCalls.has(signature)) {
+          console.log(`[AI] Skipping duplicate tool call: ${name}`);
+          continue;
         }
-      } else {
-        toolResult = { error: `Tool ${name} not implemented` };
-      }
-      toolResponses.push({ name, result: toolResult });
+        seenCalls.add(signature);
+        
+        const impl = toolsImpl[name];
+        let toolResult;
+        
+        if (impl) {
+          try {
+            // IMPORTANT: Inject userId into tool args for user-specific operations
+            const toolArgs = { ...args };
+            if (name === 'create_order' || name === 'list_orders_for_user' || name === 'get_user_addresses') {
+              if (!toolArgs.user_id && userId) {
+                toolArgs.user_id = userId;
+                console.log(`[AI] Injected user_id=${userId} into ${name} tool`);
+              }
+            }
+            
+            toolResult = await impl(toolArgs);
+            
+            // Log tool result for debugging
+            console.log(`[AI] Tool ${name} result:`, JSON.stringify(toolResult).substring(0, 300));
+            
+            // CRITICAL: If create_order succeeded, delete order tracking immediately
+            if (name === 'create_order' && toolResult?.success) {
+              await deleteOrderTracking(sid);
+              console.log(`[AI] Order created successfully - deleted order tracking for session ${sid}`);
+            }
+            
+            // If search_products was called, collect the products
+            if (name === 'search_products') {
+              console.log(`[AI] Tool result type: ${Array.isArray(toolResult) ? 'Array' : typeof toolResult}`);
+              
+              // Handle special case: no products found in price range (suggestions provided)
+              if (toolResult && typeof toolResult === 'object' && toolResult.found === false) {
+                console.log(`[AI] No products in price range, but ${toolResult.suggestions?.length || 0} suggestions provided`);
+                // Don't replace, append suggestions
+                if (toolResult.suggestions?.length) {
+                  dynamicProducts.push(...toolResult.suggestions);
+                }
+              }
+              // Normal case: array of products
+              else if (Array.isArray(toolResult)) {
+                console.log(`[AI] Tool search_products returned ${toolResult.length} products`);
+                // Append products (don't replace - support multiple search calls)
+                dynamicProducts.push(...toolResult);
+              } else if (toolResult?.products) {
+                console.log(`[AI] Tool search_products returned ${toolResult.products.length} products`);
+                dynamicProducts.push(...toolResult.products);
+              } else {
+                console.log(`[AI] Tool search_products returned unexpected format`);
+              }
+            }
+          } catch (e) {
+            toolResult = { error: e.message };
+          }
+        } else {
+          toolResult = { error: `Tool ${name} not implemented` };
+        }
+        
+        toolResponses.push({ name, result: toolResult });
 
-      await saveMessage({ session_id: sid, user_id: userId, role: 'function', content: JSON.stringify(toolResult), tool_name: name, tool_payload: args });
+        await saveMessage({ session_id: sid, user_id: userId, role: 'function', content: JSON.stringify(toolResult), tool_name: name, tool_payload: args });
 
-      contents.push({
-        role: 'user',
-        parts: [{
+        // Add function response to parts array
+        functionResponseParts.push({
           functionResponse: {
             name,
             response: {
@@ -224,26 +278,131 @@ export const chat = async (req, res) => {
               content: [{ text: JSON.stringify(toolResult) }]
             }
           }
-        }]
-      });
-      ({ result } = await generateWithRetryAndFallback({ contents, systemInstruction: { text: system } }));
+        });
+      }
+      
+      // If we processed any function calls, add them all to contents and continue
+      if (functionResponseParts.length > 0) {
+        steps += 1;
+        
+        // Save product mapping after all searches complete
+        if (dynamicProducts.length > 0) {
+          const productMapping = dynamicProducts.map(p => `${p.name} (ID: ${p.id})`).join(', ');
+          const mappingNote = `[Sản phẩm đã tìm: ${productMapping}]`;
+          await saveMessage({ 
+            session_id: sid, 
+            user_id: userId, 
+            role: 'system', 
+            content: mappingNote,
+            tool_name: 'product_mapping'
+          }).catch(e => console.warn('[AI] Failed to save product mapping:', e.message));
+          
+          // CRITICAL: Add order tracking message for AI to use when creating order
+          // Delete old tracking messages first to avoid confusion
+          await deleteOrderTracking(sid);
+          
+          if (dynamicProducts.length === 1) {
+            // Single product tracking
+            const product = dynamicProducts[0];
+            const orderTrackingNote = `📦 Đang xử lý đơn: product_id=${product.id}, product_name=${product.name}`;
+            await saveMessage({ 
+              session_id: sid, 
+              user_id: userId, 
+              role: 'system', 
+              content: orderTrackingNote,
+              tool_name: 'order_tracking'
+            }).catch(e => console.warn('[AI] Failed to save order tracking:', e.message));
+            console.log(`[AI] Order tracking started: product_id=${product.id}`);
+          } else if (dynamicProducts.length > 1) {
+            // Multiple products tracking
+            const productList = dynamicProducts.map(p => `product_id=${p.id} (${p.name})`).join(', ');
+            const orderTrackingNote = `📦 Đang xử lý đơn NHIỀU SẢN PHẨM: [${productList}]`;
+            await saveMessage({ 
+              session_id: sid, 
+              user_id: userId, 
+              role: 'system', 
+              content: orderTrackingNote,
+              tool_name: 'order_tracking'
+            }).catch(e => console.warn('[AI] Failed to save order tracking:', e.message));
+            console.log(`[AI] Order tracking started: ${dynamicProducts.length} products`);
+          }
+        }
+        
+        contents.push({
+          role: 'user',
+          parts: functionResponseParts
+        });
+        
+        ({ result } = await generateWithRetryAndFallback({ contents, systemInstruction: { text: system } }));
+      } else {
+        // No new calls processed, exit loop
+        break;
+      }
     }
 
-    const text = (typeof result?.response?.text === 'function' ? result.response.text() : '')
+    let text = (typeof result?.response?.text === 'function' ? result.response.text() : '')
       || (result?.response?.candidates?.[0]?.content?.parts?.map(p=>p.text).join('\n') || '');
 
     // Merge products from initial RAG search and dynamic tool calls
-    const allProducts = [...relevantProducts];
-    if (dynamicProducts.length > 0) {
-      console.log(`[AI] Merging ${dynamicProducts.length} products from tool calls`);
-      // Add products from tool calls that aren't already in relevantProducts
-      dynamicProducts.forEach(dp => {
-        if (!allProducts.some(p => p.id === dp.id)) {
-          allProducts.push(dp);
-        }
-      });
+    // IMPORTANT: If tool search returned results, ONLY use tool results (more precise)
+    // Don't merge with RAG results to avoid showing irrelevant products
+    // CRITICAL: During order flow (choosing size/quantity/address), don't show products
+    let allProducts;
+    if (isOrderFlow) {
+      console.log(`[AI] In order flow - hiding all products from response`);
+      allProducts = [];
+    } else if (dynamicProducts.length > 0) {
+      console.log(`[AI] Tool search returned ${dynamicProducts.length} products - using ONLY tool results (ignoring ${relevantProducts.length} RAG results)`);
+      allProducts = dynamicProducts;
+    } else {
+      console.log(`[AI] No tool results - using ${relevantProducts.length} RAG results`);
+      allProducts = relevantProducts;
     }
-    console.log(`[AI] Final products count: ${allProducts.length} (${relevantProducts.length} from RAG + ${dynamicProducts.length} from tools)`);
+    console.log(`[AI] Final products count: ${allProducts.length}`);
+
+    // POST-PROCESSING: Clean up response formatting per product display rules
+    const sanitizeResponse = (raw, showImageNotice) => {
+      if (!raw) return '';
+      let out = String(raw);
+      
+      // 1) Remove product codes like "(mã #64)" or "mã #64"
+      out = out.replace(/\s*\(mã\s*#\d+\)/gi, '');
+      out = out.replace(/\bmã\s*#\d+\b/gi, '');
+
+      // 2) Replace any "Tồn kho: S: 36, M: 44" with "Size còn hàng: S, M"
+      out = out.replace(/(\*?\s*)Tồn kho\s*:\s*([^\n]*)/gi, (match, lead, rest) => {
+        const cleaned = (rest || '').replace(/\*/g, '').replace(/[\.]?\s*$/,'');
+        const sizes = cleaned.split(',').map(s => s.trim()).map(seg => {
+          const m = seg.match(/^([A-Za-zÀ-ỹ0-9]+)\s*:\s*(\d+)/i);
+          if (!m) return null;
+          const size = m[1]; const qty = parseInt(m[2], 10);
+          return qty > 0 ? size : null;
+        }).filter(Boolean);
+        return sizes.length ? `${lead}Size còn hàng: ${sizes.join(', ')}` : '';
+      });
+
+      // 3) Remove ALL *** patterns
+      out = out.replace(/\*\*\*\s*/g, '');
+      
+      // 4) AI already formats correctly with newlines - just normalize
+      // Clean up multiple spaces and normalize line breaks
+      out = out.replace(/\s{3,}/g, ' ').replace(/\n{3,}/g, '\n\n');
+
+      // 5) Ensure the image sentence appears once at the end
+      const IMG_SENTENCE = 'Ảnh sản phẩm đã được hiển thị bên dưới.';
+      const imgRe = /Ảnh sản phẩm đã được hiển thị bên dưới\.?/gi;
+      out = out.replace(imgRe, '');
+      out = out.trim();
+      
+      if (showImageNotice) {
+        if (out && !/[\.!?…]$/.test(out)) out += '.';
+        out += '\n\n' + IMG_SENTENCE;
+      }
+      
+      return out.trim();
+    };
+
+    text = sanitizeResponse(text, (relevantProducts.length + dynamicProducts.length) > 0);
 
     // OPTIMIZATION 7: Save messages and update memory async (non-blocking)
     const savePromises = [

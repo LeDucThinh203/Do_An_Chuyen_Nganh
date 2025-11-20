@@ -9,6 +9,21 @@ export const saveMessage = async ({ session_id, user_id, role, content, tool_nam
   );
 };
 
+export const deleteOrderTracking = async (session_id) => {
+  await db.query(
+    `DELETE FROM ai_conversations WHERE session_id=? AND tool_name='order_tracking'`,
+    [session_id]
+  );
+};
+
+export const getOrderTracking = async (session_id) => {
+  const [rows] = await db.query(
+    `SELECT content FROM ai_conversations WHERE session_id=? AND tool_name='order_tracking' ORDER BY id DESC LIMIT 1`,
+    [session_id]
+  );
+  return rows.length > 0 ? rows[0].content : null;
+};
+
 export const getRecentMessages = async (session_id, limit = 12) => {
   const [rows] = await db.query(
     `SELECT role, content FROM ai_conversations WHERE session_id=? ORDER BY id DESC LIMIT ?`,
