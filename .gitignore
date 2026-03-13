@@ -6,6 +6,12 @@
 # Node modules (if using Node.js)
 node_modules/
 
+# Build artifacts
+build/
+dist/
+.next/
+out/
+
 # Logs
 logs
 *.log
@@ -16,3 +22,16 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo
+
+# Temporary files
+temp_filename.txt
+*.tmp
+*.temp
