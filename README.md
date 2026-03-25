@@ -43,6 +43,7 @@ Website thương mại điện tử bán đồ bóng đá với tích hợp AI c
 | **[DEPLOY_INDEX.md](./DEPLOY_INDEX.md)** | 📌 BẮT ĐẦU TỪ ĐÂY - Index tất cả tài liệu | 2 min |
 | **[QUICK_START_RENDER.md](./QUICK_START_RENDER.md)** | ⚡ Deploy nhanh lên Render | 5 min |
 | **[DEPLOY_RENDER_DOCKER.md](./DEPLOY_RENDER_DOCKER.md)** | 📘 Hướng dẫn chi tiết deploy | 15 min |
+| **[DEPLOY_NETLIFY_FULL.md](./DEPLOY_NETLIFY_FULL.md)** | 🌐 Deploy frontend lên Netlify (full flow) | 10 min |
 | **[DOCKER_DEPLOYMENT_GUIDE.md](./DOCKER_DEPLOYMENT_GUIDE.md)** | 🐳 Deploy local với Docker | 10 min |
 | **[DATABASE_OPTIONS.md](./DATABASE_OPTIONS.md)** | 🗄️ Chọn database miễn phí | 5 min |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | 🏗️ Kiến trúc hệ thống | 10 min |

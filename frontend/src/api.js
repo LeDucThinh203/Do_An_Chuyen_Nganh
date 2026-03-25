@@ -3,7 +3,7 @@ import Session from './Session/session';
 
 // API Base URL - sử dụng biến môi trường hoặc empty string để dùng proxy
 // Khi REACT_APP_API_URL trống, requests sẽ đi qua proxy trong package.json
-const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+const API_BASE_URL = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
 
 const safeJson = async (res) => {
   try {
