@@ -304,10 +304,10 @@ export default function OrderManager() {
 
       {/* Modal chi tiết đơn hàng */}
       {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end lg:items-center justify-center z-50 p-2 sm:p-4 lg:pl-64 lg:pr-4 lg:pb-8">
-          <div className="bg-white rounded-lg max-w-5xl w-full max-h-[88vh] lg:max-h-[80vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-              <h3 className="text-lg sm:text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{selectedOrder.id}</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 pr-4 pb-8 pl-64">
+          <div className="bg-white rounded-lg max-w-5xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{selectedOrder.id}</h3>
               <button
                 onClick={handleCloseDetail}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -318,9 +318,9 @@ export default function OrderManager() {
               </button>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-6">
+            <div className="p-6 space-y-6">
               {/* Thông tin đơn hàng */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                     <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

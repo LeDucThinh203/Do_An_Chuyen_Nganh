@@ -74,35 +74,6 @@
   transition: height 0.3s ease;
 }
 
-@media (max-width: 640px) {
-  .chat-widget-container {
-    bottom: 12px;
-    right: 12px;
-  }
-
-  .chat-window {
-    right: 8px;
-    bottom: 8px;
-    width: calc(100vw - 16px);
-    max-width: 420px;
-    height: 72vh;
-    border-radius: 14px;
-  }
-
-  .chat-window.minimized {
-    height: 56px;
-  }
-
-  .chat-messages {
-    padding: 14px;
-    gap: 12px;
-  }
-
-  .chat-header {
-    padding: 12px;
-  }
-}
-
 .chat-window.minimized {
   height: 60px;
 }

@@ -14,21 +14,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("info");
   const [menuOpen, setMenuOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    const onResize = () => {
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
-      if (mobile) {
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
 
   // Xử lý activeTab từ state khi navigate về
   useEffect(() => {
@@ -143,12 +130,12 @@ export default function AdminDashboard() {
       {/* Main Content Area - Margin left để tránh sidebar */}
       <div 
         className="flex-1 flex flex-col overflow-hidden"
-        style={{ marginLeft: menuOpen && !isMobile ? '256px' : '0', transition: 'margin-left 0.3s' }}
+        style={{ marginLeft: menuOpen ? '256px' : '0', transition: 'margin-left 0.3s' }}
       >
         {/* Top Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+        <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-4">
               {!menuOpen && (
                 <button 
                   onClick={() => setMenuOpen(true)}
@@ -160,12 +147,12 @@ export default function AdminDashboard() {
                   </svg>
                 </button>
               )}
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-800 truncate max-w-[60vw] sm:max-w-none">
+              <h1 className="text-2xl font-bold text-gray-800">
                 {getPageTitle()}
               </h1>
             </div>
             
-            <div className="hidden sm:flex items-center space-x-4">
+            <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="font-semibold text-gray-800">{user.username}</p>
                 <p className="text-sm text-gray-500">{user.email || "Admin"}</p>
@@ -175,7 +162,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="flex-1 overflow-auto bg-gray-50 p-3 sm:p-6">
+        <div className="flex-1 overflow-auto bg-gray-50 p-6">
           {activeTab === "info" && <AdminInfo />}
           {activeTab === "address" && <AdminAddressManager />}
           {activeTab === "userManager" && <UserManager />}
