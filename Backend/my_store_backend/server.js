@@ -21,10 +21,13 @@ app.use('/', uiRoutes);
 
 // --- Server config ---
 const PORT = process.env.PORT || 3006;
+const renderExternal = (process.env.RENDER_EXTERNAL_URL || '').trim();
 const SERVER_URL = process.env.USE_NGROK === 'true' && process.env.NGROK_URL
   ? process.env.NGROK_URL
-  : process.env.RENDER_EXTERNAL_URL
-  ? `https://${process.env.RENDER_EXTERNAL_URL}`
+  : renderExternal
+  ? (renderExternal.startsWith('http://') || renderExternal.startsWith('https://')
+      ? renderExternal
+      : `https://${renderExternal}`)
   : `http://localhost:${PORT}`;
 
 // --- Swagger setup ---
