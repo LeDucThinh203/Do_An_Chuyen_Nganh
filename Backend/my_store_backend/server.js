@@ -22,12 +22,18 @@ app.use('/', uiRoutes);
 // --- Server config ---
 const PORT = process.env.PORT || 3006;
 const renderExternal = (process.env.RENDER_EXTERNAL_URL || '').trim();
+const normalizedRenderExternal = renderExternal
+  // Fix common typo: "https//domain" or "http//domain"
+  .replace(/^https?\/\//i, (m) => `${m.slice(0, -2)}://`)
+  // Remove accidental duplicated protocol, e.g. "https://https://domain"
+  .replace(/^(https?:\/\/)(https?:\/\/)+/i, '$1')
+  .replace(/\/+$/, '');
 const SERVER_URL = process.env.USE_NGROK === 'true' && process.env.NGROK_URL
   ? process.env.NGROK_URL
-  : renderExternal
-  ? (renderExternal.startsWith('http://') || renderExternal.startsWith('https://')
-      ? renderExternal
-      : `https://${renderExternal}`)
+  : normalizedRenderExternal
+  ? (normalizedRenderExternal.startsWith('http://') || normalizedRenderExternal.startsWith('https://')
+      ? normalizedRenderExternal
+      : `https://${normalizedRenderExternal}`)
   : `http://localhost:${PORT}`;
 
 // --- Swagger setup ---
