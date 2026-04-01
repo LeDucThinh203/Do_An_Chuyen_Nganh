@@ -79,30 +79,32 @@ app.get('/health', (req, res) => {
 });
 
 // --- Start server ---
-app.listen(PORT, '0.0.0.0', async () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
 
-
-  
-  // Ensure AI related tables exist
-  await ensureAiSchema().catch((e) => console.error('AI schema init error:', e));
-  
-  // Auto-generate embeddings for products without cache (background task)
-  // Limit to small batch to avoid blocking server startup
-  const { ensureEmbeddingsForProducts } = await import('./services/ai/vectorStore.js');
-  const STARTUP_BATCH_SIZE = parseInt(process.env.EMBEDDING_STARTUP_BATCH || '20');
-  
-  ensureEmbeddingsForProducts(STARTUP_BATCH_SIZE)
-    .then(count => {
+  // Initialize AI schema AND embeddings in background (don't block startup)
+  (async () => {
+    try {
+      // Ensure AI related tables exist
+      await ensureAiSchema().catch((e) => console.error('AI schema init error:', e));
+      
+      // Auto-generate embeddings for products without cache (background task)
+      // Limit to small batch to avoid blocking server startup
+      const { ensureEmbeddingsForProducts } = await import('./services/ai/vectorStore.js');
+      const STARTUP_BATCH_SIZE = parseInt(process.env.EMBEDDING_STARTUP_BATCH || '20');
+      
+      const count = await ensureEmbeddingsForProducts(STARTUP_BATCH_SIZE);
       if (count > 0) {
         console.log(`✅ Generated ${count} product embeddings on startup`);
         console.log(`💡 For large product catalogs, run: node scripts/generate_embeddings.js`);
       } else {
         console.log(`✅ All product embeddings already cached`);
       }
-    })
-    .catch(e => console.warn('⚠️  Embedding generation warning:', e.message));
+    } catch (e) {
+      console.warn('⚠️  Background initialization warning:', e.message);
+    }
+  })();
 });
 
 
