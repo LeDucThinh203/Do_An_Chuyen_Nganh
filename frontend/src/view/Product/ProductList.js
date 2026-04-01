@@ -242,9 +242,9 @@ export default function ProductList() {
       `}</style>
 
       {/* Main content wrapper */}
-      <div className="flex gap-6 mt-20">
+      <div className="flex gap-4 sm:gap-6 mt-16 sm:mt-20">
         {/* Right Content Area - Full width */}
-        <div className="flex-1 px-4">
+        <div className="flex-1 px-2 sm:px-4">
           {/* Video Banner */}
           <div className="relative w-full h-64 sm:h-80 lg:h-[400px] overflow-hidden mb-4 rounded-lg">
             <video
@@ -278,7 +278,7 @@ export default function ProductList() {
         {featuredProducts.length > 0 && (
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
+                <h2 className="text-xl sm:text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
             </div>
 
             <div className="relative overflow-hidden">
@@ -374,7 +374,7 @@ export default function ProductList() {
             cat.products.length > 0 && (
               <div key={cat.id} className="relative">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold uppercase">{cat.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold uppercase">{cat.name}</h2>
                   <Link to={`/category/${cat.id}`} className="text-sm text-blue-600 hover:underline">
                     Xem thêm
                   </Link>
@@ -550,24 +550,24 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
 
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+      <div className="max-w-7xl mx-auto flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center">
           <span
             onClick={handleLogoClick}
-            className="text-2xl sm:text-3xl font-extrabold text-blue-700 tracking-wide cursor-pointer"
+            className="text-xl sm:text-3xl font-extrabold text-blue-700 tracking-wide cursor-pointer"
           >
             CoolShop
           </span>
         </div>
 
-        <div className="relative w-1/2 sm:w-2/5 md:w-1/2" ref={searchRef}>
+        <div className="relative w-full order-3 sm:order-none sm:flex-1 sm:max-w-xl" ref={searchRef}>
           <input
             type="text"
             placeholder="🔍 Tìm kiếm sản phẩm..."
             value={searchTerm}
             onChange={handleSearchChange}
             onKeyDown={handleKeyPress}
-            className="w-full border border-gray-300 rounded-full px-4 py-2 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-full px-3 sm:px-4 py-2 text-gray-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {suggestions.length > 0 && (
             <ul className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-md mt-1 z-50 max-h-64 overflow-y-auto">
@@ -610,7 +610,7 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
           )}
         </div>
 
-        <div className="flex items-center gap-5 text-gray-700 font-medium">
+        <div className="flex items-center gap-3 sm:gap-5 text-gray-700 font-medium text-xs sm:text-base whitespace-nowrap">
           <Link to="/cart" className="relative hover:text-yellow-500 transition">
             🛒 Giỏ hàng
             {cartCount > 0 && (

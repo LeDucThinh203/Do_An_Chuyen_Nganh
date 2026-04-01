@@ -53,14 +53,14 @@ export default function Header() {
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 w-full z-50">
-      <div className="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between py-4 gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-8 flex flex-col sm:flex-row items-center justify-between py-3 sm:py-4 gap-3 sm:gap-4">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-extrabold text-blue-700 tracking-wide">
+        <Link to="/" className="text-xl sm:text-2xl font-extrabold text-blue-700 tracking-wide">
           CoolShop
         </Link>
 
         {/* Menu */}
-        <div className="flex space-x-4 text-gray-700 font-medium items-center relative flex-shrink-0">
+        <div className="flex flex-wrap justify-center sm:justify-end gap-3 sm:space-x-4 text-gray-700 font-medium items-center relative flex-shrink-0 text-sm sm:text-base">
           <Link to="/cart" className="relative hover:text-yellow-500 transition">
             🛒 Giỏ hàng
             {cartCount > 0 && (
