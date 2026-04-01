@@ -155,8 +155,8 @@ export const forgotPassword = async (req, res) => {
     // Gmail SMTP ổn định hơn service:'gmail' trên một số cloud runtime.
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
       connectionTimeout: 15000,
       greetingTimeout: 15000,
