@@ -126,7 +126,8 @@ export const forgotPassword = async (req, res) => {
 
     await accountRepo.saveResetToken(account.id, token, expiryDate);
 
-    const resetLink = `http://localhost:3000/reset-password/${token}`;
+    const frontendBaseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const resetLink = `${frontendBaseUrl}/reset-password/${token}`;
 
     // Giao diện email HTML đẹp
     const emailHtml = `
@@ -145,9 +146,21 @@ export const forgotPassword = async (req, res) => {
       </div>
     `;
 
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.status(500).json({
+        error: 'Thiếu cấu hình EMAIL_USER/EMAIL_PASS trên server'
+      });
+    }
+
+    // Gmail SMTP ổn định hơn service:'gmail' trên một số cloud runtime.
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
     });
 
     await transporter.sendMail({
@@ -160,6 +173,11 @@ export const forgotPassword = async (req, res) => {
     res.json({ message: 'Email khôi phục mật khẩu đã gửi. Vui lòng kiểm tra hộp thư.' });
   } catch (err) {
     console.error(err);
+    if (err?.code === 'ETIMEDOUT' || String(err?.message || '').toLowerCase().includes('timeout')) {
+      return res.status(504).json({
+        error: 'Gửi email bị timeout. Vui lòng kiểm tra SMTP (EMAIL_USER/EMAIL_PASS) hoặc thử lại sau.'
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 };
