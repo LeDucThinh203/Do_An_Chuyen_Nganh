@@ -102,7 +102,7 @@ function AppContent() {
       {showHeader && <Header user={user} handleLogout={handleLogout} />}
 
       {/* Main content */}
-      <div className="pt-24 px-8 max-w-7xl mx-auto flex-grow">
+      <div className="pt-20 sm:pt-24 px-3 sm:px-6 lg:px-8 max-w-7xl w-full mx-auto flex-grow">
         <Suspense fallback={<p className="text-center mt-10">Đang tải...</p>}>
           <Routes>
             {/* Public */}

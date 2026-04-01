@@ -300,7 +300,7 @@ export default function ProductList() {
                     const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
                     container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
                   }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full hidden sm:flex items-center justify-center transition-all shadow-lg hover:scale-110"
                   aria-label="Scroll left"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,7 +327,7 @@ export default function ProductList() {
                     const nextIndex = Math.min(maxStart, currentIndex + 1);
                     container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
                   }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full hidden sm:flex items-center justify-center transition-all shadow-lg hover:scale-110"
                   aria-label="Scroll right"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -338,12 +338,12 @@ export default function ProductList() {
 
               <div 
                 id={`category-featured`}
-                className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
-                style={{ maxWidth: '1048px' }}
+                className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory w-full"
+                style={{ maxWidth: '100%' }}
               >
                 <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
                   {featuredProducts.map((product) => (
-                    <div key={product.id} className="w-64 flex-shrink-0 snap-start">
+                    <div key={product.id} className="w-[78vw] sm:w-64 max-w-[320px] flex-shrink-0 snap-start">
                       <ProductCard
                         product={product}
                         availableSizes={getAvailableSizes(product.id)}
@@ -401,7 +401,7 @@ export default function ProductList() {
                         const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
                         container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
                       }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full hidden sm:flex items-center justify-center transition-all shadow-lg hover:scale-110"
                       aria-label="Scroll left"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -429,7 +429,7 @@ export default function ProductList() {
                         const nextIndex = Math.min(maxStart, currentIndex + 1);
                         container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
                       }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full hidden sm:flex items-center justify-center transition-all shadow-lg hover:scale-110"
                       aria-label="Scroll right"
                     >
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,12 +440,12 @@ export default function ProductList() {
 
                   <div 
                     id={`category-${cat.id}`}
-                    className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
-                    style={{ maxWidth: '1048px' }}
+                    className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory w-full"
+                    style={{ maxWidth: '100%' }}
                   >
                     <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
                       {cat.products.map((product) => (
-                        <div key={product.id} className="w-64 flex-shrink-0 snap-start">
+                        <div key={product.id} className="w-[78vw] sm:w-64 max-w-[320px] flex-shrink-0 snap-start">
                           <ProductCard
                             product={product}
                             availableSizes={getAvailableSizes(product.id)}
