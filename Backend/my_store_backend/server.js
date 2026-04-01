@@ -23,6 +23,8 @@ app.use('/', uiRoutes);
 const PORT = process.env.PORT || 3006;
 const SERVER_URL = process.env.USE_NGROK === 'true' && process.env.NGROK_URL
   ? process.env.NGROK_URL
+  : process.env.RENDER_EXTERNAL_URL
+  ? `https://${process.env.RENDER_EXTERNAL_URL}`
   : `http://localhost:${PORT}`;
 
 // --- Swagger setup ---
