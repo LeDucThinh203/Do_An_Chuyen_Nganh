@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import Session from '../../Session/session';
 import './ChatWidget.css';
 
+const API_BASE_URL = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+const AI_CHAT_API_URL = `${API_BASE_URL}/ai/chat`;
+
 // Resolve image URL for products
 const resolveImage = (img) => {
   if (!img) return '/images/placeholder.png';
@@ -95,8 +98,8 @@ const ChatWidget = () => {
       const user = Session.getUser();
       const userId = user?.id || null;
 
-      // Call AI API (Backend runs on port 3006, route is /ai/chat not /api/ai/chat)
-      const response = await fetch('http://localhost:3006/ai/chat', {
+      // Call AI API via configurable backend URL for local/dev/prod environments.
+      const response = await fetch(AI_CHAT_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
