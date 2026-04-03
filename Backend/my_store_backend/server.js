@@ -101,7 +101,13 @@ app.listen(PORT, '0.0.0.0', () => {
       // Auto-generate embeddings for products without cache (background task)
       // Limit to small batch to avoid blocking server startup
       const { ensureEmbeddingsForProducts } = await import('./services/ai/vectorStore.js');
-      const STARTUP_BATCH_SIZE = parseInt(process.env.EMBEDDING_STARTUP_BATCH || '20');
+      const defaultStartupBatch = process.env.NODE_ENV === 'production' ? '0' : '20';
+      const STARTUP_BATCH_SIZE = parseInt(process.env.EMBEDDING_STARTUP_BATCH || defaultStartupBatch);
+
+      if (STARTUP_BATCH_SIZE <= 0) {
+        console.log('ℹ️  Skip startup embedding generation (EMBEDDING_STARTUP_BATCH <= 0)');
+        return;
+      }
       
       const count = await ensureEmbeddingsForProducts(STARTUP_BATCH_SIZE);
       if (count > 0) {

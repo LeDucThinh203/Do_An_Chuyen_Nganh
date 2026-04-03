@@ -5,6 +5,7 @@
 
   [build.environment]
     CI = "false"
+    REACT_APP_API_URL = "https://my-store-backend-4fuu.onrender.com"
 
 [[redirects]]
   from = "/*"

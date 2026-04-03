@@ -5,6 +5,10 @@ import Session from './Session/session';
 // Khi REACT_APP_API_URL trống, requests sẽ đi qua proxy trong package.json
 const API_BASE_URL = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
 
+if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
+  console.warn("[API] REACT_APP_API_URL is empty in production. Requests may hit the frontend domain instead of backend API.");
+}
+
 const safeJson = async (res) => {
   try {
     return await res.json();
