@@ -24,6 +24,12 @@ const EMBED_MODEL = !normalizedEmbedModel || normalizedEmbedModel === 'embedding
   ? 'text-embedding-004'
   : normalizedEmbedModel;
 
+const EMBED_FALLBACK_MODELS = [
+  EMBED_MODEL,
+  'gemini-embedding-001',
+  'text-embedding-004'
+].filter(Boolean).filter((value, index, arr) => arr.indexOf(value) === index);
+
 if (normalizedEmbedModel === 'embedding-001') {
   console.warn('[AI] GEMINI_EMBED_MODEL is deprecated (embedding-001). Fallback to text-embedding-004.');
 }
@@ -33,6 +39,8 @@ console.log(`[AI] Models -> chat: ${CHAT_MODEL}, fast: ${FAST_MODEL}, embed: ${E
 export const getChatModel = () => genAI.getGenerativeModel({ model: CHAT_MODEL });
 export const getFastModel = () => genAI.getGenerativeModel({ model: FAST_MODEL });
 export const getEmbeddingModel = () => genAI.getGenerativeModel({ model: EMBED_MODEL });
+export const getEmbeddingModelByName = (modelName) => genAI.getGenerativeModel({ model: modelName });
+export const getEmbeddingModelCandidates = () => EMBED_FALLBACK_MODELS;
 export const getChatModelWithTools = (functionDeclarations) =>
   genAI.getGenerativeModel({ model: CHAT_MODEL, tools: [{ functionDeclarations }] });
 export const getFastModelWithTools = (functionDeclarations) =>

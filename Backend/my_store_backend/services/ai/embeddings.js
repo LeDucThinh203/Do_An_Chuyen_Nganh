@@ -1,8 +1,10 @@
-import { getEmbeddingModel } from './gemini.js';
+import { getEmbeddingModel, getEmbeddingModelByName, getEmbeddingModelCandidates } from './gemini.js';
 
 // OPTIMIZATION: Simple in-memory cache for embeddings (LRU with max 100 entries)
 const embeddingCache = new Map();
 const MAX_CACHE_SIZE = 100;
+let embeddingDisabled = false;
+let workingEmbeddingModel = null;
 
 const getCacheKey = (text) => {
   // Normalize text for cache key
@@ -18,6 +20,8 @@ const cleanCache = () => {
 };
 
 export const embedText = async (text) => {
+  if (embeddingDisabled) return [];
+
   const cacheKey = getCacheKey(text);
   
   // Check cache first
@@ -25,12 +29,44 @@ export const embedText = async (text) => {
     return embeddingCache.get(cacheKey);
   }
   
-  const model = getEmbeddingModel();
-  const res = await model.embedContent({
-    content: { parts: [{ text }] },
-    taskType: 'RETRIEVAL_QUERY',
-  });
-  const embedding = res?.embedding?.values || res?.data?.embedding?.values || [];
+  const candidates = workingEmbeddingModel
+    ? [workingEmbeddingModel, ...getEmbeddingModelCandidates().filter(m => m !== workingEmbeddingModel)]
+    : getEmbeddingModelCandidates();
+
+  let embedding = [];
+  let lastError;
+
+  for (const modelName of candidates) {
+    try {
+      const model = modelName ? getEmbeddingModelByName(modelName) : getEmbeddingModel();
+      const res = await model.embedContent({
+        content: { parts: [{ text }] },
+        taskType: 'RETRIEVAL_QUERY',
+      });
+
+      embedding = res?.embedding?.values || res?.data?.embedding?.values || [];
+      if (embedding.length > 0) {
+        workingEmbeddingModel = modelName;
+        break;
+      }
+    } catch (e) {
+      lastError = e;
+      const msg = e?.message || '';
+      if (e?.status === 404 || msg.includes('404')) {
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  if (!embedding.length) {
+    embeddingDisabled = true;
+    console.warn('[AI] Embedding disabled: no supported embedding model available for this API key/project.');
+    if (lastError?.message) {
+      console.warn('[AI] Last embedding error:', lastError.message);
+    }
+    return [];
+  }
   
   // Store in cache
   embeddingCache.set(cacheKey, embedding);
