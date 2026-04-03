@@ -4,6 +4,7 @@ import AdminInfo from "./AdminInfo";
 import AdminAddressManager from "./AdminAddressManager";
 import UserManager from "./UserManager";
 import ProductManager from "./ProductManager";
+import SizeManager from "./SizeManager";
 import CategoryManager from "./categories/CategoryManager";
 import OrderManager from "./OrderManager";
 import Revenue from "./Revenue";
@@ -45,7 +46,8 @@ export default function AdminDashboard() {
     { id: "orderManager", label: "Quản lý đơn hàng" },
     { id: "userManager", label: "Quản lý người dùng" },
     { id: "address", label: "Quản lý địa chỉ" },
-    { id: "category", label: "Quản lý danh mục" }
+    { id: "category", label: "Quản lý danh mục" },
+    { id: "size", label: "Quản lý size" }
     ];
 
   const getPageTitle = () => {
@@ -56,7 +58,8 @@ export default function AdminDashboard() {
       orderManager: "Quản lý đơn hàng",
       userManager: "Quản lý người dùng",
       address: "Quản lý địa chỉ",
-      revenue: "Bảng giá & Doanh thu"
+      revenue: "Bảng giá & Doanh thu",
+      size: "Quản lý size"
     };
     return titles[activeTab] || "Bảng Điều Khiển";
   };
@@ -168,6 +171,7 @@ export default function AdminDashboard() {
           {activeTab === "userManager" && <UserManager />}
           {activeTab === "product" && <ProductManager />}
           {activeTab === "category" && <CategoryManager />}
+          {activeTab === "size" && <SizeManager />}
           {activeTab === "orderManager" && <OrderManager />}
           {activeTab === "revenue" && <Revenue />}
         </div>

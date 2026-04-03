@@ -29,6 +29,11 @@ const getAuthHeaders = () => {
   return headers;
 };
 
+const getErrorMessage = async (res, fallbackMessage) => {
+  const data = await safeJson(res);
+  return data?.error || data?.message || fallbackMessage;
+};
+
 // ================= Product API =================
 const PRODUCT_API_URL = `${API_BASE_URL}/product`;
 
@@ -141,7 +146,7 @@ export const createSize = async (data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Tạo size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Tạo size thất bại"));
   return await safeJson(res);
 };
 
@@ -151,7 +156,7 @@ export const updateSize = async (id, data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Cập nhật size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Cập nhật size thất bại"));
   return await safeJson(res);
 };
 
@@ -160,7 +165,7 @@ export const deleteSize = async (id) => {
     method: "DELETE",
     headers: getAuthHeaders()
   });
-  if (!res.ok) throw new Error("Xóa size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa size thất bại"));
   return true;
 };
 
@@ -328,7 +333,7 @@ export const createProductSize = async (data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Tạo product size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Tạo product size thất bại"));
   return await safeJson(res);
 };
 
@@ -338,7 +343,7 @@ export const updateProductSize = async (id, data) => {
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Cập nhật product size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Cập nhật product size thất bại"));
   return await safeJson(res);
 };
 
@@ -347,7 +352,7 @@ export const deleteProductSize = async (id) => {
     method: "DELETE",
     headers: getAuthHeaders()
   });
-  if (!res.ok) throw new Error("Xóa product size thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa product size thất bại"));
   return true;
 };
 

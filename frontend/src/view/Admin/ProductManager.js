@@ -73,6 +73,13 @@ export default function ProductManager() {
   const handleAddSize = async (productId) => {
     const sizeId = selectedSize[productId];
     if (!sizeId) return alert("Vui lòng chọn size");
+    const existed = productSizes.some(
+      (ps) => ps.product_id === productId && Number(ps.size_id) === Number(sizeId)
+    );
+    if (existed) {
+      alert("⚠️ Size này đã tồn tại trong sản phẩm.");
+      return;
+    }
     try {
       await createProductSize({ product_id: productId, size_id: Number(sizeId) });
       const updatedProductSizes = await getAllProductSizes();
@@ -80,15 +87,18 @@ export default function ProductManager() {
       setSelectedSize((prev) => ({ ...prev, [productId]: "" }));
     } catch (err) {
       console.error("Thêm size thất bại:", err);
+      alert(`❌ Thêm size thất bại: ${err.message}`);
     }
   };
 
   const handleRemoveSize = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xóa size này khỏi sản phẩm?")) return;
     try {
       await deleteProductSize(id);
       setProductSizes(productSizes.filter((ps) => ps.id !== id));
     } catch (err) {
       console.error("Xóa size thất bại:", err);
+      alert(`❌ Xóa size thất bại: ${err.message}`);
     }
   };
 
