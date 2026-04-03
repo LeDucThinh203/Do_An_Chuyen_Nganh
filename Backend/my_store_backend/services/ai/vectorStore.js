@@ -1,6 +1,32 @@
 import db from '../../db.js';
 import { embedText, cosineSim } from './embeddings.js';
 
+let stockColumnPromise;
+
+const resolveProductSizeStockColumn = async () => {
+  if (stockColumnPromise) return stockColumnPromise;
+
+  stockColumnPromise = (async () => {
+    const [rows] = await db.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = DATABASE()
+        AND table_name = 'product_sizes'
+        AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
+      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
+      LIMIT 1
+    `);
+
+    if (!rows.length) {
+      throw new Error('Bảng product_sizes chưa có cột tồn kho hợp lệ (stock/quantity/stock_quantity/warehouse)');
+    }
+
+    return rows[0].column_name;
+  })();
+
+  return stockColumnPromise;
+};
+
 const parseVec = (s) => {
   try { return JSON.parse(s); } catch { return null; }
 };
@@ -64,6 +90,7 @@ export const ensureEmbeddingsForProducts = async (limit = 200) => {
 };
 
 export const semanticSearchProducts = async (query, topK = 5) => {
+  const stockColumn = await resolveProductSizeStockColumn();
   const qVec = await embedText(query);
   
   // OPTIMIZATION: Improved keyword extraction with better matching
@@ -130,7 +157,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   const [candidates] = await db.query(
     `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding,
             GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
-            GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.stock) ORDER BY s.id SEPARATOR ', ') as stock_by_size
+            GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
      FROM product p
      LEFT JOIN product_embeddings pe ON pe.product_id = p.id
      LEFT JOIN product_sizes ps ON ps.product_id = p.id
@@ -301,7 +328,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
     const [relatedByCategory] = await db.query(
       `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, pe.embedding,
               GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
-              GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.stock) ORDER BY s.id SEPARATOR ', ') as stock_by_size
+              GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
        FROM product p
        LEFT JOIN product_embeddings pe ON pe.product_id = p.id
        LEFT JOIN product_sizes ps ON ps.product_id = p.id
