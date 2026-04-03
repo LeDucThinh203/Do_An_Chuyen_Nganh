@@ -10,21 +10,30 @@ const genAI = new GoogleGenerativeAI(apiKey || '');
 
 // Allow model override via env to support 2.5 / 2.5-flash if available
 const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';
+const FAST_MODEL = process.env.GEMINI_FAST_MODEL || 'gemini-2.5-flash';
 
 // `embedding-001` is no longer available on many projects; use a safer default.
-const embedModelFromEnv = process.env.GEMINI_EMBED_MODEL;
-const EMBED_MODEL = !embedModelFromEnv || embedModelFromEnv === 'embedding-001'
-  ? 'text-embedding-004'
-  : embedModelFromEnv;
+const sanitizeModelName = (value) => {
+  if (!value) return '';
+  return String(value).trim().replace(/^models\//i, '').toLowerCase();
+};
 
-if (embedModelFromEnv === 'embedding-001') {
-  console.warn('[AI] GEMINI_EMBED_MODEL=embedding-001 is deprecated. Fallback to text-embedding-004.');
+const rawEmbedModel = process.env.GEMINI_EMBED_MODEL;
+const normalizedEmbedModel = sanitizeModelName(rawEmbedModel);
+const EMBED_MODEL = !normalizedEmbedModel || normalizedEmbedModel === 'embedding-001'
+  ? 'text-embedding-004'
+  : normalizedEmbedModel;
+
+if (normalizedEmbedModel === 'embedding-001') {
+  console.warn('[AI] GEMINI_EMBED_MODEL is deprecated (embedding-001). Fallback to text-embedding-004.');
 }
 
+console.log(`[AI] Models -> chat: ${CHAT_MODEL}, fast: ${FAST_MODEL}, embed: ${EMBED_MODEL}`);
+
 export const getChatModel = () => genAI.getGenerativeModel({ model: CHAT_MODEL });
-export const getFastModel = () => genAI.getGenerativeModel({ model: CHAT_MODEL });
+export const getFastModel = () => genAI.getGenerativeModel({ model: FAST_MODEL });
 export const getEmbeddingModel = () => genAI.getGenerativeModel({ model: EMBED_MODEL });
 export const getChatModelWithTools = (functionDeclarations) =>
   genAI.getGenerativeModel({ model: CHAT_MODEL, tools: [{ functionDeclarations }] });
 export const getFastModelWithTools = (functionDeclarations) =>
-  genAI.getGenerativeModel({ model: CHAT_MODEL, tools: [{ functionDeclarations }] });
+  genAI.getGenerativeModel({ model: FAST_MODEL, tools: [{ functionDeclarations }] });

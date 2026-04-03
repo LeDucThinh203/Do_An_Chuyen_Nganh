@@ -34,7 +34,13 @@ export const getRecentMessages = async (session_id, limit = 12) => {
 
 export const upsertLongTermMemory = async (user_id, summary) => {
   if (!user_id || !summary) return;
-  const vec = await embedText(summary);
+  let vec = [];
+  try {
+    vec = await embedText(summary);
+  } catch (e) {
+    console.warn('[AI] Skip upsertLongTermMemory embedding:', e.message);
+    return;
+  }
   const sql = `
     INSERT INTO ai_memory (user_id, summary, embedding, updated_at)
     VALUES (?, ?, ?, NOW())
@@ -52,7 +58,13 @@ export const recallLongTermMemory = async (user_id, query, topK = 3) => {
   // OPTIMIZATION: Early return if no query
   if (!query || query.length < 3) return [];
   
-  const qVec = await embedText(query);
+  let qVec = [];
+  try {
+    qVec = await embedText(query);
+  } catch (e) {
+    console.warn('[AI] Skip recallLongTermMemory embedding:', e.message);
+    return [];
+  }
   const [rows] = await db.query(`SELECT summary, embedding FROM ai_memory WHERE user_id=? LIMIT 10`, [user_id]);
   
   // Early return if no memory

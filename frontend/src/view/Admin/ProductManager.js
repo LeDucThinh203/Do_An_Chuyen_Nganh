@@ -111,7 +111,7 @@ export default function ProductManager() {
       alert("✅ Cập nhật số lượng kho thành công!");
     } catch (err) {
       console.error("Cập nhật kho thất bại:", err);
-      alert("❌ Cập nhật kho thất bại!");
+      alert(`❌ Cập nhật kho thất bại: ${err.message}`);
     }
   };
 

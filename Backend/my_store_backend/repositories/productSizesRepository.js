@@ -1,24 +1,71 @@
 import db from '../db.js';
 
+let stockColumnPromise;
+
+const resolveStockColumn = async () => {
+  if (stockColumnPromise) return stockColumnPromise;
+
+  stockColumnPromise = (async () => {
+    const [rows] = await db.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = DATABASE()
+        AND table_name = 'product_sizes'
+        AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
+      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
+      LIMIT 1
+    `);
+
+    if (!rows.length) {
+      throw new Error('Bảng product_sizes chưa có cột tồn kho hợp lệ (stock/quantity/stock_quantity/warehouse)');
+    }
+
+    return rows[0].column_name;
+  })();
+
+  return stockColumnPromise;
+};
+
+const getStockInput = (data = {}) => {
+  if (data.stock !== undefined) return data.stock;
+  if (data.quantity !== undefined) return data.quantity;
+  if (data.stock_quantity !== undefined) return data.stock_quantity;
+  if (data.warehouse !== undefined) return data.warehouse;
+  return undefined;
+};
+
 export const getAllProductSizes = async () => {
-  const [rows] = await db.query('SELECT * FROM product_sizes');
+  const stockColumn = await resolveStockColumn();
+  const [rows] = await db.query(
+    `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes`
+  );
   return rows;
 };
 
 export const getProductSizeById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM product_sizes WHERE id=?', [id]);
+  const stockColumn = await resolveStockColumn();
+  const [rows] = await db.query(
+    `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes WHERE id=?`,
+    [id]
+  );
   return rows[0] || null;
 };
 
-export const createProductSize = async ({ product_id, size_id, stock = 0 }) => {
+export const createProductSize = async (data) => {
+  const stockColumn = await resolveStockColumn();
+  const stockValue = Number(getStockInput(data) ?? 0);
+  const product_id = data?.product_id;
+  const size_id = data?.size_id;
+
   const [result] = await db.query(
-    'INSERT INTO product_sizes (product_id, size_id, stock) VALUES (?, ?, ?)',
-    [product_id, size_id, stock]
+    `INSERT INTO product_sizes (product_id, size_id, ${stockColumn}) VALUES (?, ?, ?)`,
+    [product_id, size_id, stockValue]
   );
   return result.insertId;
 };
 
 export const updateProductSize = async (id, data) => {
+  const stockColumn = await resolveStockColumn();
   const fields = [];
   const values = [];
   
@@ -30,9 +77,11 @@ export const updateProductSize = async (id, data) => {
     fields.push('size_id=?');
     values.push(data.size_id);
   }
-  if (data.stock !== undefined) {
-    fields.push('stock=?');
-    values.push(data.stock);
+
+  const stockInput = getStockInput(data);
+  if (stockInput !== undefined) {
+    fields.push(`${stockColumn}=?`);
+    values.push(stockInput);
   }
   
   if (fields.length === 0) return;
