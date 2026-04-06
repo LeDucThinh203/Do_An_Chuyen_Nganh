@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { resolveProductSizeStockColumn } from '../services/productSizeStock.js';
 
 export const getAllOrders = async () => {
   const [orders] = await db.query('SELECT * FROM orders');
@@ -45,6 +46,7 @@ export const createOrder = async (orderData) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
+    const stockColumn = await resolveProductSizeStockColumn();
 
     const [result] = await conn.query(
       'INSERT INTO orders (name, phone, address, account_id, total_amount, payment_method, is_paid) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -60,7 +62,7 @@ export const createOrder = async (orderData) => {
         
         // Lấy stock hiện tại
         const [stockRows] = await conn.query(
-          'SELECT stock FROM product_sizes WHERE id = ?',
+          `SELECT ${stockColumn} AS stock FROM product_sizes WHERE id = ?`,
           [product_sizes_id]
         );
         
@@ -76,7 +78,7 @@ export const createOrder = async (orderData) => {
         
         // Giảm stock
         await conn.query(
-          'UPDATE product_sizes SET stock = stock - ? WHERE id = ?',
+          `UPDATE product_sizes SET ${stockColumn} = ${stockColumn} - ? WHERE id = ?`,
           [quantity, product_sizes_id]
         );
       }

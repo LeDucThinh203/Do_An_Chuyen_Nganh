@@ -1,30 +1,5 @@
 import db from '../db.js';
-
-let stockColumnPromise;
-
-const resolveStockColumn = async () => {
-  if (stockColumnPromise) return stockColumnPromise;
-
-  stockColumnPromise = (async () => {
-    const [rows] = await db.query(`
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_schema = DATABASE()
-        AND table_name = 'product_sizes'
-        AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
-      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
-      LIMIT 1
-    `);
-
-    if (!rows.length) {
-      throw new Error('Bảng product_sizes chưa có cột tồn kho hợp lệ (stock/quantity/stock_quantity/warehouse)');
-    }
-
-    return rows[0].column_name;
-  })();
-
-  return stockColumnPromise;
-};
+import { resolveProductSizeStockColumn } from '../services/productSizeStock.js';
 
 const getStockInput = (data = {}) => {
   if (data.stock !== undefined) return data.stock;
@@ -35,7 +10,7 @@ const getStockInput = (data = {}) => {
 };
 
 export const getAllProductSizes = async () => {
-  const stockColumn = await resolveStockColumn();
+  const stockColumn = await resolveProductSizeStockColumn();
   const [rows] = await db.query(
     `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes`
   );
@@ -43,7 +18,7 @@ export const getAllProductSizes = async () => {
 };
 
 export const getProductSizeById = async (id) => {
-  const stockColumn = await resolveStockColumn();
+  const stockColumn = await resolveProductSizeStockColumn();
   const [rows] = await db.query(
     `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes WHERE id=?`,
     [id]
@@ -52,7 +27,7 @@ export const getProductSizeById = async (id) => {
 };
 
 export const createProductSize = async (data) => {
-  const stockColumn = await resolveStockColumn();
+  const stockColumn = await resolveProductSizeStockColumn();
   const stockValue = Number(getStockInput(data) ?? 0);
   const product_id = data?.product_id;
   const size_id = data?.size_id;
@@ -65,7 +40,7 @@ export const createProductSize = async (data) => {
 };
 
 export const updateProductSize = async (id, data) => {
-  const stockColumn = await resolveStockColumn();
+  const stockColumn = await resolveProductSizeStockColumn();
   const fields = [];
   const values = [];
   

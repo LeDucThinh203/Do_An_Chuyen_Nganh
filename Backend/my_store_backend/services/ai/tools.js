@@ -1,5 +1,6 @@
 import db from '../../db.js';
 import { semanticSearchProducts } from './vectorStore.js';
+import { resolveProductSizeStockColumn } from '../productSizeStock.js';
 
 // Tool declarations (for Gemini function calling)
 export const toolDeclarations = [
@@ -552,6 +553,8 @@ export const toolsImpl = {
     console.log(`[Tool create_order] Creating order for user ${user_id} with ${items.length} items`);
     
     try {
+      const stockColumn = await resolveProductSizeStockColumn();
+
       // Validate user exists
       const [[user]] = await db.query('SELECT id FROM account WHERE id = ?', [user_id]);
       if (!user) {
@@ -626,7 +629,7 @@ export const toolsImpl = {
 
         // Get size and check stock
         const [[sizeInfo]] = await db.query(
-          `SELECT ps.id, ps.stock, s.size 
+          `SELECT ps.id, ps.${stockColumn} AS stock, s.size 
            FROM product_sizes ps 
            JOIN sizes s ON s.id = ps.size_id 
            WHERE ps.product_id = ? AND s.size = ?`,
@@ -683,7 +686,7 @@ export const toolsImpl = {
 
         // Update stock
         await db.query(
-          'UPDATE product_sizes SET stock = stock - ? WHERE id = ?',
+          `UPDATE product_sizes SET ${stockColumn} = ${stockColumn} - ? WHERE id = ?`,
           [item.quantity, item.product_sizes_id]
         );
       }
@@ -754,6 +757,8 @@ export const toolsImpl = {
     console.log(`[Tool update_order] Updating order ${order_id}, action: ${action}`);
     
     try {
+      const stockColumn = await resolveProductSizeStockColumn();
+
       // Verify order exists and is still pending
       const [[order]] = await db.query(
         'SELECT id, account_id, status FROM orders WHERE id = ?',
@@ -787,7 +792,7 @@ export const toolsImpl = {
           
           // Get size and check stock
           const [[sizeInfo]] = await db.query(
-            `SELECT ps.id, ps.stock, s.size 
+            `SELECT ps.id, ps.${stockColumn} AS stock, s.size 
              FROM product_sizes ps 
              JOIN sizes s ON s.id = ps.size_id 
              WHERE ps.product_id = ? AND s.size = ?`,
@@ -819,7 +824,7 @@ export const toolsImpl = {
           
           // Update stock
           await db.query(
-            'UPDATE product_sizes SET stock = stock - ? WHERE id = ?',
+            `UPDATE product_sizes SET ${stockColumn} = ${stockColumn} - ? WHERE id = ?`,
             [item.quantity, sizeInfo.id]
           );
           
