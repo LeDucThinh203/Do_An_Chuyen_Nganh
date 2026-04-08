@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model account {
+  id                 BigInt      @id @default(autoincrement())
+  email              String      @unique
+  username           String
+  password           String
+  role               String      @default("user")
+  reset_token        String?
+  reset_token_expiry DateTime?
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @default(now()) @updatedAt
+  address            address[]
+  orders             orders[]
+
+  @@map("account")
+}
+
+model category {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  description String?
+  product     product[]
+
+  @@map("category")
+}
+
+model product {
+  id               BigInt              @id @default(autoincrement())
+  name             String
+  description      String?
+  price            Decimal             @default(0)
+  image            String?
+  category_id      BigInt?
+  discount_percent Decimal             @default(0)
+  category         category?           @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  product_sizes    product_sizes[]
+  product_embedding product_embeddings?
+
+  @@index([category_id], map: "idx_product_category")
+  @@map("product")
+}
+
+model sizes {
+  id            BigInt          @id @default(autoincrement())
+  size          String          @unique
+  product_sizes product_sizes[]
+
+  @@map("sizes")
+}
+
+model product_sizes {
+  id            BigInt          @id @default(autoincrement())
+  product_id    BigInt
+  size_id       BigInt
+  stock         Int             @default(0)
+  product       product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  sizes         sizes           @relation(fields: [size_id], references: [id], onDelete: Cascade)
+  order_details order_details[]
+
+  @@unique([product_id, size_id])
+  @@index([product_id], map: "idx_product_sizes_product")
+  @@map("product_sizes")
+}
+
+model address {
+  id            BigInt   @id @default(autoincrement())
+  account_id    BigInt?
+  name          String
+  phone         String
+  provinceName  String?
+  districtName  String?
+  wardName      String?
+  address_detail String
+  account       account? @relation(fields: [account_id], references: [id], onDelete: SetNull)
+
+  @@map("address")
+}
+
+model orders {
+  id           BigInt          @id @default(autoincrement())
+  name         String
+  phone        String
+  address      String
+  account_id   BigInt?
+  total_amount Decimal         @default(0)
+  status       String          @default("pending")
+  payment_method String        @default("cod")
+  is_paid      Boolean         @default(false)
+  payment_info String?
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @default(now()) @updatedAt
+  account      account?        @relation(fields: [account_id], references: [id], onDelete: SetNull)
+  order_details order_details[]
+
+  @@index([account_id], map: "idx_orders_account")
+  @@map("orders")
+}
+
+model order_details {
+  id               BigInt        @id @default(autoincrement())
+  order_id         BigInt
+  product_sizes_id BigInt
+  quantity         Int
+  price            Decimal       @default(0)
+  orders           orders        @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_sizes    product_sizes @relation(fields: [product_sizes_id], references: [id], onDelete: Restrict)
+  rating           rating[]
+
+  @@index([order_id], map: "idx_order_details_order")
+  @@map("order_details")
+}
+
+model rating {
+  id              BigInt      @id @default(autoincrement())
+  rating_value    Int
+  comment         String?
+  order_detail_id BigInt?
+  admin_reply     String?
+  replied_by      BigInt?
+  replied_at      DateTime?
+  order_details   order_details? @relation(fields: [order_detail_id], references: [id], onDelete: SetNull)
+
+  @@index([order_detail_id], map: "idx_rating_order_detail")
+  @@map("rating")
+}
+
+model ai_conversations {
+  id           BigInt   @id @default(autoincrement())
+  session_id   String
+  user_id      BigInt?
+  role         String
+  content      String?
+  tool_name    String?
+  tool_payload String?
+  created_at   DateTime @default(now())
+
+  @@index([session_id], map: "idx_ai_conv_session_id")
+  @@index([user_id, role], map: "idx_ai_conv_user_role")
+  @@map("ai_conversations")
+}
+
+model ai_memory {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt   @unique
+  summary    String?
+  embedding  String?
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@index([user_id], map: "idx_ai_mem_user")
+  @@map("ai_memory")
+}
+
+model product_embeddings {
+  product_id BigInt   @id
+  embedding  String?
+  updated_at DateTime @default(now())
+  product    product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@map("product_embeddings")
+}
