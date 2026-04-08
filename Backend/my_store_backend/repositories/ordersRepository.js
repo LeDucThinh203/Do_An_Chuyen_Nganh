@@ -83,9 +83,13 @@ export const createOrder = async (orderData) => {
         );
       }
       
-      // Insert order details
-      const values = order_details.map(d => [orderId, d.product_sizes_id, d.quantity, d.price]);
-      await conn.query('INSERT INTO order_details (order_id, product_sizes_id, quantity, price) VALUES ?', [values]);
+      // Insert order details (PostgreSQL-friendly, one statement per detail)
+      for (const d of order_details) {
+        await conn.query(
+          'INSERT INTO order_details (order_id, product_sizes_id, quantity, price) VALUES (?, ?, ?, ?)',
+          [orderId, d.product_sizes_id, d.quantity, d.price]
+        );
+      }
     }
 
     await conn.commit();

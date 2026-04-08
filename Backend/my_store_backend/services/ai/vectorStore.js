@@ -10,10 +10,16 @@ const resolveProductSizeStockColumn = async () => {
     const [rows] = await db.query(`
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_schema = DATABASE()
+      WHERE table_schema = current_schema()
         AND table_name = 'product_sizes'
         AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
-      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
+      ORDER BY CASE column_name
+        WHEN 'stock' THEN 1
+        WHEN 'quantity' THEN 2
+        WHEN 'stock_quantity' THEN 3
+        WHEN 'warehouse' THEN 4
+        ELSE 100
+      END
       LIMIT 1
     `);
 
@@ -33,7 +39,7 @@ const parseVec = (s) => {
 
 const getAssetBase = () => {
   // Images are served from frontend, not backend
-  return 'http://localhost:3000'; // Frontend URL
+  return process.env.FRONTEND_URL || 'http://localhost:3000';
 };
 
 export const normalizeImage = (img) => {
@@ -49,7 +55,8 @@ export const upsertProductEmbedding = async (product) => {
   const text = `${product.name}\n${product.description || ''}`.trim();
   const vec = await embedText(text);
   await db.query(
-    `REPLACE INTO product_embeddings (product_id, embedding) VALUES (?, ?)`,
+    `INSERT INTO product_embeddings (product_id, embedding) VALUES (?, ?)
+     ON CONFLICT (product_id) DO UPDATE SET embedding = EXCLUDED.embedding, updated_at = NOW()`,
     [product.id, JSON.stringify(vec)]
   );
 };
