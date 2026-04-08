@@ -510,7 +510,10 @@ export const toolsImpl = {
       // Build query - lấy TẤT CẢ đơn hàng trong khoảng thời gian (không filter theo status)
       const query = `SELECT o.*, 
                     (SELECT COUNT(*) FROM order_details WHERE order_id = o.id) as item_count,
-                    (SELECT GROUP_CONCAT(CONCAT(p.name, ' (', s.size, ') x', od.quantity) SEPARATOR ', ')
+                    (SELECT STRING_AGG(
+                        (COALESCE(p.name, 'Sản phẩm') || ' (' || COALESCE(s.size::text, '?') || ') x' || od.quantity::text),
+                        ', '
+                      )
                      FROM order_details od
                      LEFT JOIN product_sizes ps ON od.product_sizes_id = ps.id
                      LEFT JOIN product p ON ps.product_id = p.id

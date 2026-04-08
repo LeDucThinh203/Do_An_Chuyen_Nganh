@@ -9,7 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
-    "prisma:pull": "prisma db pull"
+    "prisma:pull": "prisma db pull",
+    "db:import:mysql": "node scripts/import_mysql_dump_to_postgres.js",
+    "db:import:mysql:ai": "node scripts/import_mysql_dump_to_postgres.js --include-ai"
   },
   "keywords": [],
   "author": "",

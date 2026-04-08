@@ -129,8 +129,8 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   
   // If BOTH category AND brand keywords exist → must have BOTH in name (AND logic)
   if (categoryKeywords.length > 0 && importantKeywords.length > 0) {
-    const categoryConditions = categoryKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
-    const brandConditions = importantKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
+    const categoryConditions = categoryKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
+    const brandConditions = importantKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
     likeConditions = `(${categoryConditions}) AND (${brandConditions})`;
     likeParams = [...categoryKeywords, ...importantKeywords];
     
@@ -138,7 +138,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   }
   // Else if only category keyword exists (e.g., "giày"), it MUST be in product name
   else if (categoryKeywords.length > 0) {
-    const categoryConditions = categoryKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
+    const categoryConditions = categoryKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
     likeConditions = categoryConditions;
     likeParams = categoryKeywords;
     
@@ -147,7 +147,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   // Else if there are important keywords (e.g., "MU"), they must be in name OR description
   else if (importantKeywords.length > 0) {
     const requiredConditions = importantKeywords.map(() => 
-      '(p.name LIKE CONCAT("%", ?, "%") OR p.description LIKE CONCAT("%", ?, "%"))'
+      "(p.name ILIKE ('%' || ? || '%') OR p.description ILIKE ('%' || ? || '%'))"
     ).join(' AND ');
     likeConditions = requiredConditions;
     likeParams = importantKeywords.flatMap(k => [k, k]);
@@ -156,15 +156,15 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   }
   // Else use generic keyword search
   else if (keywords.length > 0) {
-    likeConditions = keywords.map(() => '(p.name LIKE CONCAT("%", ?, "%") OR p.description LIKE CONCAT("%", ?, "%"))').join(' OR ');
+    likeConditions = keywords.map(() => "(p.name ILIKE ('%' || ? || '%') OR p.description ILIKE ('%' || ? || '%'))").join(' OR ');
     likeParams = keywords.flatMap(k => [k, k]);
   }
   
   // Fetch candidates with LIKE prefilter
   const [candidates] = await db.query(
     `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding,
-            GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
-            GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
+            STRING_AGG(DISTINCT s.size::text, ', ') as sizes,
+            STRING_AGG(DISTINCT (s.size::text || ':' || ps.${stockColumn}::text), ', ') as stock_by_size
      FROM product p
      LEFT JOIN product_embeddings pe ON pe.product_id = p.id
      LEFT JOIN product_sizes ps ON ps.product_id = p.id
@@ -334,8 +334,8 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   if (categoryId) {
     const [relatedByCategory] = await db.query(
       `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, pe.embedding,
-              GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
-              GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
+              STRING_AGG(DISTINCT s.size::text, ', ') as sizes,
+              STRING_AGG(DISTINCT (s.size::text || ':' || ps.${stockColumn}::text), ', ') as stock_by_size
        FROM product p
        LEFT JOIN product_embeddings pe ON pe.product_id = p.id
        LEFT JOIN product_sizes ps ON ps.product_id = p.id
