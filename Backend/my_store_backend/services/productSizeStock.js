@@ -9,16 +9,10 @@ export const resolveProductSizeStockColumn = async () => {
     const [rows] = await db.query(`
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_schema = current_schema()
+      WHERE table_schema = DATABASE()
         AND table_name = 'product_sizes'
         AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
-      ORDER BY CASE column_name
-        WHEN 'stock' THEN 1
-        WHEN 'quantity' THEN 2
-        WHEN 'stock_quantity' THEN 3
-        WHEN 'warehouse' THEN 4
-        ELSE 100
-      END
+      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
       LIMIT 1
     `);
 

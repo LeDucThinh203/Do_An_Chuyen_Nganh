@@ -44,9 +44,9 @@ export const upsertLongTermMemory = async (user_id, summary) => {
   const sql = `
     INSERT INTO ai_memory (user_id, summary, embedding, updated_at)
     VALUES (?, ?, ?, NOW())
-    ON CONFLICT (user_id) DO UPDATE SET
-      summary = EXCLUDED.summary,
-      embedding = EXCLUDED.embedding,
+    ON DUPLICATE KEY UPDATE
+      summary = VALUES(summary),
+      embedding = VALUES(embedding),
       updated_at = NOW()
   `;
   await db.query(sql, [user_id, summary, JSON.stringify(vec)]);

@@ -10,16 +10,10 @@ const resolveProductSizeStockColumn = async () => {
     const [rows] = await db.query(`
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_schema = current_schema()
+      WHERE table_schema = DATABASE()
         AND table_name = 'product_sizes'
         AND column_name IN ('stock', 'quantity', 'stock_quantity', 'warehouse')
-      ORDER BY CASE column_name
-        WHEN 'stock' THEN 1
-        WHEN 'quantity' THEN 2
-        WHEN 'stock_quantity' THEN 3
-        WHEN 'warehouse' THEN 4
-        ELSE 100
-      END
+      ORDER BY FIELD(column_name, 'stock', 'quantity', 'stock_quantity', 'warehouse')
       LIMIT 1
     `);
 
@@ -39,7 +33,7 @@ const parseVec = (s) => {
 
 const getAssetBase = () => {
   // Images are served from frontend, not backend
-  return process.env.FRONTEND_URL || 'http://localhost:3000';
+  return 'http://localhost:3000'; // Frontend URL
 };
 
 export const normalizeImage = (img) => {
@@ -55,8 +49,7 @@ export const upsertProductEmbedding = async (product) => {
   const text = `${product.name}\n${product.description || ''}`.trim();
   const vec = await embedText(text);
   await db.query(
-    `INSERT INTO product_embeddings (product_id, embedding) VALUES (?, ?)
-     ON CONFLICT (product_id) DO UPDATE SET embedding = EXCLUDED.embedding, updated_at = NOW()`,
+    `REPLACE INTO product_embeddings (product_id, embedding) VALUES (?, ?)`,
     [product.id, JSON.stringify(vec)]
   );
 };
@@ -129,8 +122,8 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   
   // If BOTH category AND brand keywords exist → must have BOTH in name (AND logic)
   if (categoryKeywords.length > 0 && importantKeywords.length > 0) {
-    const categoryConditions = categoryKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
-    const brandConditions = importantKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
+    const categoryConditions = categoryKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
+    const brandConditions = importantKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
     likeConditions = `(${categoryConditions}) AND (${brandConditions})`;
     likeParams = [...categoryKeywords, ...importantKeywords];
     
@@ -138,7 +131,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   }
   // Else if only category keyword exists (e.g., "giày"), it MUST be in product name
   else if (categoryKeywords.length > 0) {
-    const categoryConditions = categoryKeywords.map(() => "p.name ILIKE ('%' || ? || '%')").join(' AND ');
+    const categoryConditions = categoryKeywords.map(() => 'p.name LIKE CONCAT("%", ?, "%")').join(' AND ');
     likeConditions = categoryConditions;
     likeParams = categoryKeywords;
     
@@ -147,7 +140,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   // Else if there are important keywords (e.g., "MU"), they must be in name OR description
   else if (importantKeywords.length > 0) {
     const requiredConditions = importantKeywords.map(() => 
-      "(p.name ILIKE ('%' || ? || '%') OR p.description ILIKE ('%' || ? || '%'))"
+      '(p.name LIKE CONCAT("%", ?, "%") OR p.description LIKE CONCAT("%", ?, "%"))'
     ).join(' AND ');
     likeConditions = requiredConditions;
     likeParams = importantKeywords.flatMap(k => [k, k]);
@@ -156,15 +149,15 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   }
   // Else use generic keyword search
   else if (keywords.length > 0) {
-    likeConditions = keywords.map(() => "(p.name ILIKE ('%' || ? || '%') OR p.description ILIKE ('%' || ? || '%'))").join(' OR ');
+    likeConditions = keywords.map(() => '(p.name LIKE CONCAT("%", ?, "%") OR p.description LIKE CONCAT("%", ?, "%"))').join(' OR ');
     likeParams = keywords.flatMap(k => [k, k]);
   }
   
   // Fetch candidates with LIKE prefilter
   const [candidates] = await db.query(
     `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding,
-            STRING_AGG(DISTINCT s.size::text, ', ') as sizes,
-            STRING_AGG(DISTINCT (s.size::text || ':' || ps.${stockColumn}::text), ', ') as stock_by_size
+            GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
+            GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
      FROM product p
      LEFT JOIN product_embeddings pe ON pe.product_id = p.id
      LEFT JOIN product_sizes ps ON ps.product_id = p.id
@@ -334,8 +327,8 @@ export const semanticSearchProducts = async (query, topK = 5) => {
   if (categoryId) {
     const [relatedByCategory] = await db.query(
       `SELECT p.id, p.name, p.description, p.price, p.discount_percent, p.image, pe.embedding,
-              STRING_AGG(DISTINCT s.size::text, ', ') as sizes,
-              STRING_AGG(DISTINCT (s.size::text || ':' || ps.${stockColumn}::text), ', ') as stock_by_size
+              GROUP_CONCAT(DISTINCT s.size ORDER BY s.id SEPARATOR ', ') as sizes,
+              GROUP_CONCAT(DISTINCT CONCAT(s.size, ':', ps.${stockColumn}) ORDER BY s.id SEPARATOR ', ') as stock_by_size
        FROM product p
        LEFT JOIN product_embeddings pe ON pe.product_id = p.id
        LEFT JOIN product_sizes ps ON ps.product_id = p.id
