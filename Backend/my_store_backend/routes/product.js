@@ -186,4 +186,31 @@ router.delete('/:id', authenticate, requireAdmin, productController.deleteProduc
  */
 router.patch('/:id/restore', authenticate, requireAdmin, productController.restoreProduct);
 
+/**
+ * @swagger
+ * /product/{id}/hard-delete:
+ *   delete:
+ *     summary: Xóa cứng sản phẩm (chỉ cho sản phẩm chưa được mua)
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID sản phẩm
+ *     responses:
+ *       200:
+ *         description: Xóa thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
+ *       409:
+ *         description: Sản phẩm đã được mua, không thể xóa
+ */
+router.delete('/:id/hard-delete', authenticate, requireAdmin, productController.hardDeleteProduct);
+
 export default router;

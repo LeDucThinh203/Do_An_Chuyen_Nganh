@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   getAllProductsAdmin,
   deleteProduct,
+  hardDeleteProduct,
   restoreProduct,
   updateProduct,
   getAllSizes,
@@ -66,15 +67,29 @@ export default function ProductManager() {
     }
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm("🗑️ Bạn có chắc muốn ẩn sản phẩm này?")) return;
-    try {
-      await deleteProduct(id);
-      await fetchProductData();
-      alert("✅ Đã ẩn sản phẩm. Bạn có thể khôi phục trong danh sách admin.");
-    } catch (err) {
-      console.error("Ẩn sản phẩm thất bại:", err);
-      alert(`❌ Ẩn sản phẩm thất bại: ${err.message}`);
+  const handleDeleteProduct = async (id, hasPurchases = false) => {
+    if (hasPurchases) {
+      // Sản phẩm đã được mua → chỉ có thể ẩn
+      if (!window.confirm("🚫 Sản phẩm này đã được mua. Bạn có chắc muốn ẩn sản phẩm?")) return;
+      try {
+        await deleteProduct(id);
+        await fetchProductData();
+        alert("✅ Đã ẩn sản phẩm. Bạn có thể khôi phục trong danh sách admin.");
+      } catch (err) {
+        console.error("Ẩn sản phẩm thất bại:", err);
+        alert(`❌ Ẩn sản phẩm thất bại: ${err.message}`);
+      }
+    } else {
+      // Sản phẩm chưa được mua → xóa cứng
+      if (!window.confirm("⚠️ Sản phẩm này chưa được mua. Bạn có chắc muốn xóa vĩnh viễn?")) return;
+      try {
+        await hardDeleteProduct(id);
+        await fetchProductData();
+        alert("✅ Đã xóa sản phẩm vĩnh viễn!");
+      } catch (err) {
+        console.error("Xóa sản phẩm thất bại:", err);
+        alert(`❌ Xóa sản phẩm thất bại: ${err.message}`);
+      }
     }
   };
 
@@ -721,10 +736,14 @@ function ProductCard({
             </button>
           ) : (
             <button
-              onClick={() => handleDeleteProduct(product.id)}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
+              onClick={() => handleDeleteProduct(product.id, product.hasPurchases)}
+              className={`flex-1 text-white py-2 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium ${
+                product.hasPurchases 
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700' 
+                  : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+              }`}
             >
-              🗑️ Ẩn
+              {product.hasPurchases ? '🚫 Ẩn' : '🗑️ Xóa'}
             </button>
           )}
         </div>

@@ -201,10 +201,13 @@ export default function ProductList() {
   // Featured products: those having discount_percent > 0
   const featuredProducts = filteredProducts.filter((p) => Number(p.discount_percent || 0) > 0);
 
-  const handleResetFilters = () => {
+  const handleResetFilters = async () => {
     setSelectedCategory("all");
     setPriceRange([0, 5000000]);
     setSortOrder("default");
+    setSearchName("");
+    setIsSearching(false);
+    await fetchData();
   };
 
   // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
@@ -220,6 +223,7 @@ export default function ProductList() {
         handleLogout={handleLogout}
         products={products}
         onSearch={handleSearch}
+        onResetFilters={handleResetFilters}
         cartCount={cartCount}
       />
 
@@ -375,7 +379,7 @@ export default function ProductList() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
             </div>
-            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {featuredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -411,7 +415,7 @@ export default function ProductList() {
                   </Link>
                 </div>
                 
-                <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {cat.products.map((product) => (
                     <ProductCard
                       key={product.id}
@@ -463,7 +467,7 @@ const resolveImage = (img) => {
 };
 
 /* Header component */
-function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) {
+function Header({ user, handleLogout, products = [], onSearch, onResetFilters, cartCount = 0 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -498,9 +502,13 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
     }
   };
 
-  const handleLogoClick = () => {
+  const handleLogoClick = async () => {
     setSearchTerm("");
+    setSuggestions([]);
     if (onSearch) onSearch("");
+    if (onResetFilters) {
+      await onResetFilters();
+    }
     navigate("/");
   };
 

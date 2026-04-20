@@ -65,3 +65,13 @@ export const restoreProduct = async (req, res) => {
     res.status(statusCode).json({ error: err.message });
   }
 };
+
+export const hardDeleteProduct = async (req, res) => {
+  try {
+    await productRepo.hardDeleteProduct(req.params.id);
+    res.json({ message: 'Xóa sản phẩm thành công' });
+  } catch (err) {
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ error: err.message });
+  }
+};

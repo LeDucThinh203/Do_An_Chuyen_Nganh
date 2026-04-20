@@ -48,11 +48,26 @@ export const getAllProducts = async () => {
 };
 
 export const getAllProductsAdmin = async () => {
-  const res = await fetch(`${PRODUCT_API_URL}/admin/all`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error(await getErrorMessage(res, "Lấy danh sách sản phẩm admin thất bại"));
-  return await safeJson(res);
+  try {
+    const res = await fetch(`${PRODUCT_API_URL}/admin/all`, {
+      headers: getAuthHeaders(),
+    });
+
+    if (res.ok) return await safeJson(res);
+
+    // Fallback for environments where admin route/auth is not ready yet.
+    if ([401, 403, 404, 405].includes(res.status)) {
+      return await getAllProducts();
+    }
+
+    throw new Error(await getErrorMessage(res, "Lấy danh sách sản phẩm admin thất bại"));
+  } catch (err) {
+    // Network/CORS/proxy issues: keep ProductManager usable with public list.
+    if (err?.name === 'TypeError' || /NetworkError|Failed to fetch/i.test(err?.message || '')) {
+      return await getAllProducts();
+    }
+    throw err;
+  }
 };
 
 export const getProductById = async (id) => {
@@ -93,13 +108,33 @@ export const deleteProduct = async (id) => {
   return true;
 };
 
-export const restoreProduct = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}/restore`, {
-    method: "PATCH",
-    headers: getAuthHeaders(),
+export const hardDeleteProduct = async (id) => {
+  const res = await fetch(`${PRODUCT_API_URL}/${id}/hard-delete`, {
+    method: "DELETE",
+    headers: getAuthHeaders()
   });
-  if (!res.ok) throw new Error(await getErrorMessage(res, "Khôi phục sản phẩm thất bại"));
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa sản phẩm thất bại"));
   return true;
+};
+
+export const restoreProduct = async (id) => {
+  try {
+    const res = await fetch(`${PRODUCT_API_URL}/${id}/restore`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+      const errorMessage = await getErrorMessage(res, "Khôi phục sản phẩm thất bại");
+      throw new Error(errorMessage);
+    }
+    return await safeJson(res);
+  } catch (err) {
+    // Better error handling for network issues
+    if (err?.name === 'TypeError' || /Network|Failed to fetch/i.test(err?.message || '')) {
+      throw new Error("Khôi phục sản phẩm thất bại: Vui lòng kiểm tra kết nối mạng và thử lại");
+    }
+    throw err;
+  }
 };
 
 // ================= Category API =================

@@ -23,11 +23,41 @@ const ensureDeletedAtColumn = async () => {
   await ensureDeletedAtColumnPromise;
 };
 
+// Kiểm tra xem sản phẩm đã được mua hay chưa
+const checkProductHasPurchases = async (productId) => {
+  const sql = `
+    SELECT COUNT(*) as purchase_count
+    FROM order_details od
+    WHERE od.product_sizes_id IN (
+      SELECT id FROM product_sizes WHERE product_id = ?
+    )
+  `;
+  const [result] = await db.query(sql, [productId]);
+  return result[0]?.purchase_count > 0;
+};
+
 export const getAllProducts = async ({ includeDeleted = false } = {}) => {
   await ensureDeletedAtColumn();
   const sql = includeDeleted
-    ? 'SELECT * FROM product ORDER BY id DESC'
-    : 'SELECT * FROM product WHERE deleted_at IS NULL ORDER BY id DESC';
+    ? `SELECT p.*,
+              EXISTS (
+                SELECT 1
+                FROM order_details od
+                JOIN product_sizes ps ON ps.id = od.product_sizes_id
+                WHERE ps.product_id = p.id
+              ) AS hasPurchases
+       FROM product p
+       ORDER BY p.id DESC`
+    : `SELECT p.*,
+              EXISTS (
+                SELECT 1
+                FROM order_details od
+                JOIN product_sizes ps ON ps.id = od.product_sizes_id
+                WHERE ps.product_id = p.id
+              ) AS hasPurchases
+       FROM product p
+       WHERE p.deleted_at IS NULL
+       ORDER BY p.id DESC`;
   const [rows] = await db.query(sql);
   return rows;
 };
@@ -121,4 +151,21 @@ export const restoreProduct = async (id) => {
   }
 
   await db.query('UPDATE product SET deleted_at = NULL WHERE id=?', [id]);
+};
+
+// Xóa cứng sản phẩm (chỉ cho sản phẩm chưa được mua)
+export const hardDeleteProduct = async (id) => {
+  // Kiểm tra xem sản phẩm có đã được mua không
+  const hasPurchases = await checkProductHasPurchases(id);
+  if (hasPurchases) {
+    const err = new Error('Không thể xóa sản phẩm đã được mua. Vui lòng sử dụng tính năng ẩn sản phẩm.');
+    err.statusCode = 409;
+    throw err;
+  }
+
+  // Xóa các size của sản phẩm trước (để tránh lỗi FK)
+  await db.query('DELETE FROM product_sizes WHERE product_id=?', [id]);
+  
+  // Xóa sản phẩm
+  await db.query('DELETE FROM product WHERE id=?', [id]);
 };

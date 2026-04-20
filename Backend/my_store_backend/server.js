@@ -14,7 +14,11 @@ const app = express();
 
 // --- Middleware ---
 app.use(express.json());
-app.use(cors({ origin: '*', methods: ['GET','POST','PUT','DELETE','OPTIONS'] }));
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // --- Mount tất cả route ---
 app.use('/', uiRoutes);
