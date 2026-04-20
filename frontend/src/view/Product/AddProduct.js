@@ -79,7 +79,7 @@ export default function AddProduct() {
     }
   };
 
-  if (loadingCategories) return <ProductFormSkeleton />;
+  if (loadingCategories) return <ProductFormSkeleton containerClassName="max-w-lg" />;
 
   return (
     <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">

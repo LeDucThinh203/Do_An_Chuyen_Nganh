@@ -30,9 +30,9 @@ export function ProductGridSkeleton({ count = 8 }) {
   );
 }
 
-export function ProductFormSkeleton() {
+export function ProductFormSkeleton({ containerClassName = "max-w-5xl" }) {
   return (
-    <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <div className={`w-full ${containerClassName} mx-auto bg-white p-8 rounded-lg shadow-md`}>
       <SkeletonBlock className="h-9 w-64 mx-auto mb-8" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
@@ -53,7 +53,7 @@ export function ProductFormSkeleton() {
 
 export function ProductDetailSkeleton() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
+    <div className="w-full px-4 py-8 space-y-8">
       <SkeletonBlock className="h-6 w-24" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <SkeletonBlock className="h-96 w-full rounded-2xl" />

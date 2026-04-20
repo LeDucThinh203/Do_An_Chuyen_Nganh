@@ -94,7 +94,7 @@ export default function EditProduct() {
     }
   };
 
-  if (loading || !product) return <ProductFormSkeleton />;
+  if (loading || !product) return <ProductFormSkeleton containerClassName="max-w-5xl" />;
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">
