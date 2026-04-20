@@ -25,6 +25,24 @@ router.get('/', productController.getAllProducts);
 
 /**
  * @swagger
+ * /product/admin/all:
+ *   get:
+ *     summary: Lấy tất cả sản phẩm gồm cả đã ẩn (Admin only)
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách sản phẩm đầy đủ
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
+ */
+router.get('/admin/all', authenticate, requireAdmin, productController.getAllProductsAdmin);
+
+/**
+ * @swagger
  * /product/{id}:
  *   get:
  *     summary: Lấy sản phẩm theo ID
@@ -142,5 +160,30 @@ router.put('/:id', authenticate, requireAdmin, productController.updateProduct);
  *         description: Không có quyền admin
  */
 router.delete('/:id', authenticate, requireAdmin, productController.deleteProduct);
+
+/**
+ * @swagger
+ * /product/{id}/restore:
+ *   patch:
+ *     summary: Khôi phục sản phẩm đã ẩn (Admin only)
+ *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID sản phẩm
+ *     responses:
+ *       200:
+ *         description: Khôi phục thành công
+ *       401:
+ *         description: Chưa xác thực
+ *       403:
+ *         description: Không có quyền admin
+ */
+router.patch('/:id/restore', authenticate, requireAdmin, productController.restoreProduct);
 
 export default router;

@@ -9,6 +9,15 @@ export const getAllProducts = async (req, res) => {
   }
 };
 
+export const getAllProductsAdmin = async (req, res) => {
+  try {
+    const products = await productRepo.getAllProducts({ includeDeleted: true });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const getProductById = async (req, res) => {
   try {
     const product = await productRepo.getProductById(req.params.id);
@@ -40,8 +49,19 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     await productRepo.deleteProduct(req.params.id);
-    res.json({ message: 'Xóa thành công' });
+    res.json({ message: 'Ẩn sản phẩm thành công' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ error: err.message });
+  }
+};
+
+export const restoreProduct = async (req, res) => {
+  try {
+    await productRepo.restoreProduct(req.params.id);
+    res.json({ message: 'Khôi phục sản phẩm thành công' });
+  } catch (err) {
+    const statusCode = err.statusCode || 500;
+    res.status(statusCode).json({ error: err.message });
   }
 };

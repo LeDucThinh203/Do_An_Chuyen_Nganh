@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS product (
   price NUMERIC(14,2) NOT NULL DEFAULT 0,
   image TEXT NULL,
   category_id BIGINT NULL REFERENCES category(id) ON DELETE SET NULL,
-  discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0
+  discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0,
+  deleted_at TIMESTAMPTZ NULL
 );
 
 CREATE TABLE IF NOT EXISTS sizes (

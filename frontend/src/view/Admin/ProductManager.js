@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllProducts,
+  getAllProductsAdmin,
   deleteProduct,
+  restoreProduct,
   updateProduct,
   getAllSizes,
   getAllProductSizes,
@@ -35,6 +36,7 @@ export default function ProductManager() {
   const [editingDiscount, setEditingDiscount] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [visibleCount, setVisibleCount] = useState(6);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,7 @@ export default function ProductManager() {
     try {
       setLoading(true);
       const [prodData, catData, sizeData, prodSizeData] = await Promise.all([
-        getAllProducts(),
+        getAllProductsAdmin(),
         getAllCategories(),
         getAllSizes(),
         getAllProductSizes()
@@ -65,13 +67,26 @@ export default function ProductManager() {
   };
 
   const handleDeleteProduct = async (id) => {
-    if (!window.confirm("🗑️ Bạn có chắc muốn xóa sản phẩm này?")) return;
+    if (!window.confirm("🗑️ Bạn có chắc muốn ẩn sản phẩm này?")) return;
     try {
       await deleteProduct(id);
-      setProducts(products.filter((p) => p.id !== id));
-      setProductSizes(productSizes.filter((ps) => ps.product_id !== id));
+      await fetchProductData();
+      alert("✅ Đã ẩn sản phẩm. Bạn có thể khôi phục trong danh sách admin.");
     } catch (err) {
-      console.error("Xóa sản phẩm thất bại:", err);
+      console.error("Ẩn sản phẩm thất bại:", err);
+      alert(`❌ Ẩn sản phẩm thất bại: ${err.message}`);
+    }
+  };
+
+  const handleRestoreProduct = async (id) => {
+    if (!window.confirm("↩️ Bạn có chắc muốn khôi phục sản phẩm này?")) return;
+    try {
+      await restoreProduct(id);
+      await fetchProductData();
+      alert("✅ Khôi phục sản phẩm thành công!");
+    } catch (err) {
+      console.error("Khôi phục sản phẩm thất bại:", err);
+      alert(`❌ Khôi phục sản phẩm thất bại: ${err.message}`);
     }
   };
 
@@ -123,7 +138,7 @@ export default function ProductManager() {
   const handleUpdateDiscount = async (productId, discountPercent) => {
     try {
       await updateProduct(productId, { discount_percent: Number(discountPercent) });
-      const updatedProducts = await getAllProducts();
+      const updatedProducts = await getAllProductsAdmin();
       setProducts(updatedProducts);
       setEditingDiscount((prev) => ({ ...prev, [productId]: undefined }));
       alert("✅ Cập nhật khuyến mãi thành công!");
@@ -140,23 +155,37 @@ export default function ProductManager() {
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === "all" || p.category_id === Number(filterCategory);
+    const isDeleted = Boolean(p.deleted_at);
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && !isDeleted) ||
+      (filterStatus === "deleted" && isDeleted);
     
     // Tính giá sau giảm giá
     const discount = Number(p.discount_percent || 0);
     const finalPrice = discount > 0 ? p.price * (1 - discount / 100) : p.price;
     const matchesPrice = finalPrice >= priceRange[0] && finalPrice <= priceRange[1];
     
-    return matchesSearch && matchesCategory && matchesPrice;
+    return matchesSearch && matchesCategory && matchesPrice && matchesStatus;
   });
+
+  const productsByStatus = useMemo(() => {
+    return products.filter((p) => {
+      const isDeleted = Boolean(p.deleted_at);
+      if (filterStatus === "active") return !isDeleted;
+      if (filterStatus === "deleted") return isDeleted;
+      return true;
+    });
+  }, [products, filterStatus]);
 
   // Thống kê sản phẩm theo danh mục
   const categoryStats = useMemo(() => {
-    const stats = { all: products.length };
+    const stats = { all: productsByStatus.length };
     categories.forEach(cat => {
-      stats[cat.id] = products.filter(p => p.category_id === cat.id).length;
+      stats[cat.id] = productsByStatus.filter(p => p.category_id === cat.id).length;
     });
     return stats;
-  }, [products, categories]);
+  }, [productsByStatus, categories]);
 
   if (loading) {
     return <AdminPanelSkeleton cardCount={6} />;
@@ -213,6 +242,48 @@ export default function ProductManager() {
             ➕ Thêm sản phẩm
           </button>
         </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => {
+            setFilterStatus("all");
+            setVisibleCount(6);
+          }}
+          className={`px-4 py-2 rounded-full border transition ${
+            filterStatus === "all"
+              ? "bg-blue-600 text-white border-blue-700"
+              : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
+          }`}
+        >
+          Tất cả ({products.length})
+        </button>
+        <button
+          onClick={() => {
+            setFilterStatus("active");
+            setVisibleCount(6);
+          }}
+          className={`px-4 py-2 rounded-full border transition ${
+            filterStatus === "active"
+              ? "bg-green-600 text-white border-green-700"
+              : "bg-white text-gray-700 border-gray-300 hover:border-green-400"
+          }`}
+        >
+          Đang bán ({products.filter((p) => !p.deleted_at).length})
+        </button>
+        <button
+          onClick={() => {
+            setFilterStatus("deleted");
+            setVisibleCount(6);
+          }}
+          className={`px-4 py-2 rounded-full border transition ${
+            filterStatus === "deleted"
+              ? "bg-gray-700 text-white border-gray-800"
+              : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
+          }`}
+        >
+          Đã ẩn ({products.filter((p) => Boolean(p.deleted_at)).length})
+        </button>
       </div>
 
       {/* Sticky Category Filter */}
@@ -390,6 +461,7 @@ export default function ProductManager() {
                           handleUpdateStock={handleUpdateStock}
                           handleUpdateDiscount={handleUpdateDiscount}
                           handleDeleteProduct={handleDeleteProduct}
+                          handleRestoreProduct={handleRestoreProduct}
                           navigate={navigate}
                           calculateDiscountedPrice={calculateDiscountedPrice}
                         />
@@ -420,6 +492,7 @@ export default function ProductManager() {
                 handleUpdateStock={handleUpdateStock}
                 handleUpdateDiscount={handleUpdateDiscount}
                 handleDeleteProduct={handleDeleteProduct}
+                handleRestoreProduct={handleRestoreProduct}
                 navigate={navigate}
                 calculateDiscountedPrice={calculateDiscountedPrice}
               />
@@ -469,9 +542,11 @@ function ProductCard({
   handleUpdateStock,
   handleUpdateDiscount,
   handleDeleteProduct,
+  handleRestoreProduct,
   navigate,
   calculateDiscountedPrice
 }) {
+  const isDeleted = Boolean(product.deleted_at);
   const sizesOfProduct = productSizes
     .filter((ps) => ps.product_id === product.id)
     .map((ps) => ({
@@ -491,6 +566,11 @@ function ProductCard({
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="font-semibold text-lg">{product.name}</h3>
+          {isDeleted && (
+            <span className="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full bg-gray-800 text-white">
+              Đã ẩn khỏi trang bán hàng
+            </span>
+          )}
           
           {/* Price section with discount */}
           <div className="mt-2">
@@ -522,6 +602,7 @@ function ProductCard({
               type="number"
               min="0"
               max="100"
+              disabled={isDeleted}
               value={editingDiscount[product.id] ?? product.discount_percent ?? 0}
               onChange={(e) =>
                 setEditingDiscount((prev) => ({
@@ -529,7 +610,7 @@ function ProductCard({
                   [product.id]: e.target.value,
                 }))
               }
-              className="w-16 border border-gray-300 rounded px-2 py-1 text-sm"
+              className={`w-16 border border-gray-300 rounded px-2 py-1 text-sm ${isDeleted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             />
             <span className="text-sm">%</span>
             {editingDiscount[product.id] !== undefined && (
@@ -558,6 +639,7 @@ function ProductCard({
                         <input
                           type="number"
                           min="0"
+                          disabled={isDeleted}
                           value={editingStock[ps.id] ?? ps.stock ?? 0}
                           onChange={(e) =>
                             setEditingStock((prev) => ({
@@ -565,7 +647,7 @@ function ProductCard({
                               [ps.id]: e.target.value,
                             }))
                           }
-                          className="w-16 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                          className={`w-16 border border-gray-300 rounded px-1 py-0.5 text-sm ${isDeleted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                         />
                         {editingStock[ps.id] !== undefined && (
                           <button
@@ -578,6 +660,7 @@ function ProductCard({
                       </div>
                       <button
                         onClick={() => handleRemoveSize(ps.id)}
+                        disabled={isDeleted}
                         className="text-red-500 hover:text-red-700 font-bold ml-auto text-lg transition-all hover:scale-125 active:scale-95"
                         title="Xóa size"
                       >
@@ -595,13 +678,14 @@ function ProductCard({
           <div className="flex gap-2 mt-3">
             <select
               value={selectedSize[product.id] || ""}
+              disabled={isDeleted}
               onChange={(e) =>
                 setSelectedSize((prev) => ({
                   ...prev,
                   [product.id]: e.target.value,
                 }))
               }
-              className="flex-1 border border-gray-300 rounded-full px-3 py-1 focus:outline-none focus:ring-2 focus:ring-green-400 transition"
+              className={`flex-1 border border-gray-300 rounded-full px-3 py-1 focus:outline-none focus:ring-2 focus:ring-green-400 transition ${isDeleted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             >
               <option value="">Chọn size</option>
               {sizes.map((s) => (
@@ -612,7 +696,8 @@ function ProductCard({
             </select>
             <button
               onClick={() => handleAddSize(product.id)}
-              className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1 rounded-full hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95"
+              disabled={isDeleted}
+              className={`bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1 rounded-full transition-all duration-200 shadow-md ${isDeleted ? 'opacity-50 cursor-not-allowed' : 'hover:from-green-600 hover:to-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95'}`}
             >
               ➕ Thêm
             </button>
@@ -622,16 +707,26 @@ function ProductCard({
         <div className="flex gap-2 mt-4">
           <button
             onClick={() => navigate(`/edit/${product.id}`, { state: { returnTo: "/admin", activeTab: "product" } })}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
+            disabled={isDeleted}
+            className={`flex-1 text-white py-2 rounded-full transition-all duration-200 shadow-md font-medium ${isDeleted ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg transform hover:scale-105 active:scale-95'}`}
           >
             ✏️ Sửa
           </button>
-          <button
-            onClick={() => handleDeleteProduct(product.id)}
-            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
-          >
-            🗑️ Xóa
-          </button>
+          {isDeleted ? (
+            <button
+              onClick={() => handleRestoreProduct(product.id)}
+              className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-full hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
+            >
+              ↩️ Khôi phục
+            </button>
+          ) : (
+            <button
+              onClick={() => handleDeleteProduct(product.id)}
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
+            >
+              🗑️ Ẩn
+            </button>
+          )}
         </div>
       </div>
     </div>

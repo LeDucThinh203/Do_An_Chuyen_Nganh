@@ -47,6 +47,14 @@ export const getAllProducts = async () => {
   return await safeJson(res);
 };
 
+export const getAllProductsAdmin = async () => {
+  const res = await fetch(`${PRODUCT_API_URL}/admin/all`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Lấy danh sách sản phẩm admin thất bại"));
+  return await safeJson(res);
+};
+
 export const getProductById = async (id) => {
   const res = await fetch(`${PRODUCT_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy sản phẩm thất bại");
@@ -81,7 +89,16 @@ export const deleteProduct = async (id) => {
     method: "DELETE",
     headers: getAuthHeaders()
   });
-  if (!res.ok) throw new Error("Xóa sản phẩm thất bại");
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Ẩn sản phẩm thất bại"));
+  return true;
+};
+
+export const restoreProduct = async (id) => {
+  const res = await fetch(`${PRODUCT_API_URL}/${id}/restore`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Khôi phục sản phẩm thất bại"));
   return true;
 };
 

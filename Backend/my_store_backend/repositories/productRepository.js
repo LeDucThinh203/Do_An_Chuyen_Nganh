@@ -1,12 +1,43 @@
 import db from '../db.js';
 
-export const getAllProducts = async () => {
-  const [rows] = await db.query('SELECT * FROM product');
+let ensureDeletedAtColumnPromise = null;
+
+const ensureDeletedAtColumn = async () => {
+  if (!ensureDeletedAtColumnPromise) {
+    ensureDeletedAtColumnPromise = (async () => {
+      const [rows] = await db.query(
+        `SELECT 1
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = 'product'
+           AND column_name = 'deleted_at'
+         LIMIT 1`
+      );
+
+      if (!rows?.length) {
+        await db.query('ALTER TABLE product ADD COLUMN deleted_at TIMESTAMPTZ NULL');
+      }
+    })();
+  }
+
+  await ensureDeletedAtColumnPromise;
+};
+
+export const getAllProducts = async ({ includeDeleted = false } = {}) => {
+  await ensureDeletedAtColumn();
+  const sql = includeDeleted
+    ? 'SELECT * FROM product ORDER BY id DESC'
+    : 'SELECT * FROM product WHERE deleted_at IS NULL ORDER BY id DESC';
+  const [rows] = await db.query(sql);
   return rows;
 };
 
-export const getProductById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM product WHERE id=?', [id]);
+export const getProductById = async (id, { includeDeleted = false } = {}) => {
+  await ensureDeletedAtColumn();
+  const sql = includeDeleted
+    ? 'SELECT * FROM product WHERE id=?'
+    : 'SELECT * FROM product WHERE id=? AND deleted_at IS NULL';
+  const [rows] = await db.query(sql, [id]);
   return rows[0] || null;
 };
 
@@ -57,5 +88,37 @@ export const updateProduct = async (id, data) => {
 };
 
 export const deleteProduct = async (id) => {
-  await db.query('DELETE FROM product WHERE id=?', [id]);
+  await ensureDeletedAtColumn();
+  const [rows] = await db.query('SELECT id, deleted_at FROM product WHERE id=?', [id]);
+  if (!rows?.length) {
+    const err = new Error('Sản phẩm không tồn tại');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (rows[0].deleted_at) {
+    const err = new Error('Sản phẩm đã được ẩn trước đó');
+    err.statusCode = 409;
+    throw err;
+  }
+
+  await db.query('UPDATE product SET deleted_at = NOW() WHERE id=?', [id]);
+};
+
+export const restoreProduct = async (id) => {
+  await ensureDeletedAtColumn();
+  const [rows] = await db.query('SELECT id, deleted_at FROM product WHERE id=?', [id]);
+  if (!rows?.length) {
+    const err = new Error('Sản phẩm không tồn tại');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!rows[0].deleted_at) {
+    const err = new Error('Sản phẩm đang ở trạng thái hoạt động');
+    err.statusCode = 409;
+    throw err;
+  }
+
+  await db.query('UPDATE product SET deleted_at = NULL WHERE id=?', [id]);
 };
