@@ -28,6 +28,7 @@ const Session = {
 
 export default function ProductLoadMore() {
   const { categoryId } = useParams();
+  const normalizedCategoryId = String(categoryId);
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState(null);
@@ -58,14 +59,14 @@ export default function ProductLoadMore() {
       setSizes(sizesData);
       setProductSizes(productSizesData);
       
-      const currentCategory = catData.find(c => c.id === Number(categoryId));
+      const currentCategory = catData.find(c => String(c.id) === normalizedCategoryId);
       setCategory(currentCategory);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
     } finally {
       setLoading(false);
     }
-  }, [categoryId]);
+  }, [normalizedCategoryId]);
 
   useEffect(() => {
     fetchData();
@@ -166,7 +167,7 @@ export default function ProductLoadMore() {
 
   // Lọc sản phẩm theo category và các bộ lọc khác
   const filteredProducts = products.filter((p) => {
-    const matchesCategory = p.category_id === Number(categoryId);
+    const matchesCategory = String(p.category_id) === normalizedCategoryId;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     const discount = Number(p.discount_percent || 0);
@@ -204,7 +205,7 @@ export default function ProductLoadMore() {
       <Header
         user={user}
         handleLogout={handleLogout}
-        products={products.filter(p => p.category_id === Number(categoryId))}
+        products={products.filter(p => String(p.category_id) === normalizedCategoryId)}
         onSearch={setSearchTerm}
         cartCount={cartCount}
       />

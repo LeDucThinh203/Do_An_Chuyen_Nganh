@@ -34,9 +34,9 @@ export default function ProductList() {
   const [searchName, setSearchName] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState({});
-  const [priceRange] = useState([0, 5000000]);
-  const [selectedCategory] = useState("all");
-  const [sortOrder] = useState("default");
+  const [priceRange, setPriceRange] = useState([0, 5000000]);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortOrder, setSortOrder] = useState("default");
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -182,7 +182,7 @@ export default function ProductList() {
     const matchesPrice = finalPrice >= priceRange[0] && finalPrice <= priceRange[1];
     
     // Lọc theo danh mục
-    const matchesCategory = selectedCategory === "all" || p.category_id === Number(selectedCategory);
+    const matchesCategory = selectedCategory === "all" || String(p.category_id) === String(selectedCategory);
     
     return matchesSearch && matchesPrice && matchesCategory;
   }).sort((a, b) => {
@@ -200,6 +200,12 @@ export default function ProductList() {
 
   // Featured products: those having discount_percent > 0
   const featuredProducts = filteredProducts.filter((p) => Number(p.discount_percent || 0) > 0);
+
+  const handleResetFilters = () => {
+    setSelectedCategory("all");
+    setPriceRange([0, 5000000]);
+    setSortOrder("default");
+  };
 
   // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
   const categorizedProducts = categories.map((cat) => {
@@ -285,6 +291,83 @@ export default function ProductList() {
             </div>
           )}
 
+          {/* Bộ lọc */}
+          <div className="mb-8 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="all">Tất cả danh mục</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={String(cat.id)}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Giá từ (VNĐ)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max={priceRange[1]}
+                  step="10000"
+                  value={priceRange[0]}
+                  onChange={(e) => {
+                    const min = Math.max(0, Number(e.target.value) || 0);
+                    setPriceRange([Math.min(min, priceRange[1]), priceRange[1]]);
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Giá đến (VNĐ)</label>
+                <input
+                  type="number"
+                  min={priceRange[0]}
+                  step="10000"
+                  value={priceRange[1]}
+                  onChange={(e) => {
+                    const max = Number(e.target.value) || priceRange[0];
+                    setPriceRange([priceRange[0], Math.max(max, priceRange[0])]);
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sắp xếp</label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="default">Mặc định</option>
+                  <option value="name-asc">Tên A-Z</option>
+                  <option value="name-desc">Tên Z-A</option>
+                  <option value="price-asc">Giá tăng dần</option>
+                  <option value="price-desc">Giá giảm dần</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between text-sm text-gray-600">
+              <span>Đang hiển thị: <b>{filteredProducts.length}</b> sản phẩm</span>
+              <button
+                onClick={handleResetFilters}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Đặt lại bộ lọc
+              </button>
+            </div>
+          </div>
+
           {/* Hàng đầu: Sản phẩm nổi bật (khuyến mãi) */}
           <div className="pb-20 space-y-10">
         {featuredProducts.length > 0 && (
@@ -292,84 +375,20 @@ export default function ProductList() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
             </div>
-
-            <div className="relative overflow-hidden">
-              {featuredProducts.length > 4 && (
-                <button
-                  onClick={() => {
-                    const container = document.getElementById('category-featured');
-                    if (!container) return;
-                    const row = container.querySelector('.product-row');
-                    const firstItem = row && row.children && row.children[0];
-                    if (!row || !firstItem) return;
-                    const styles = getComputedStyle(row);
-                    const gapRaw = styles.columnGap || styles.gap || '0';
-                    const gap = parseFloat(gapRaw) || 0;
-                    const itemWidth = firstItem.getBoundingClientRect().width + gap;
-                    const total = row.children.length;
-                    const maxStart = Math.max(0, total - 4);
-                    const currentIndex = Math.round(container.scrollLeft / itemWidth);
-                    const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
-                    container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
-                  }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
-                  aria-label="Scroll left"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              )}
-
-              {featuredProducts.length > 4 && (
-                <button
-                  onClick={() => {
-                    const container = document.getElementById('category-featured');
-                    if (!container) return;
-                    const row = container.querySelector('.product-row');
-                    const firstItem = row && row.children && row.children[0];
-                    if (!row || !firstItem) return;
-                    const styles = getComputedStyle(row);
-                    const gapRaw = styles.columnGap || styles.gap || '0';
-                    const gap = parseFloat(gapRaw) || 0;
-                    const itemWidth = firstItem.getBoundingClientRect().width + gap;
-                    const total = row.children.length;
-                    const maxStart = Math.max(0, total - 4);
-                    const currentIndex = Math.round(container.scrollLeft / itemWidth);
-                    const nextIndex = Math.min(maxStart, currentIndex + 1);
-                    container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
-                  }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
-                  aria-label="Scroll right"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              )}
-
-              <div 
-                id={`category-featured`}
-                className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
-                style={{ maxWidth: '1048px' }}
-              >
-                <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
-                  {featuredProducts.map((product) => (
-                    <div key={product.id} className="w-64 flex-shrink-0 snap-start">
-                      <ProductCard
-                        product={product}
-                        availableSizes={getAvailableSizes(product.id)}
-                        selectedSize={selectedSizes[product.id]}
-                        onSizeSelect={handleSizeSelect}
-                        handleAddToCart={handleAddToCart}
-                        handleDelete={handleDelete}
-                        handleImageClick={handleImageClick}
-                        isAdmin={isAdmin}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+              {featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  availableSizes={getAvailableSizes(product.id)}
+                  selectedSize={selectedSizes[product.id]}
+                  onSizeSelect={handleSizeSelect}
+                  handleAddToCart={handleAddToCart}
+                  handleDelete={handleDelete}
+                  handleImageClick={handleImageClick}
+                  isAdmin={isAdmin}
+                />
+              ))}
             </div>
           </div>
         )}
@@ -392,86 +411,20 @@ export default function ProductList() {
                   </Link>
                 </div>
                 
-                {/* Horizontal scrollable product list with arrows */}
-                <div className="relative overflow-hidden">
-                  {/* Left arrow */}
-                  {cat.products.length > 4 && (
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById(`category-${cat.id}`);
-                        if (!container) return;
-                        const row = container.querySelector('.product-row');
-                        const firstItem = row && row.children && row.children[0];
-                        if (!row || !firstItem) return;
-                        const styles = getComputedStyle(row);
-                        const gapRaw = styles.columnGap || styles.gap || '0';
-                        const gap = parseFloat(gapRaw) || 0;
-                        const itemWidth = firstItem.getBoundingClientRect().width + gap;
-                        const total = row.children.length;
-                        const maxStart = Math.max(0, total - 4);
-                        const currentIndex = Math.round(container.scrollLeft / itemWidth);
-                        const prevIndex = Math.max(0, Math.min(maxStart, currentIndex - 1));
-                        container.scrollTo({ left: Math.round(prevIndex * itemWidth), behavior: 'smooth' });
-                      }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
-                      aria-label="Scroll left"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  )}
-                  
-                  {/* Right arrow */}
-                  {cat.products.length > 4 && (
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById(`category-${cat.id}`);
-                        if (!container) return;
-                        const row = container.querySelector('.product-row');
-                        const firstItem = row && row.children && row.children[0];
-                        if (!row || !firstItem) return;
-                        const styles = getComputedStyle(row);
-                        const gapRaw = styles.columnGap || styles.gap || '0';
-                        const gap = parseFloat(gapRaw) || 0;
-                        const itemWidth = firstItem.getBoundingClientRect().width + gap;
-                        const total = row.children.length;
-                        const maxStart = Math.max(0, total - 4);
-                        const currentIndex = Math.round(container.scrollLeft / itemWidth);
-                        const nextIndex = Math.min(maxStart, currentIndex + 1);
-                        container.scrollTo({ left: Math.round(nextIndex * itemWidth), behavior: 'smooth' });
-                      }}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black text-white w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-lg hover:scale-110"
-                      aria-label="Scroll right"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  )}
-
-                  <div 
-                    id={`category-${cat.id}`}
-                    className="overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
-                    style={{ maxWidth: '1048px' }}
-                  >
-                    <div className="product-row flex gap-2" style={{ width: 'max-content' }}>
-                      {cat.products.map((product) => (
-                        <div key={product.id} className="w-64 flex-shrink-0 snap-start">
-                          <ProductCard
-                            product={product}
-                            availableSizes={getAvailableSizes(product.id)}
-                            selectedSize={selectedSizes[product.id]}
-                            onSizeSelect={handleSizeSelect}
-                            handleAddToCart={handleAddToCart}
-                            handleDelete={handleDelete}
-                            handleImageClick={handleImageClick}
-                            isAdmin={isAdmin}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+                  {cat.products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      availableSizes={getAvailableSizes(product.id)}
+                      selectedSize={selectedSizes[product.id]}
+                      onSizeSelect={handleSizeSelect}
+                      handleAddToCart={handleAddToCart}
+                      handleDelete={handleDelete}
+                      handleImageClick={handleImageClick}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
                 </div>
               </div>
             )
