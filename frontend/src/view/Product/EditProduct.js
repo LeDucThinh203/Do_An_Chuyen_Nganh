@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllProducts, updateProduct, getAllCategories } from "../../api";
+import { getProductById, updateProduct, getAllCategories } from "../../api";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
 // Resolve image URL for products
@@ -26,7 +26,7 @@ export default function EditProduct() {
   useEffect(() => {
     loadProduct();
     loadCategories();
-  }, []);
+  }, [id]);
 
   const loadCategories = async () => {
     try {
@@ -39,20 +39,23 @@ export default function EditProduct() {
 
   const loadProduct = async () => {
     try {
-      const data = await getAllProducts();
-      const found = data.find((p) => p.id === parseInt(id));
-      if (!found) {
+      const data = await getProductById(id);
+      if (!data) {
         alert("❌ Không tìm thấy sản phẩm!");
         navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
       } else {
+        const normalizedId = data.id ?? data.product_id;
         setProduct({ 
-          ...found, 
+          ...data,
+          id: normalizedId,
           imageFile: null, 
           newImagePreview: null 
         });
       }
     } catch (error) {
-      console.error(error);
+      console.error("Lỗi tải sản phẩm:", error);
+      alert("❌ Không tìm thấy sản phẩm!");
+      navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
     }
   };
 
@@ -76,7 +79,8 @@ export default function EditProduct() {
     };
 
     try {
-      const res = await updateProduct(id, updated);
+      const targetId = product.id ?? product.product_id ?? id;
+      const res = await updateProduct(targetId, updated);
       if (res) {
         alert("✅ Cập nhật sản phẩm thành công!");
         navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
