@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
 
@@ -47,7 +47,7 @@ export default function AddressManager() {
     fetchProvinces();
   }, []);
 
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     if (!user) return;
     setLoadingList(true);
     setErrorList("");
@@ -61,11 +61,11 @@ export default function AddressManager() {
     } finally {
       setLoadingList(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchAddresses();
-  }, [user]);
+  }, [fetchAddresses]);
 
   const handleProvinceChange = async (e) => {
     const provinceCode = e.target.value;
@@ -152,9 +152,9 @@ export default function AddressManager() {
         account_id: user.id,
         name: form.name,
         phone: form.phone,
-        provinceName: provinces.find(p => p.code == form.province)?.name || "",
-        districtName: districts.find(d => d.code == form.district)?.name || "",
-        wardName: wards.find(w => w.code == form.ward)?.name || "",
+        provinceName: provinces.find(p => Number(p.code) === Number(form.province))?.name || "",
+        districtName: districts.find(d => Number(d.code) === Number(form.district))?.name || "",
+        wardName: wards.find(w => Number(w.code) === Number(form.ward))?.name || "",
         address_detail: form.address,
       };
 

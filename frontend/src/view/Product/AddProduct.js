@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createProduct, getAllCategories } from "../../api";
 import { useNavigate, useLocation } from "react-router-dom";
+import { ProductFormSkeleton } from "../common/Skeletons";
 
 export default function AddProduct() {
   const [product, setProduct] = useState({
@@ -12,6 +13,7 @@ export default function AddProduct() {
     imagePreview: "",
   });
   const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = location.state?.returnTo || "/";
@@ -23,6 +25,7 @@ export default function AddProduct() {
 
   const fetchCategories = async () => {
     try {
+      setLoadingCategories(true);
       const data = await getAllCategories();
       setCategories(data);
       if (data.length > 0) {
@@ -30,6 +33,8 @@ export default function AddProduct() {
       }
     } catch (err) {
       console.error("Lỗi tải danh mục:", err);
+    } finally {
+      setLoadingCategories(false);
     }
   };
 
@@ -73,6 +78,8 @@ export default function AddProduct() {
       }
     }
   };
+
+  if (loadingCategories) return <ProductFormSkeleton />;
 
   return (
     <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">

@@ -1,5 +1,5 @@
 // src/view/Cart/Checkout.jsx
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
@@ -36,6 +36,38 @@ export default function Checkout() {
     if (savedForm) setForm(JSON.parse(savedForm));
   }, []);
 
+  const fillFormFromAddress = useCallback((addr) => {
+    const provinceCode = provinces.find(p => p.name === addr.provinceName)?.code || "";
+    setForm({
+      name: addr.name,
+      phone: addr.phone,
+      province: provinceCode,
+      district: "",
+      ward: "",
+      address: addr.address_detail,
+      payment_method: "",
+    });
+
+    if (provinceCode) {
+      fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`)
+        .then(res => res.json())
+        .then(data => {
+          setDistricts(data.districts || []);
+          const districtCode = data.districts?.find(d => d.name === addr.districtName)?.code || "";
+          setForm(prev => ({ ...prev, district: districtCode }));
+          if (districtCode) {
+            fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`)
+              .then(res => res.json())
+              .then(wData => {
+                setWards(wData.wards || []);
+                const wardCode = wData.wards?.find(w => w.name === addr.wardName)?.code || "";
+                setForm(prev => ({ ...prev, ward: wardCode }));
+              });
+          }
+        });
+    }
+  }, [provinces]);
+
   // Auto fill form nếu được chuyển từ trang chọn địa chỉ
   useEffect(() => {
     if (location.state?.selectedAddress) {
@@ -43,7 +75,7 @@ export default function Checkout() {
       fillFormFromAddress(addr);
       setUseSavedAddress(false);
     }
-  }, [location.state, provinces]);
+  }, [location.state, fillFormFromAddress]);
 
   // Load checkout items
   useEffect(() => {
@@ -139,38 +171,6 @@ export default function Checkout() {
     if (window.confirm("Bạn chắc muốn chọn địa chỉ này?")) {
       fillFormFromAddress(addr);
       setUseSavedAddress(false);
-    }
-  };
-
-  const fillFormFromAddress = (addr) => {
-    const provinceCode = provinces.find(p => p.name === addr.provinceName)?.code || "";
-    setForm({
-      name: addr.name,
-      phone: addr.phone,
-      province: provinceCode,
-      district: "",
-      ward: "",
-      address: addr.address_detail,
-      payment_method: "",
-    });
-
-    if (provinceCode) {
-      fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`)
-        .then(res => res.json())
-        .then(data => {
-          setDistricts(data.districts || []);
-          const districtCode = data.districts?.find(d => d.name === addr.districtName)?.code || "";
-          setForm(prev => ({ ...prev, district: districtCode }));
-          if (districtCode) {
-            fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`)
-              .then(res => res.json())
-              .then(wData => {
-                setWards(wData.wards || []);
-                const wardCode = wData.wards?.find(w => w.name === addr.wardName)?.code || "";
-                setForm(prev => ({ ...prev, ward: wardCode }));
-              });
-          }
-        });
     }
   };
 

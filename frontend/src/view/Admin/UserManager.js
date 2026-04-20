@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Session from "../../Session/session";
 import * as api from "../../api";
+import { AdminPanelSkeleton } from "../common/Skeletons";
 
 export default function UserManager() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -147,15 +148,16 @@ export default function UserManager() {
         />
       </div>
 
-      {loading && <p className="text-center text-gray-500">Đang tải danh sách...</p>}
+      {loading && <AdminPanelSkeleton cardCount={6} />}
       {message && <p className="text-center text-green-600">{message}</p>}
       {error && <p className="text-center text-red-600">{error}</p>}
       {!loading && filteredAccounts.length === 0 && (
         <p className="text-gray-500 text-center">Không tìm thấy tài khoản.</p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredAccounts.slice(0, visibleCount).map((acc) => (
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAccounts.slice(0, visibleCount).map((acc) => (
           <div key={acc.id} className="border p-4 rounded flex flex-col justify-between">
             <div className="mb-4">
               <p><b>ID:</b> {acc.id}</p>
@@ -226,8 +228,9 @@ export default function UserManager() {
               </div>
             )}
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {filteredAccounts.length > 6 && (
         <div className="text-center mt-4">

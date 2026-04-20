@@ -1,6 +1,37 @@
 // src/view/Admin/Revenue.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { getAllOrders, getAllProducts } from "../../api";
+import { RevenueTabContentSkeleton } from "../common/Skeletons";
+
+function getCurrentWeek() {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+}
+
+function getWeekFromDate(date) {
+  const startOfYear = new Date(date.getFullYear(), 0, 1);
+  const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
+  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+}
+
+function getDatesOfWeek(weekNumber, year = new Date().getFullYear()) {
+  const firstDayOfYear = new Date(year, 0, 1);
+  const daysOffset = firstDayOfYear.getDay() === 0 ? 1 : 8 - firstDayOfYear.getDay();
+
+  const firstMonday = new Date(year, 0, 1 + daysOffset);
+  const startDate = new Date(firstMonday);
+  startDate.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
+
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+}
 
 export default function Revenue() {
   const [orders, setOrders] = useState([]);
@@ -31,39 +62,6 @@ export default function Revenue() {
   // State cho modal chi tiết ngày
   const [dayDetailModal, setDayDetailModal] = useState({ show: false, date: null, orders: [] });
 
-  // Hàm lấy tuần hiện tại
-  function getCurrentWeek() {
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  }
-
-  // Hàm lấy tuần từ ngày
-  function getWeekFromDate(date) {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date - startOfYear) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  }
-
-  // Hàm lấy ngày trong tuần
-  function getDatesOfWeek(weekNumber, year = new Date().getFullYear()) {
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysOffset = firstDayOfYear.getDay() === 0 ? 1 : 8 - firstDayOfYear.getDay();
-    
-    const firstMonday = new Date(year, 0, 1 + daysOffset);
-    const startDate = new Date(firstMonday);
-    startDate.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
-    
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  }
-
   // Hàm lấy thông tin ngân hàng từ payment_info
   const getBankCode = (order) => {
     if (order.payment_method !== 'bank' || !order.payment_info) {
@@ -79,7 +77,7 @@ export default function Revenue() {
   };
 
   // Hàm tính doanh thu và thống kê
-  const calculateRevenueAndStats = (orders, week) => {
+  const calculateRevenueAndStats = useCallback((orders, week) => {
     const weekDates = getDatesOfWeek(week);
     const startDate = weekDates[0];
     const endDate = weekDates[6];
@@ -187,7 +185,7 @@ export default function Revenue() {
       allOrders: weeklyOrders,
       receivedOrders,
     };
-  };
+  }, []);
 
   // Fetch orders và products
   useEffect(() => {
@@ -216,7 +214,7 @@ export default function Revenue() {
       const data = calculateRevenueAndStats(orders, selectedWeek);
       setRevenueData(data);
     }
-  }, [orders, selectedWeek]);
+  }, [orders, selectedWeek, calculateRevenueAndStats]);
 
   // Reset lazy loading khi chuyển tab hoặc tuần
   useEffect(() => {
@@ -242,7 +240,6 @@ export default function Revenue() {
 
   // Tạo calendar
   const renderCalendar = () => {
-    const currentDate = new Date();
     const currentMonth = selectedDate.getMonth();
     const currentYear = selectedDate.getFullYear();
     
@@ -878,10 +875,7 @@ export default function Revenue() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
-        <div className="text-center py-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dữ liệu doanh thu...</p>
-        </div>
+        <RevenueTabContentSkeleton tab={activeTab} />
       </div>
     );
   }

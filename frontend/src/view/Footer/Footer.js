@@ -11,11 +11,11 @@ export default function Footer() {
           <h3 className="font-semibold mb-4">Đóng góp ý kiến</h3>
           <p>Chúng tôi luôn trân trọng và mong đợi nhận được mọi ý kiến đóng góp từ khách hàng để nâng cấp trải nghiệm dịch vụ và sản phẩm tốt hơn nữa.</p>
           <div className="flex space-x-3 mt-3">
-            <a href="#" className="hover:text-blue-500">Facebook</a>
-            <a href="#" className="hover:text-blue-400">Zalo</a>
-            <a href="#" className="hover:text-red-500">TikTok</a>
-            <a href="#" className="hover:text-pink-500">Instagram</a>
-            <a href="#" className="hover:text-red-600">YouTube</a>
+            <a href="/" className="hover:text-blue-500">Facebook</a>
+            <a href="/" className="hover:text-blue-400">Zalo</a>
+            <a href="/" className="hover:text-red-500">TikTok</a>
+            <a href="/" className="hover:text-pink-500">Instagram</a>
+            <a href="/" className="hover:text-red-600">YouTube</a>
           </div>
         </div>
 
@@ -23,9 +23,9 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold mb-4">CoolClub</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-white">Tài khoản CoolClub</a></li>
-            <li><a href="#" className="hover:text-white">Đăng kí thành viên</a></li>
-            <li><a href="#" className="hover:text-white">Ưu đãi & Đặc quyền</a></li>
+            <li><a href="/" className="hover:text-white">Tài khoản CoolClub</a></li>
+            <li><a href="/" className="hover:text-white">Đăng kí thành viên</a></li>
+            <li><a href="/" className="hover:text-white">Ưu đãi & Đặc quyền</a></li>
           </ul>
         </div>
 
@@ -33,10 +33,10 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold mb-4">Chính sách</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-white">Chính sách đổi trả 60 ngày</a></li>
-            <li><a href="#" className="hover:text-white">Chính sách khuyến mãi</a></li>
-            <li><a href="#" className="hover:text-white">Chính sách bảo mật</a></li>
-            <li><a href="#" className="hover:text-white">Chính sách giao hàng</a></li>
+            <li><a href="/" className="hover:text-white">Chính sách đổi trả 60 ngày</a></li>
+            <li><a href="/" className="hover:text-white">Chính sách khuyến mãi</a></li>
+            <li><a href="/" className="hover:text-white">Chính sách bảo mật</a></li>
+            <li><a href="/" className="hover:text-white">Chính sách giao hàng</a></li>
           </ul>
         </div>
 
@@ -44,11 +44,11 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold mb-4">Coolmate.me</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-white">Lịch sử thay đổi website</a></li>
-            <li><a href="#" className="hover:text-white">Chăm sóc khách hàng</a></li>
-            <li><a href="#" className="hover:text-white">Trải nghiệm mua sắm 100% hài lòng</a></li>
-            <li><a href="#" className="hover:text-white">Hỏi đáp - FAQs</a></li>
-            <li><a href="#" className="hover:text-white">Blog</a></li>
+            <li><a href="/" className="hover:text-white">Lịch sử thay đổi website</a></li>
+            <li><a href="/" className="hover:text-white">Chăm sóc khách hàng</a></li>
+            <li><a href="/" className="hover:text-white">Trải nghiệm mua sắm 100% hài lòng</a></li>
+            <li><a href="/" className="hover:text-white">Hỏi đáp - FAQs</a></li>
+            <li><a href="/" className="hover:text-white">Blog</a></li>
           </ul>
         </div>
 
@@ -56,13 +56,13 @@ export default function Footer() {
         <div>
           <h3 className="font-semibold mb-4">Về COOLMATE</h3>
           <ul className="space-y-2">
-            <li><a href="#" className="hover:text-white">Quy tắc ứng xử của Coolmate</a></li>
-            <li><a href="#" className="hover:text-white">Coolmate 101</a></li>
-            <li><a href="#" className="hover:text-white">DVKH xuất sắc</a></li>
-            <li><a href="#" className="hover:text-white">Câu chuyện về Coolmate</a></li>
-            <li><a href="#" className="hover:text-white">Nhà máy</a></li>
-            <li><a href="#" className="hover:text-white">Care & Share</a></li>
-            <li><a href="#" className="hover:text-white">Cam kết bền vững</a></li>
+            <li><a href="/" className="hover:text-white">Quy tắc ứng xử của Coolmate</a></li>
+            <li><a href="/" className="hover:text-white">Coolmate 101</a></li>
+            <li><a href="/" className="hover:text-white">DVKH xuất sắc</a></li>
+            <li><a href="/" className="hover:text-white">Câu chuyện về Coolmate</a></li>
+            <li><a href="/" className="hover:text-white">Nhà máy</a></li>
+            <li><a href="/" className="hover:text-white">Care & Share</a></li>
+            <li><a href="/" className="hover:text-white">Cam kết bền vững</a></li>
           </ul>
         </div>
       </div>

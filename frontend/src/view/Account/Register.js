@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import * as api from "../../api";
-import Session from "../../Session/session";
 import { EnvelopeIcon, UserIcon, LockClosedIcon } from "@heroicons/react/24/solid";
 
 export default function Register() {

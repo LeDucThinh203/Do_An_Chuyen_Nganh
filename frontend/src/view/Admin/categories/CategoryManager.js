@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { getAllCategories, deleteCategory } from "../../../api";
 import CategoryForm from "./CategoryForm";
+import { AdminPanelSkeleton } from "../../common/Skeletons";
 
 export default function CategoryManager() {
   const [categories, setCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
-    const data = await getAllCategories();
-    setCategories(data);
+    try {
+      setLoading(true);
+      const data = await getAllCategories();
+      setCategories(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -54,7 +61,9 @@ export default function CategoryManager() {
           </div>
 
           {/* Danh sách */}
-          {categories.length === 0 ? (
+          {loading ? (
+            <AdminPanelSkeleton cardCount={6} />
+          ) : categories.length === 0 ? (
             <div className="text-center py-20 text-gray-400 text-lg font-medium">
               Chưa có danh mục nào.
             </div>

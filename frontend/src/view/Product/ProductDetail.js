@@ -13,6 +13,7 @@ import {
   getAllOrderDetails,
   getAllOrders
 } from "../../api";
+import { ProductDetailSkeleton } from "../common/Skeletons";
 
 // Resolve image URL for products
 const resolveImage = (img) => {
@@ -254,7 +255,7 @@ export default function ProductDetail() {
 
   const isAdmin = JSON.parse(localStorage.getItem("user"))?.role === "admin";
 
-  if (loading) return <div className="text-center py-10">Đang tải...</div>;
+  if (loading) return <ProductDetailSkeleton />;
   if (error) return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <button

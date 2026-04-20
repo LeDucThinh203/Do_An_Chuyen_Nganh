@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { getAllProducts, deleteProduct, getAllCategories, getAllSizes, getAllProductSizes } from "../../api";
 import { Link, useNavigate } from "react-router-dom";
+import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 
 // Session utility - định nghĩa trước để sử dụng trong component
 const Session = {
@@ -33,10 +34,11 @@ export default function ProductList() {
   const [searchName, setSearchName] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState({});
-  const [priceRange, setPriceRange] = useState([0, 5000000]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortOrder, setSortOrder] = useState("default");
+  const [priceRange] = useState([0, 5000000]);
+  const [selectedCategory] = useState("all");
+  const [sortOrder] = useState("default");
   const [cartCount, setCartCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
   const user = Session.getUser();
@@ -55,6 +57,7 @@ export default function ProductList() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [prodData, catData, sizesData, productSizesData] = await Promise.all([
         getAllProducts(),
         getAllCategories(),
@@ -71,6 +74,8 @@ export default function ProductList() {
       setProductSizes(productSizesData);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -245,6 +250,13 @@ export default function ProductList() {
       <div className="flex gap-6 mt-20">
         {/* Right Content Area - Full width */}
         <div className="flex-1 px-4">
+          {loading ? (
+            <div className="space-y-6">
+              <SkeletonBlock className="w-full h-64 sm:h-80 lg:h-[400px] rounded-lg" />
+              <ProductGridSkeleton count={8} />
+            </div>
+          ) : (
+            <>
           {/* Video Banner */}
           <div className="relative w-full h-64 sm:h-80 lg:h-[400px] overflow-hidden mb-4 rounded-lg">
             <video
@@ -473,6 +485,8 @@ export default function ProductList() {
             </p>
             )}
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

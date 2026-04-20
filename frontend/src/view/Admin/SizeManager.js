@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createSize, deleteSize, getAllSizes, updateSize } from "../../api";
+import { AdminPanelSkeleton } from "../common/Skeletons";
 
 export default function SizeManager() {
   const [sizes, setSizes] = useState([]);
@@ -106,7 +107,7 @@ export default function SizeManager() {
       )}
 
       {loading ? (
-        <p className="text-center text-gray-500 py-8">Đang tải...</p>
+        <AdminPanelSkeleton cardCount={4} />
       ) : sizes.length === 0 ? (
         <p className="text-center text-gray-400 py-12">Chưa có size nào.</p>
       ) : (

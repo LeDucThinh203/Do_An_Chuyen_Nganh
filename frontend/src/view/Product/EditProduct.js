@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getProductById, updateProduct, getAllCategories } from "../../api";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { ProductFormSkeleton } from "../common/Skeletons";
 
 // Resolve image URL for products
 const resolveImage = (img) => {
@@ -22,42 +23,42 @@ export default function EditProduct() {
   const activeTab = location.state?.activeTab;
   const [product, setProduct] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProduct();
-    loadCategories();
-  }, [id]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [productData, categoriesData] = await Promise.all([
+          getProductById(id),
+          getAllCategories()
+        ]);
 
-  const loadCategories = async () => {
-    try {
-      const data = await getAllCategories();
-      setCategories(data);
-    } catch (error) {
-      console.error("Lỗi tải danh mục:", error);
-    }
-  };
+        setCategories(categoriesData);
+        if (!productData) {
+          alert("❌ Không tìm thấy sản phẩm!");
+          navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
+          return;
+        }
 
-  const loadProduct = async () => {
-    try {
-      const data = await getProductById(id);
-      if (!data) {
+        const normalizedId = productData.id ?? productData.product_id;
+        setProduct({
+          ...productData,
+          id: normalizedId,
+          imageFile: null,
+          newImagePreview: null
+        });
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu sản phẩm:", error);
         alert("❌ Không tìm thấy sản phẩm!");
         navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
-      } else {
-        const normalizedId = data.id ?? data.product_id;
-        setProduct({ 
-          ...data,
-          id: normalizedId,
-          imageFile: null, 
-          newImagePreview: null 
-        });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Lỗi tải sản phẩm:", error);
-      alert("❌ Không tìm thấy sản phẩm!");
-      navigate(returnTo, activeTab ? { state: { activeTab } } : undefined);
-    }
-  };
+    };
+
+    loadData();
+  }, [id, navigate, returnTo, activeTab]);
 
   const handleSave = async () => {
     if (!product.name || !product.price || !product.category_id) {
@@ -93,7 +94,7 @@ export default function EditProduct() {
     }
   };
 
-  if (!product) return <p className="text-center mt-10">Đang tải...</p>;
+  if (loading || !product) return <ProductFormSkeleton />;
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-md">

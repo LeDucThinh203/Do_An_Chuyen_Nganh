@@ -1,21 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { getCategoryById, createCategory, updateCategory } from "../../../api";
+import { ProductFormSkeleton } from "../../common/Skeletons";
 
 export default function CategoryForm({ id, onClose }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchCategory = useCallback(async () => {
+    try {
+      setLoading(true);
+      const cat = await getCategoryById(id);
+      if (cat) {
+        setName(cat.name);
+        setDescription(cat.description);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (id) fetchCategory();
-  }, [id]);
-
-  const fetchCategory = async () => {
-    const cat = await getCategoryById(id);
-    if (cat) {
-      setName(cat.name);
-      setDescription(cat.description);
-    }
-  };
+  }, [id, fetchCategory]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +38,16 @@ export default function CategoryForm({ id, onClose }) {
 
     onClose(); // đóng form và refresh list
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center z-50 overflow-auto py-10">
+        <div className="w-full max-w-4xl mx-4 sm:mx-0">
+          <ProductFormSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-start sm:items-center justify-center z-50 overflow-auto py-10">

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllOrders, updateOrderStatus, getAllAccounts, deleteOrder } from "../../api";
+import { OrderManagerSkeleton } from "../common/Skeletons";
 
 export default function OrderManager() {
   const [orders, setOrders] = useState([]);
@@ -200,11 +201,6 @@ export default function OrderManager() {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
-  };
-
   const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString('vi-VN');
@@ -213,10 +209,6 @@ export default function OrderManager() {
   const getUsername = (accountId) => {
     const account = accounts.find(acc => acc.id === accountId);
     return account ? account.username : 'Không xác định';
-  };
-
-  const getTotalItems = (order) => {
-    return order.order_details?.reduce((total, detail) => total + detail.quantity, 0) || 0;
   };
 
   // Hàm xử lý đường dẫn hình ảnh
@@ -245,11 +237,7 @@ export default function OrderManager() {
   const orderStats = getOrderStats();
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <OrderManagerSkeleton />;
   }
 
   if (error) {

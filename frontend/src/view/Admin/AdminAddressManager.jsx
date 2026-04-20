@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
+import { AdminPanelSkeleton } from "../common/Skeletons";
 
 export default function AdminAddressManager() {
   const user = useMemo(
@@ -33,7 +34,7 @@ export default function AdminAddressManager() {
       .catch(() => setErr("Không thể tải danh sách tỉnh"));
   }, []);
 
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     if (!user || user.role !== "admin") return;
     setLoading(true);
     try {
@@ -45,11 +46,11 @@ export default function AdminAddressManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchAddresses();
-  }, [user]);
+  }, [fetchAddresses]);
 
   const handleProvinceChange = async (e) => {
     const code = e.target.value;
@@ -86,9 +87,9 @@ export default function AdminAddressManager() {
       name: form.name,
       phone: form.phone,
       address_detail: form.address,
-      provinceName: provinces.find((p) => p.code == form.province)?.name,
-      districtName: districts.find((d) => d.code == form.district)?.name,
-      wardName: wards.find((w) => w.code == form.ward)?.name,
+      provinceName: provinces.find((p) => Number(p.code) === Number(form.province))?.name,
+      districtName: districts.find((d) => Number(d.code) === Number(form.district))?.name,
+      wardName: wards.find((w) => Number(w.code) === Number(form.ward))?.name,
     };
 
     try {
@@ -153,7 +154,7 @@ export default function AdminAddressManager() {
         <div>
           <h3 className="text-lg font-semibold mb-2">Danh sách địa chỉ</h3>
           {loading ? (
-            <p>Đang tải...</p>
+            <AdminPanelSkeleton cardCount={3} />
           ) : addresses.length === 0 ? (
             <p className="text-gray-500">Chưa có địa chỉ nào.</p>
           ) : (

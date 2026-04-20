@@ -8,14 +8,13 @@ import SizeManager from "./SizeManager";
 import CategoryManager from "./categories/CategoryManager";
 import OrderManager from "./OrderManager";
 import Revenue from "./Revenue";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
   const [activeTab, setActiveTab] = useState("info");
   const [menuOpen, setMenuOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(true);
-  const navigate = useNavigate();
   const location = useLocation();
 
   // Xử lý activeTab từ state khi navigate về

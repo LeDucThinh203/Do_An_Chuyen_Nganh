@@ -35,6 +35,7 @@ import UserDashboard from "./view/User/UserDashboard";
 import OrderSuccess from "./view/Cart/OrderSuccess";
 import VNPayReturn from "./view/Cart/VNPayReturn";
 import VNPayDebug from "./view/Cart/VNPayDebug";
+import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -103,7 +104,7 @@ function AppContent() {
 
       {/* Main content */}
       <div className="pt-24 px-8 max-w-7xl mx-auto flex-grow">
-        <Suspense fallback={<p className="text-center mt-10">Đang tải...</p>}>
+        <Suspense fallback={<RouteFallbackSkeleton />}>
           <Routes>
             {/* Public */}
             <Route path="/" element={<ProductList />} />

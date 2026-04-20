@@ -11,6 +11,7 @@ import {
   deleteProductSize,
   getAllCategories,
 } from "../../api.js";
+import { AdminPanelSkeleton } from "../common/Skeletons";
 
 // Resolve image URL for products
 const resolveImage = (img) => {
@@ -36,6 +37,7 @@ export default function ProductManager() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function ProductManager() {
 
   const fetchProductData = async () => {
     try {
+      setLoading(true);
       const [prodData, catData, sizeData, prodSizeData] = await Promise.all([
         getAllProducts(),
         getAllCategories(),
@@ -56,6 +59,8 @@ export default function ProductManager() {
       setProductSizes(prodSizeData);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,6 +157,10 @@ export default function ProductManager() {
     });
     return stats;
   }, [products, categories]);
+
+  if (loading) {
+    return <AdminPanelSkeleton cardCount={6} />;
+  }
 
   return (
     <div>

@@ -1,7 +1,8 @@
 // src/view/Product/ProductLoadMore.js
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { getAllProducts, getAllCategories, getAllSizes, getAllProductSizes, deleteProduct } from "../../api";
+import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 
 // Session utility
 const Session = {
@@ -35,26 +36,17 @@ export default function ProductLoadMore() {
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartCount, setCartCount] = useState(0);
   const [visibleCount, setVisibleCount] = useState(8);
-  const [priceRange, setPriceRange] = useState([0, 5000000]);
-  const [sortOrder, setSortOrder] = useState("default");
+  const [priceRange] = useState([0, 5000000]);
+  const [sortOrder] = useState("default");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const user = Session.getUser();
   const isAdmin = Session.isAdmin();
 
-  useEffect(() => {
-    fetchData();
-    updateCartCount();
-  }, [categoryId]);
-
-  const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    setCartCount(totalItems);
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       const [prodData, catData, sizesData, productSizesData] = await Promise.all([
         getAllProducts(),
         getAllCategories(),
@@ -70,7 +62,20 @@ export default function ProductLoadMore() {
       setCategory(currentCategory);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
+    } finally {
+      setLoading(false);
     }
+  }, [categoryId]);
+
+  useEffect(() => {
+    fetchData();
+    updateCartCount();
+  }, [fetchData]);
+
+  const updateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    setCartCount(totalItems);
   };
 
   const handleDelete = async (id) => {
@@ -229,6 +234,14 @@ export default function ProductLoadMore() {
         {/* Right Content Area - Full width */}
         <div className="flex-1 px-4 pb-10">
           <div className="max-w-7xl mx-auto">
+            {loading ? (
+              <div className="space-y-6">
+                <SkeletonBlock className="h-10 w-1/3" />
+                <SkeletonBlock className="h-5 w-1/4" />
+                <ProductGridSkeleton count={8} />
+              </div>
+            ) : (
+              <>
             {/* Category Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -300,6 +313,8 @@ export default function ProductLoadMore() {
                   🛒 Không tìm thấy sản phẩm nào trong danh mục này.
                 </p>
               </div>
+            )}
+              </>
             )}
           </div>
         </div>

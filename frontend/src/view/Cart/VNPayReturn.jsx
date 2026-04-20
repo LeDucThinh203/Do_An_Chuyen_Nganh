@@ -33,7 +33,6 @@ export default function VNPayReturn() {
 
         // Kiểm tra response code trực tiếp
         const responseCode = params.vnp_ResponseCode;
-        const orderId = params.vnp_TxnRef;
         
         if (!responseCode) {
           setError("Không tìm thấy thông tin thanh toán");

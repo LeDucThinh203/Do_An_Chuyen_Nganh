@@ -55,10 +55,6 @@ const ChatWidget = () => {
     }
   };
 
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized);
-  };
-
   // Reset chat - create new session and clear all messages
   const handleNewChat = () => {
     // Create new session ID
