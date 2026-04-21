@@ -183,31 +183,6 @@ export default function ProductList() {
     });
   };
 
-  useEffect(() => {
-    const computeOverflow = () => {
-      const next = {};
-      const featuredId = "featured-row";
-      const featuredEl = document.getElementById(featuredId);
-      if (featuredEl) {
-        next[featuredId] = featuredEl.scrollWidth > featuredEl.clientWidth + 1;
-      }
-
-      categorizedProducts.forEach((cat) => {
-        const rowId = `category-row-${cat.id}`;
-        const rowEl = document.getElementById(rowId);
-        if (rowEl) {
-          next[rowId] = rowEl.scrollWidth > rowEl.clientWidth + 1;
-        }
-      });
-
-      setOverflowRows(next);
-    };
-
-    computeOverflow();
-    window.addEventListener("resize", computeOverflow);
-    return () => window.removeEventListener("resize", computeOverflow);
-  }, [featuredProducts, categorizedProducts, loading]);
-
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchName.toLowerCase());
     
@@ -236,6 +211,37 @@ export default function ProductList() {
   // Featured products: those having discount_percent > 0
   const featuredProducts = filteredProducts.filter((p) => Number(p.discount_percent || 0) > 0);
 
+  // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
+  const categorizedProducts = categories.map((cat) => {
+    const catProducts = filteredProducts.filter((p) => p.category_id === cat.id);
+    return { ...cat, products: catProducts };
+  }).filter(cat => cat.products.length > 0); // Chỉ giữ category có sản phẩm
+
+  useEffect(() => {
+    const computeOverflow = () => {
+      const next = {};
+      const featuredId = "featured-row";
+      const featuredEl = document.getElementById(featuredId);
+      if (featuredEl) {
+        next[featuredId] = featuredEl.scrollWidth > featuredEl.clientWidth + 1;
+      }
+
+      categorizedProducts.forEach((cat) => {
+        const rowId = `category-row-${cat.id}`;
+        const rowEl = document.getElementById(rowId);
+        if (rowEl) {
+          next[rowId] = rowEl.scrollWidth > rowEl.clientWidth + 1;
+        }
+      });
+
+      setOverflowRows(next);
+    };
+
+    computeOverflow();
+    window.addEventListener("resize", computeOverflow);
+    return () => window.removeEventListener("resize", computeOverflow);
+  }, [featuredProducts, categorizedProducts, loading]);
+
   const handleResetFilters = async () => {
     setSelectedCategory("all");
     setPriceRange([0, 5000000]);
@@ -244,12 +250,6 @@ export default function ProductList() {
     setIsSearching(false);
     await fetchData();
   };
-
-  // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
-  const categorizedProducts = categories.map((cat) => {
-    const catProducts = filteredProducts.filter((p) => p.category_id === cat.id);
-    return { ...cat, products: catProducts };
-  }).filter(cat => cat.products.length > 0); // Chỉ giữ category có sản phẩm
 
   return (
     <div className="bg-gray-50 min-h-screen">
