@@ -39,6 +39,7 @@ export default function ProductList() {
   const [sortOrder, setSortOrder] = useState("default");
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [overflowRows, setOverflowRows] = useState({});
 
   const navigate = useNavigate();
   const user = Session.getUser();
@@ -172,6 +173,40 @@ export default function ProductList() {
   const handleImageClick = (productId) => {
     navigate(`/product/${productId}`);
   };
+
+  const scrollRow = (rowId, direction) => {
+    const container = document.getElementById(rowId);
+    if (!container) return;
+    container.scrollBy({
+      left: direction === "left" ? -900 : 900,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const computeOverflow = () => {
+      const next = {};
+      const featuredId = "featured-row";
+      const featuredEl = document.getElementById(featuredId);
+      if (featuredEl) {
+        next[featuredId] = featuredEl.scrollWidth > featuredEl.clientWidth + 1;
+      }
+
+      categorizedProducts.forEach((cat) => {
+        const rowId = `category-row-${cat.id}`;
+        const rowEl = document.getElementById(rowId);
+        if (rowEl) {
+          next[rowId] = rowEl.scrollWidth > rowEl.clientWidth + 1;
+        }
+      });
+
+      setOverflowRows(next);
+    };
+
+    computeOverflow();
+    window.addEventListener("resize", computeOverflow);
+    return () => window.removeEventListener("resize", computeOverflow);
+  }, [featuredProducts, categorizedProducts, loading]);
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchName.toLowerCase());
@@ -379,20 +414,43 @@ export default function ProductList() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
             </div>
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  availableSizes={getAvailableSizes(product.id)}
-                  selectedSize={selectedSizes[product.id]}
-                  onSizeSelect={handleSizeSelect}
-                  handleAddToCart={handleAddToCart}
-                  handleDelete={handleDelete}
-                  handleImageClick={handleImageClick}
-                  isAdmin={isAdmin}
-                />
-              ))}
+            <div className="relative">
+              {overflowRows["featured-row"] && (
+                <>
+                  <button
+                    onClick={() => scrollRow("featured-row", "left")}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
+                    aria-label="Xem sản phẩm nổi bật bên trái"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    onClick={() => scrollRow("featured-row", "right")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
+                    aria-label="Xem sản phẩm nổi bật bên phải"
+                  >
+                    ›
+                  </button>
+                </>
+              )}
+
+              <div id="featured-row" className="overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+                <div className="flex gap-3 w-max">
+                  {featuredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      availableSizes={getAvailableSizes(product.id)}
+                      selectedSize={selectedSizes[product.id]}
+                      onSizeSelect={handleSizeSelect}
+                      handleAddToCart={handleAddToCart}
+                      handleDelete={handleDelete}
+                      handleImageClick={handleImageClick}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -414,21 +472,47 @@ export default function ProductList() {
                     Xem thêm
                   </Link>
                 </div>
-                
-                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                  {cat.products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      availableSizes={getAvailableSizes(product.id)}
-                      selectedSize={selectedSizes[product.id]}
-                      onSizeSelect={handleSizeSelect}
-                      handleAddToCart={handleAddToCart}
-                      handleDelete={handleDelete}
-                      handleImageClick={handleImageClick}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
+
+                <div className="relative">
+                  {overflowRows[`category-row-${cat.id}`] && (
+                    <>
+                      <button
+                        onClick={() => scrollRow(`category-row-${cat.id}`, "left")}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
+                        aria-label={`Xem danh mục ${cat.name} bên trái`}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={() => scrollRow(`category-row-${cat.id}`, "right")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
+                        aria-label={`Xem danh mục ${cat.name} bên phải`}
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
+
+                  <div
+                    id={`category-row-${cat.id}`}
+                    className="overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
+                  >
+                    <div className="flex gap-3 w-max">
+                      {cat.products.map((product) => (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          availableSizes={getAvailableSizes(product.id)}
+                          selectedSize={selectedSizes[product.id]}
+                          onSizeSelect={handleSizeSelect}
+                          handleAddToCart={handleAddToCart}
+                          handleDelete={handleDelete}
+                          handleImageClick={handleImageClick}
+                          isAdmin={isAdmin}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             )
@@ -679,7 +763,7 @@ const ProductCard = ({
   const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col w-[250px] flex-shrink-0">
       <div 
         className="relative overflow-hidden aspect-square cursor-pointer group group/image"
         onClick={() => handleImageClick(product.id)}

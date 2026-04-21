@@ -6,6 +6,8 @@ import Session from "./Session/session";
 import Footer from "./view/Footer/Footer";
 import Header from "./view/Header/Header";
 import ChatWidget from "./view/Chat/ChatWidget";
+import SupportChatWidget from "./view/Chat/SupportChatWidget";
+import AdminSupportChatWidget from "./view/Admin/AdminSupportChatWidget";
 
 // Product
 import ProductList from "./view/Product/ProductList";
@@ -54,6 +56,7 @@ function ScrollToTop() {
 function AppContent() {
   const { pathname } = useLocation();
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
+  const [chatMode, setChatMode] = useState(() => localStorage.getItem("chat_mode") || "support");
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -62,6 +65,10 @@ function AppContent() {
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("chat_mode", chatMode);
+  }, [chatMode]);
 
   const handleLogout = () => {
     Session.logout();
@@ -96,6 +103,8 @@ function AppContent() {
 
   // Kiểm tra route để không render header trên ProductList và ProductLoadMore
   const showHeader = pathname !== "/" && !pathname.startsWith("/category/");
+  const isAdminPage = pathname.startsWith("/admin");
+  const isAdminUser = user?.role === "admin";
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col font-sans">
@@ -211,9 +220,31 @@ function AppContent() {
 
       {/* Footer */}
       <Footer />
-      
-      {/* Chat Widget AI - Available for all users */}
-      <ChatWidget />
+
+      {!isAdminPage && (
+        <>
+          {/* Chat mode toggle */}
+          <div className="fixed right-4 bottom-20 z-[1250] bg-white border border-slate-200 rounded-xl shadow-lg p-1 flex gap-1">
+            <button
+              onClick={() => setChatMode("ai")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${chatMode === "ai" ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"}`}
+            >
+              AI Chat
+            </button>
+            <button
+              onClick={() => setChatMode("support")}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${chatMode === "support" ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"}`}
+            >
+              CSKH
+            </button>
+          </div>
+
+          {/* Keep both widgets available; user selects mode via toggle */}
+          {chatMode === "ai" ? <ChatWidget /> : <SupportChatWidget />}
+        </>
+      )}
+
+      {isAdminPage && isAdminUser && <AdminSupportChatWidget />}
     </div>
   );
 }

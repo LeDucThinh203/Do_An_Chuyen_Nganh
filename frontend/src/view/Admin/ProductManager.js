@@ -67,29 +67,32 @@ export default function ProductManager() {
     }
   };
 
+  const handleHideProduct = async (id) => {
+    if (!window.confirm("🚫 Bạn có chắc muốn ẩn sản phẩm này khỏi trang bán hàng?")) return;
+    try {
+      await deleteProduct(id);
+      await fetchProductData();
+      alert("✅ Đã ẩn sản phẩm. Bạn có thể khôi phục trong danh sách admin.");
+    } catch (err) {
+      console.error("Ẩn sản phẩm thất bại:", err);
+      alert(`❌ Ẩn sản phẩm thất bại: ${err.message}`);
+    }
+  };
+
   const handleDeleteProduct = async (id, hasPurchases = false) => {
     if (hasPurchases) {
-      // Sản phẩm đã được mua → chỉ có thể ẩn
-      if (!window.confirm("🚫 Sản phẩm này đã được mua. Bạn có chắc muốn ẩn sản phẩm?")) return;
-      try {
-        await deleteProduct(id);
-        await fetchProductData();
-        alert("✅ Đã ẩn sản phẩm. Bạn có thể khôi phục trong danh sách admin.");
-      } catch (err) {
-        console.error("Ẩn sản phẩm thất bại:", err);
-        alert(`❌ Ẩn sản phẩm thất bại: ${err.message}`);
-      }
-    } else {
-      // Sản phẩm chưa được mua → xóa cứng
-      if (!window.confirm("⚠️ Sản phẩm này chưa được mua. Bạn có chắc muốn xóa vĩnh viễn?")) return;
-      try {
-        await hardDeleteProduct(id);
-        await fetchProductData();
-        alert("✅ Đã xóa sản phẩm vĩnh viễn!");
-      } catch (err) {
-        console.error("Xóa sản phẩm thất bại:", err);
-        alert(`❌ Xóa sản phẩm thất bại: ${err.message}`);
-      }
+      alert("Sản phẩm đã từng được mua nên không thể xóa vĩnh viễn. Vui lòng dùng nút Ẩn.");
+      return;
+    }
+
+    if (!window.confirm("⚠️ Sản phẩm này chưa được mua. Bạn có chắc muốn xóa vĩnh viễn?")) return;
+    try {
+      await hardDeleteProduct(id);
+      await fetchProductData();
+      alert("✅ Đã xóa sản phẩm vĩnh viễn!");
+    } catch (err) {
+      console.error("Xóa sản phẩm thất bại:", err);
+      alert(`❌ Xóa sản phẩm thất bại: ${err.message}`);
     }
   };
 
@@ -241,18 +244,18 @@ export default function ProductManager() {
       `}</style>
 
       {/* Fixed Search + Add Button */}
-      <div className="mb-4">
-        <div className="flex gap-2">
+      <div className="mb-3">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             placeholder="🔍 Tìm sản phẩm theo tên..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="flex-1 h-11 px-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <button
             onClick={() => navigate("/add", { state: { returnTo: "/admin", activeTab: "product" } })}
-            className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600 transition"
+            className="h-11 bg-emerald-500 text-white px-4 rounded-xl hover:bg-emerald-600 transition font-medium"
           >
             ➕ Thêm sản phẩm
           </button>
@@ -265,7 +268,7 @@ export default function ProductManager() {
             setFilterStatus("all");
             setVisibleCount(6);
           }}
-          className={`px-4 py-2 rounded-full border transition ${
+          className={`px-4 py-2 rounded-xl border transition text-sm font-medium ${
             filterStatus === "all"
               ? "bg-blue-600 text-white border-blue-700"
               : "bg-white text-gray-700 border-gray-300 hover:border-blue-400"
@@ -278,7 +281,7 @@ export default function ProductManager() {
             setFilterStatus("active");
             setVisibleCount(6);
           }}
-          className={`px-4 py-2 rounded-full border transition ${
+          className={`px-4 py-2 rounded-xl border transition text-sm font-medium ${
             filterStatus === "active"
               ? "bg-green-600 text-white border-green-700"
               : "bg-white text-gray-700 border-gray-300 hover:border-green-400"
@@ -291,7 +294,7 @@ export default function ProductManager() {
             setFilterStatus("deleted");
             setVisibleCount(6);
           }}
-          className={`px-4 py-2 rounded-full border transition ${
+          className={`px-4 py-2 rounded-xl border transition text-sm font-medium ${
             filterStatus === "deleted"
               ? "bg-gray-700 text-white border-gray-800"
               : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"
@@ -302,8 +305,8 @@ export default function ProductManager() {
       </div>
 
       {/* Sticky Category Filter */}
-      <div className="sticky top-0 z-10 bg-gray-50 py-4 mb-6 -mx-4 px-4 shadow-md">
-        <h3 className="text-sm font-semibold text-gray-600 mb-3">Lọc theo danh mục:</h3>
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur py-3 mb-4 rounded-xl border border-slate-200 px-3 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-600 mb-2">Lọc theo danh mục</h3>
         <div className="flex flex-wrap gap-3">
             <button
               onClick={() => {
@@ -311,14 +314,14 @@ export default function ProductManager() {
                 setFilterCategory("all");
                 setVisibleCount(6);
               }}
-              className={`px-4 py-2 rounded-lg shadow-md border-2 transition-all duration-300 transform hover:scale-105 ${
+              className={`px-3 py-2 rounded-lg border transition-all duration-200 ${
                 filterCategory === "all"
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-blue-300 text-white font-semibold'
-                  : 'bg-white border-blue-200 hover:border-blue-400 hover:shadow-blue-200 text-gray-700'
+                  ? 'bg-blue-600 border-blue-700 text-white font-semibold'
+                  : 'bg-white border-slate-200 hover:border-blue-300 text-slate-700'
               }`}
             >
-              <span className="text-lg font-bold">{categoryStats.all}</span>
-              <span className="text-sm ml-2">Tất cả sản phẩm</span>
+              <span className="text-base font-bold">{categoryStats.all}</span>
+              <span className="text-sm ml-2">Tất cả</span>
             </button>
             
             {categories.map((cat) => (
@@ -332,13 +335,13 @@ export default function ProductManager() {
                   }
                   setVisibleCount(6);
                 }}
-                className={`px-4 py-2 rounded-lg shadow-md border-2 transition-all duration-300 transform hover:scale-105 ${
+                className={`px-3 py-2 rounded-lg border transition-all duration-200 ${
                   filterCategory === String(cat.id)
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-700 shadow-purple-300 text-white font-semibold'
-                    : 'bg-white border-purple-200 hover:border-purple-400 hover:shadow-purple-200 text-gray-700'
+                    ? 'bg-slate-700 border-slate-800 text-white font-semibold'
+                    : 'bg-white border-slate-200 hover:border-slate-400 text-slate-700'
                 }`}
               >
-                <span className="text-lg font-bold">{categoryStats[cat.id] || 0}</span>
+                <span className="text-base font-bold">{categoryStats[cat.id] || 0}</span>
                 <span className="text-sm ml-2">{cat.name}</span>
               </button>
             ))}
@@ -346,7 +349,7 @@ export default function ProductManager() {
         </div>
 
       {/* Price Range Filter */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow-md border border-gray-200">
+      <div className="mb-5 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Khoảng Giá</h3>
         
         <div className="mb-4">
@@ -405,7 +408,7 @@ export default function ProductManager() {
       </div>
 
       {/* Product Display by Category */}
-      <div className="space-y-10">
+      <div className="space-y-8">
         {/* Hiển thị tất cả sản phẩm khi không filter */}
         {filterCategory === "all" ? (
           categories.map((cat) => {
@@ -414,8 +417,8 @@ export default function ProductManager() {
             
             return (
               <div key={cat.id} className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold uppercase">{cat.name}</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-xl font-bold uppercase tracking-wide">{cat.name}</h2>
                   <span className="text-sm text-gray-500">{catProducts.length} sản phẩm</span>
                 </div>
 
@@ -458,7 +461,7 @@ export default function ProductManager() {
                     className="overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
-                    <div className="flex gap-6" style={{ width: 'max-content' }}>
+                    <div className="flex gap-4" style={{ width: 'max-content' }}>
                       {catProducts.map((product) => (
                         <ProductCard
                           key={product.id}
@@ -475,6 +478,7 @@ export default function ProductManager() {
                           handleRemoveSize={handleRemoveSize}
                           handleUpdateStock={handleUpdateStock}
                           handleUpdateDiscount={handleUpdateDiscount}
+                          handleHideProduct={handleHideProduct}
                           handleDeleteProduct={handleDeleteProduct}
                           handleRestoreProduct={handleRestoreProduct}
                           navigate={navigate}
@@ -506,6 +510,7 @@ export default function ProductManager() {
                 handleRemoveSize={handleRemoveSize}
                 handleUpdateStock={handleUpdateStock}
                 handleUpdateDiscount={handleUpdateDiscount}
+                handleHideProduct={handleHideProduct}
                 handleDeleteProduct={handleDeleteProduct}
                 handleRestoreProduct={handleRestoreProduct}
                 navigate={navigate}
@@ -556,6 +561,7 @@ function ProductCard({
   handleRemoveSize,
   handleUpdateStock,
   handleUpdateDiscount,
+  handleHideProduct,
   handleDeleteProduct,
   handleRestoreProduct,
   navigate,
@@ -570,19 +576,19 @@ function ProductCard({
     }));
 
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col w-80 flex-shrink-0">
-      <div className="h-48 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col w-72 flex-shrink-0">
+      <div className="h-40 overflow-hidden">
         <img
           src={resolveImage(product.image)}
           alt={product.name}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      <div className="p-3 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="font-semibold text-lg">{product.name}</h3>
+          <h3 className="font-semibold text-base leading-snug">{product.name}</h3>
           {isDeleted && (
-            <span className="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full bg-gray-800 text-white">
+            <span className="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full bg-slate-700 text-white">
               Đã ẩn khỏi trang bán hàng
             </span>
           )}
@@ -599,12 +605,12 @@ function ProductCard({
                     -{product.discount_percent}%
                   </span>
                 </div>
-                <p className="text-red-600 font-bold text-lg">
+                <p className="text-red-600 font-bold text-base">
                   {calculateDiscountedPrice(product.price, product.discount_percent).toLocaleString()} ₫
                 </p>
               </div>
             ) : (
-              <p className="text-red-600 font-bold">
+              <p className="text-red-600 font-bold text-base">
                 {Number(product.price).toLocaleString()} ₫
               </p>
             )}
@@ -612,7 +618,7 @@ function ProductCard({
 
           {/* Discount editor */}
           <div className="mt-2 flex gap-2 items-center">
-            <label className="text-sm font-medium">Khuyến mãi:</label>
+            <label className="text-xs font-medium text-slate-600">KM:</label>
             <input
               type="number"
               min="0"
@@ -625,9 +631,9 @@ function ProductCard({
                   [product.id]: e.target.value,
                 }))
               }
-              className={`w-16 border border-gray-300 rounded px-2 py-1 text-sm ${isDeleted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              className={`w-14 border border-gray-300 rounded px-2 py-1 text-sm ${isDeleted ? 'bg-gray-100 cursor-not-allowed' : ''}`}
             />
-            <span className="text-sm">%</span>
+            <span className="text-sm text-slate-600">%</span>
             {editingDiscount[product.id] !== undefined && (
               <button
                 onClick={() => handleUpdateDiscount(product.id, editingDiscount[product.id])}
@@ -640,17 +646,17 @@ function ProductCard({
 
           {/* Sizes with stock */}
           <div className="mt-3">
-            <h4 className="font-medium">Sizes & Kho:</h4>
+            <h4 className="font-medium text-sm">Sizes & Kho:</h4>
             <div className="flex flex-col gap-2 mt-1">
               {sizesOfProduct.length > 0
                 ? sizesOfProduct.map((ps) => (
                     <div
                       key={ps.id}
-                      className="flex items-center gap-2 bg-gray-100 px-2 py-2 rounded"
+                      className="flex items-center gap-2 bg-slate-50 px-2 py-1.5 rounded"
                     >
                       <span className="font-medium min-w-[40px]">{ps.size}</span>
                       <div className="flex items-center gap-1 flex-1">
-                        <span className="text-xs text-gray-600">Kho:</span>
+                        <span className="text-xs text-slate-500">Kho:</span>
                         <input
                           type="number"
                           min="0"
@@ -676,7 +682,7 @@ function ProductCard({
                       <button
                         onClick={() => handleRemoveSize(ps.id)}
                         disabled={isDeleted}
-                        className="text-red-500 hover:text-red-700 font-bold ml-auto text-lg transition-all hover:scale-125 active:scale-95"
+                        className="text-red-500 hover:text-red-700 font-bold ml-auto text-lg transition-all hover:scale-110 active:scale-95"
                         title="Xóa size"
                       >
                         ×
@@ -712,39 +718,49 @@ function ProductCard({
             <button
               onClick={() => handleAddSize(product.id)}
               disabled={isDeleted}
-              className={`bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1 rounded-full transition-all duration-200 shadow-md ${isDeleted ? 'opacity-50 cursor-not-allowed' : 'hover:from-green-600 hover:to-green-700 hover:shadow-lg transform hover:scale-105 active:scale-95'}`}
+              className={`bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1 rounded-lg transition-all duration-200 shadow-sm text-sm ${isDeleted ? 'opacity-50 cursor-not-allowed' : 'hover:from-emerald-600 hover:to-emerald-700 hover:shadow transform hover:scale-105 active:scale-95'}`}
             >
               ➕ Thêm
             </button>
           </div>
         </div>
 
-        <div className="flex gap-2 mt-4">
+        <div className="grid grid-cols-3 gap-2 mt-4">
           <button
             onClick={() => navigate(`/edit/${product.id}`, { state: { returnTo: "/admin", activeTab: "product" } })}
             disabled={isDeleted}
-            className={`flex-1 text-white py-2 rounded-full transition-all duration-200 shadow-md font-medium ${isDeleted ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg transform hover:scale-105 active:scale-95'}`}
+            className={`text-white py-2 rounded-lg transition-all duration-200 shadow-sm font-medium text-sm ${isDeleted ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow transform hover:scale-105 active:scale-95'}`}
           >
-            ✏️ Sửa
+            Sửa
           </button>
           {isDeleted ? (
             <button
               onClick={() => handleRestoreProduct(product.id)}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-full hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium"
+              className="col-span-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 shadow-sm hover:shadow transform hover:scale-105 active:scale-95 font-medium text-sm"
             >
-              ↩️ Khôi phục
+              Khôi phục
             </button>
           ) : (
-            <button
-              onClick={() => handleDeleteProduct(product.id, product.hasPurchases)}
-              className={`flex-1 text-white py-2 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-medium ${
-                product.hasPurchases 
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700' 
-                  : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-              }`}
-            >
-              {product.hasPurchases ? '🚫 Ẩn' : '🗑️ Xóa'}
-            </button>
+            <>
+              <button
+                onClick={() => handleHideProduct(product.id)}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow transform hover:scale-105 active:scale-95 font-medium text-sm"
+              >
+                Ẩn
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(product.id, product.hasPurchases)}
+                disabled={product.hasPurchases}
+                title={product.hasPurchases ? "Sản phẩm đã có đơn mua, chỉ có thể ẩn" : "Xóa vĩnh viễn"}
+                className={`text-white py-2 rounded-lg transition-all duration-200 shadow-sm font-medium text-sm ${
+                  product.hasPurchases
+                    ? 'bg-red-300 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 hover:shadow transform hover:scale-105 active:scale-95'
+                }`}
+              >
+                Xóa
+              </button>
+            </>
           )}
         </div>
       </div>

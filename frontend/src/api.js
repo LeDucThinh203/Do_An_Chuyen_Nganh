@@ -662,3 +662,52 @@ export const updateOrderPaymentStatus = async (orderId, isPaid, paymentInfo) => 
   return await safeJson(res);
 };
 
+// ================= Support Chat API =================
+const SUPPORT_CHAT_API_URL = `${API_BASE_URL}/support-chat`;
+
+export const ensureSupportRoom = async ({ userId = null, guestId = null, username = 'Khach hang' }) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/ensure`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ userId, guestId, username })
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Tạo phòng chat thất bại'));
+  return await safeJson(res);
+};
+
+export const getSupportRooms = async () => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Lấy danh sách phòng chat thất bại'));
+  return await safeJson(res);
+};
+
+export const getSupportMessages = async (roomId, limit = 200) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/messages/${encodeURIComponent(roomId)}?limit=${limit}`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Lấy tin nhắn hỗ trợ thất bại'));
+  return await safeJson(res);
+};
+
+export const sendSupportMessage = async ({ roomId, senderRole, senderId = null, senderName = '', message }) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/messages`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ roomId, senderRole, senderId, senderName, message })
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Gửi tin nhắn thất bại'));
+  return await safeJson(res);
+};
+
+export const markSupportRoomRead = async ({ roomId, readerRole }) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/mark-read`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ roomId, readerRole })
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Đánh dấu đã đọc thất bại'));
+  return await safeJson(res);
+};
+

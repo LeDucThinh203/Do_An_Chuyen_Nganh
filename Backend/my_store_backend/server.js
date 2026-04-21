@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
@@ -8,9 +9,12 @@ import swaggerJsdoc from 'swagger-jsdoc';
 
 import uiRoutes from './routes/ui.js'; // gom tất cả route
 import { ensureAiSchema } from './services/ai/schema.js';
+import { ensureSupportChatSchema } from './services/supportChat/schema.js';
+import { initSupportSocket } from './services/supportChat/socketHub.js';
 
 dotenv.config();
 const app = express();
+const httpServer = createServer(app);
 
 // --- Middleware ---
 app.use(express.json());
@@ -92,7 +96,9 @@ app.get('/health', (req, res) => {
 });
 
 // --- Start server ---
-app.listen(PORT, '0.0.0.0', () => {
+initSupportSocket(httpServer);
+
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
 
@@ -101,6 +107,7 @@ app.listen(PORT, '0.0.0.0', () => {
     try {
       // Ensure AI related tables exist
       await ensureAiSchema().catch((e) => console.error('AI schema init error:', e));
+      await ensureSupportChatSchema().catch((e) => console.error('Support chat schema init error:', e));
       
       // Auto-generate embeddings for products without cache (background task)
       // Limit to small batch to avoid blocking server startup

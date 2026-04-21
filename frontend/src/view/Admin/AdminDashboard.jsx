@@ -8,6 +8,9 @@ import SizeManager from "./SizeManager";
 import CategoryManager from "./categories/CategoryManager";
 import OrderManager from "./OrderManager";
 import Revenue from "./Revenue";
+import SupportChatManager from "./SupportChatManager";
+import { getSupportRooms } from "../../api";
+import { getSupportSocket } from "../../socket/supportSocket";
 import { useLocation } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -15,6 +18,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("info");
   const [menuOpen, setMenuOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(true);
+  const [supportUnreadTotal, setSupportUnreadTotal] = useState(0);
   const location = useLocation();
 
   // Xử lý activeTab từ state khi navigate về
@@ -23,6 +27,38 @@ export default function AdminDashboard() {
       setActiveTab(location.state.activeTab);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    if (!user || user.role !== "admin") return;
+
+    let mounted = true;
+
+    const refreshUnread = async () => {
+      try {
+        const rooms = await getSupportRooms();
+        if (!mounted) return;
+        const total = (rooms || []).reduce((sum, room) => sum + Number(room?.admin_unread_count || 0), 0);
+        setSupportUnreadTotal(total);
+      } catch (err) {
+        console.error("[AdminDashboard] refresh support unread failed:", err);
+      }
+    };
+
+    const socket = getSupportSocket();
+    socket.emit("support:register", { role: "admin", userId: user.id, username: user.username });
+
+    const onRoomUpdated = () => refreshUnread();
+    socket.on("support:room-updated", onRoomUpdated);
+
+    refreshUnread();
+    const timer = setInterval(refreshUnread, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+      socket.off("support:room-updated", onRoomUpdated);
+    };
+  }, [user]);
 
   if (!user)
     return (
@@ -43,6 +79,7 @@ export default function AdminDashboard() {
     { id: "revenue", label: "Doanh thu" },
     { id: "product", label: "Quản lý sản phẩm" },
     { id: "orderManager", label: "Quản lý đơn hàng" },
+    { id: "supportChat", label: "CSKH realtime" },
     { id: "userManager", label: "Quản lý người dùng" },
     { id: "address", label: "Quản lý địa chỉ" },
     { id: "category", label: "Quản lý danh mục" },
@@ -55,6 +92,7 @@ export default function AdminDashboard() {
       product: "Quản lý sản phẩm",
       category: "Quản lý danh mục",
       orderManager: "Quản lý đơn hàng",
+      supportChat: "Chat chăm sóc khách hàng",
       userManager: "Quản lý người dùng",
       address: "Quản lý địa chỉ",
       revenue: "Bảng giá & Doanh thu",
@@ -120,7 +158,14 @@ export default function AdminDashboard() {
                         : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
-                    {item.label}
+                    <span className="flex items-center justify-between">
+                      <span>{item.label}</span>
+                      {item.id === "supportChat" && supportUnreadTotal > 0 && (
+                        <span className="ml-2 text-xs bg-red-500 text-white rounded-full min-w-5 h-5 px-1 flex items-center justify-center">
+                          {supportUnreadTotal > 99 ? "99+" : supportUnreadTotal}
+                        </span>
+                      )}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -172,6 +217,7 @@ export default function AdminDashboard() {
           {activeTab === "category" && <CategoryManager />}
           {activeTab === "size" && <SizeManager />}
           {activeTab === "orderManager" && <OrderManager />}
+          {activeTab === "supportChat" && <SupportChatManager />}
           {activeTab === "revenue" && <Revenue />}
         </div>
       </div>
