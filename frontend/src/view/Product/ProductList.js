@@ -39,7 +39,7 @@ export default function ProductList() {
   const [sortOrder, setSortOrder] = useState("default");
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [overflowRows, setOverflowRows] = useState({});
+  const [categoryVisibleCounts, setCategoryVisibleCounts] = useState({});
 
   const navigate = useNavigate();
   const user = Session.getUser();
@@ -162,7 +162,7 @@ export default function ProductList() {
 
   const handleLogout = () => {
     Session.logout();
-    window.location.reload();
+    navigate("/login");
   };
 
   const handleSearch = (term) => {
@@ -172,15 +172,6 @@ export default function ProductList() {
 
   const handleImageClick = (productId) => {
     navigate(`/product/${productId}`);
-  };
-
-  const scrollRow = (rowId, direction) => {
-    const container = document.getElementById(rowId);
-    if (!container) return;
-    container.scrollBy({
-      left: direction === "left" ? -900 : 900,
-      behavior: "smooth",
-    });
   };
 
   const filteredProducts = products.filter((p) => {
@@ -208,8 +199,10 @@ export default function ProductList() {
     return 0; // default
   });
 
-  // Featured products: those having discount_percent > 0
-  const featuredProducts = filteredProducts.filter((p) => Number(p.discount_percent || 0) > 0);
+  // Featured products: những sản phẩm đang giảm giá, chỉ hiển thị tối đa 5 sản phẩm
+  const featuredProducts = filteredProducts
+    .filter((p) => Number(p.discount_percent || 0) > 0)
+    .slice(0, 5);
 
   // Phân loại sản phẩm theo danh mục - chỉ lấy từ category_id
   const categorizedProducts = categories.map((cat) => {
@@ -218,29 +211,32 @@ export default function ProductList() {
   }).filter(cat => cat.products.length > 0); // Chỉ giữ category có sản phẩm
 
   useEffect(() => {
-    const computeOverflow = () => {
-      const next = {};
-      const featuredId = "featured-row";
-      const featuredEl = document.getElementById(featuredId);
-      if (featuredEl) {
-        next[featuredId] = featuredEl.scrollWidth > featuredEl.clientWidth + 1;
-      }
-
+    setCategoryVisibleCounts((prev) => {
+      const next = { ...prev };
       categorizedProducts.forEach((cat) => {
-        const rowId = `category-row-${cat.id}`;
-        const rowEl = document.getElementById(rowId);
-        if (rowEl) {
-          next[rowId] = rowEl.scrollWidth > rowEl.clientWidth + 1;
+        if (!next[cat.id]) {
+          next[cat.id] = 4;
+        } else {
+          next[cat.id] = Math.min(next[cat.id], cat.products.length || 4);
         }
       });
+      return next;
+    });
+  }, [categorizedProducts]);
 
-      setOverflowRows(next);
-    };
+  const handleLoadMoreCategory = (categoryId) => {
+    setCategoryVisibleCounts((prev) => ({
+      ...prev,
+      [categoryId]: (prev[categoryId] || 4) + 4,
+    }));
+  };
 
-    computeOverflow();
-    window.addEventListener("resize", computeOverflow);
-    return () => window.removeEventListener("resize", computeOverflow);
-  }, [featuredProducts, categorizedProducts, loading]);
+  const handleCollapseCategory = (categoryId) => {
+    setCategoryVisibleCounts((prev) => ({
+      ...prev,
+      [categoryId]: 4,
+    }));
+  };
 
   const handleResetFilters = async () => {
     setSelectedCategory("all");
@@ -252,7 +248,7 @@ export default function ProductList() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen overflow-x-hidden">
       <Header
         user={user}
         handleLogout={handleLogout}
@@ -410,46 +406,25 @@ export default function ProductList() {
           {/* Hàng đầu: Sản phẩm nổi bật (khuyến mãi) */}
           <div className="pb-20 space-y-10">
         {featuredProducts.length > 0 && (
-          <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
+          <div>
+            <div className="flex items-center justify-between mb-4 gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold uppercase">Sản phẩm nổi bật</h2>
             </div>
-            <div className="relative">
-              {overflowRows["featured-row"] && (
-                <>
-                  <button
-                    onClick={() => scrollRow("featured-row", "left")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
-                    aria-label="Xem sản phẩm nổi bật bên trái"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={() => scrollRow("featured-row", "right")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
-                    aria-label="Xem sản phẩm nổi bật bên phải"
-                  >
-                    ›
-                  </button>
-                </>
-              )}
-
-              <div id="featured-row" className="overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
-                <div className="flex gap-3 w-max">
-                  {featuredProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      availableSizes={getAvailableSizes(product.id)}
-                      selectedSize={selectedSizes[product.id]}
-                      onSizeSelect={handleSizeSelect}
-                      handleAddToCart={handleAddToCart}
-                      handleDelete={handleDelete}
-                      handleImageClick={handleImageClick}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
-                </div>
+            <div id="featured-row" className="pb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+                {featuredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    availableSizes={getAvailableSizes(product.id)}
+                    selectedSize={selectedSizes[product.id]}
+                    onSizeSelect={handleSizeSelect}
+                    handleAddToCart={handleAddToCart}
+                    handleDelete={handleDelete}
+                    handleImageClick={handleImageClick}
+                    isAdmin={isAdmin}
+                  />
+                ))}
               </div>
             </div>
           </div>
@@ -466,54 +441,50 @@ export default function ProductList() {
           (cat) =>
             cat.products.length > 0 && (
               <div key={cat.id} className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-bold uppercase">{cat.name}</h2>
+                <div className="flex items-center justify-between mb-4 gap-3">
+                  <h2 className="text-xl sm:text-2xl font-bold uppercase">{cat.name}</h2>
                   <Link to={`/category/${cat.id}`} className="text-sm text-blue-600 hover:underline">
                     Xem thêm
                   </Link>
                 </div>
 
-                <div className="relative">
-                  {overflowRows[`category-row-${cat.id}`] && (
-                    <>
-                      <button
-                        onClick={() => scrollRow(`category-row-${cat.id}`, "left")}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
-                        aria-label={`Xem danh mục ${cat.name} bên trái`}
-                      >
-                        ‹
-                      </button>
-                      <button
-                        onClick={() => scrollRow(`category-row-${cat.id}`, "right")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/70 text-white hover:bg-black transition"
-                        aria-label={`Xem danh mục ${cat.name} bên phải`}
-                      >
-                        ›
-                      </button>
-                    </>
-                  )}
-
-                  <div
-                    id={`category-row-${cat.id}`}
-                    className="overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
-                  >
-                    <div className="flex gap-3 w-max">
-                      {cat.products.map((product) => (
-                        <ProductCard
-                          key={product.id}
-                          product={product}
-                          availableSizes={getAvailableSizes(product.id)}
-                          selectedSize={selectedSizes[product.id]}
-                          onSizeSelect={handleSizeSelect}
-                          handleAddToCart={handleAddToCart}
-                          handleDelete={handleDelete}
-                          handleImageClick={handleImageClick}
-                          isAdmin={isAdmin}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                  {cat.products.slice(0, categoryVisibleCounts[cat.id] || 4).map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      availableSizes={getAvailableSizes(product.id)}
+                      selectedSize={selectedSizes[product.id]}
+                      onSizeSelect={handleSizeSelect}
+                      handleAddToCart={handleAddToCart}
+                      handleDelete={handleDelete}
+                      handleImageClick={handleImageClick}
+                      isAdmin={isAdmin}
+                    />
+                  ))}
                 </div>
+
+                {(categoryVisibleCounts[cat.id] || 4) < cat.products.length && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={() => handleLoadMoreCategory(cat.id)}
+                      className="px-6 py-2 rounded-full bg-blue-600 text-white text-sm font-medium shadow hover:bg-blue-700 transition"
+                    >
+                      Xem thêm {Math.min(4, cat.products.length - (categoryVisibleCounts[cat.id] || 4))} sản phẩm
+                    </button>
+                  </div>
+                )}
+
+                {(categoryVisibleCounts[cat.id] || 4) > 4 && (
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      onClick={() => handleCollapseCategory(cat.id)}
+                      className="px-6 py-2 rounded-full border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                    >
+                      Thu gọn về 4 sản phẩm
+                    </button>
+                  </div>
+                )}
               </div>
             )
         )}
@@ -763,7 +734,7 @@ const ProductCard = ({
   const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col w-[250px] flex-shrink-0">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col w-full min-w-0">
       <div 
         className="relative overflow-hidden aspect-square cursor-pointer group group/image"
         onClick={() => handleImageClick(product.id)}
@@ -781,7 +752,7 @@ const ProductCard = ({
           className="peer w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105"
         />
         <div
-          className={`absolute inset-x-2 bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} group-hover/image:opacity-100 group-hover/image:translate-y-0`}
+          className={`absolute inset-x-1.5 sm:inset-x-2 bottom-1.5 sm:bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-2 sm:p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} group-hover/image:opacity-100 group-hover/image:translate-y-0`}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
@@ -834,25 +805,25 @@ const ProductCard = ({
         </div>
       </div>
 
-      <div className="p-3 flex-1 flex flex-col justify-between">
+          <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3 
-            className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-10"
+            className="text-xs sm:text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-9 sm:h-10"
             onClick={() => handleImageClick(product.id)}
           >
             {product.name}
           </h3>
           <div className="mt-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-base ${discount > 0 ? 'font-extrabold text-red-600' : 'font-normal text-gray-900'}`}>
+              <span className={`text-sm sm:text-base ${discount > 0 ? 'font-extrabold text-red-600' : 'font-normal text-gray-900'}`}>
                 {Math.round(finalPrice).toLocaleString()}đ
               </span>
               {discount > 0 && (
                 <>
-                  <span className="text-xs font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] sm:text-xs font-semibold bg-blue-600 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
                     -{Number.isFinite(discount) ? discount : 0}%
                   </span>
-                  <span className="text-xs text-gray-400 line-through">
+                  <span className="text-[10px] sm:text-xs text-gray-400 line-through">
                     {Math.round(price).toLocaleString()}đ
                   </span>
                 </>
@@ -865,7 +836,7 @@ const ProductCard = ({
           <div className="flex gap-2 mt-2">
             <Link
               to={`/edit/${product.id}`}
-              className="flex-1 text-center text-xs font-medium text-white bg-blue-500 px-3 py-1.5 rounded-full hover:bg-blue-600 transition"
+              className="flex-1 text-center text-[10px] sm:text-xs font-medium text-white bg-blue-500 px-2 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition"
             >
               Sửa
             </Link>
@@ -874,7 +845,7 @@ const ProductCard = ({
                 e.stopPropagation();
                 handleDelete(product.id);
               }}
-              className="flex-1 text-center text-xs font-medium text-white bg-red-500 px-3 py-1.5 rounded-full hover:bg-red-600 transition"
+              className="flex-1 text-center text-[10px] sm:text-xs font-medium text-white bg-red-500 px-2 sm:px-3 py-1.5 rounded-full hover:bg-red-600 transition"
             >
               Xóa
             </button>

@@ -8,7 +8,7 @@ import {
 import Session from '../../Session/session';
 import { getSupportSocket } from '../../socket/supportSocket';
 
-export default function SupportChatManager() {
+export default function SupportChatManager({ compact = false }) {
   const user = Session.getUser();
   const adminId = user?.id ? Number(user.id) : null;
   const adminName = user?.username || 'Admin';
@@ -136,7 +136,7 @@ export default function SupportChatManager() {
   };
 
   return (
-    <div className="h-[calc(100vh-170px)] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-12">
+    <div className={`${compact ? 'h-full min-h-0 rounded-none border-0 shadow-none' : 'h-[calc(100vh-170px)] rounded-2xl border border-slate-200 shadow-sm'} bg-white overflow-hidden grid grid-cols-12`}>
       <div className="col-span-4 border-r border-slate-200 flex flex-col">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
           <h2 className="font-semibold text-slate-800">Hộp thư hỗ trợ</h2>

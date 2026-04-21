@@ -3,12 +3,12 @@ import { io } from 'socket.io-client';
 let socketInstance = null;
 
 const resolveSocketUrl = () => {
-  const envUrl = (process.env.REACT_APP_API_URL || '').trim();
-  if (envUrl) return envUrl.replace(/\/$/, '');
-
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:3006';
   }
+
+  const envUrl = (process.env.REACT_APP_API_URL || '').trim();
+  if (envUrl) return envUrl.replace(/\/$/, '');
 
   return window.location.origin;
 };

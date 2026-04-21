@@ -223,24 +223,8 @@ function AppContent() {
 
       {!isAdminPage && (
         <>
-          {/* Chat mode toggle */}
-          <div className="fixed right-4 bottom-20 z-[1250] bg-white border border-slate-200 rounded-xl shadow-lg p-1 flex gap-1">
-            <button
-              onClick={() => setChatMode("ai")}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${chatMode === "ai" ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"}`}
-            >
-              AI Chat
-            </button>
-            <button
-              onClick={() => setChatMode("support")}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${chatMode === "support" ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"}`}
-            >
-              CSKH
-            </button>
-          </div>
-
           {/* Keep both widgets available; user selects mode via toggle */}
-          {chatMode === "ai" ? <ChatWidget /> : <SupportChatWidget />}
+          {chatMode === "ai" ? <ChatWidget onModeChange={setChatMode} /> : <SupportChatWidget onModeChange={setChatMode} />}
         </>
       )}
 

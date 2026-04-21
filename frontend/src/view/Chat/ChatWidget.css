@@ -1,10 +1,42 @@
 /* Chat Widget Container */
 .chat-widget-container {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 16px;
+  right: 16px;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.chat-mode-switcher {
+  position: fixed;
+  right: 84px;
+  bottom: 16px;
+  z-index: 1250;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.chat-mode-switcher-btn {
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.chat-mode-switcher-btn:hover {
+  background: #f1f5f9;
 }
 
 /* Floating Chat Button */
@@ -60,10 +92,10 @@
 /* Chat Window */
 .chat-window {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 380px;
-  height: 600px;
+  bottom: 16px;
+  right: 16px;
+  width: min(320px, calc(100vw - 16px));
+  height: min(480px, calc(100vh - 96px));
   background: white;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -76,6 +108,25 @@
 
 .chat-window.minimized {
   height: 60px;
+}
+
+@media (max-width: 640px) {
+  .chat-widget-container {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .chat-mode-switcher {
+    right: 72px;
+    bottom: 8px;
+  }
+
+  .chat-window {
+    right: 8px;
+    bottom: 8px;
+    width: calc(100vw - 16px);
+    height: min(68vh, 460px);
+  }
 }
 
 @keyframes slideUp {

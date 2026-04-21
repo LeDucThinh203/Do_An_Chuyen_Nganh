@@ -8,7 +8,7 @@ import {
 } from '../../api';
 import { getSupportSocket } from '../../socket/supportSocket';
 
-export default function SupportChatWidget() {
+export default function SupportChatWidget({ onModeChange }) {
   const user = Session.getUser();
   const isLoggedIn = Session.isLoggedIn();
   const isAdmin = user?.role === 'admin';
@@ -132,8 +132,29 @@ export default function SupportChatWidget() {
 
   return (
     <div className="fixed right-4 bottom-4 z-[1200]">
+      {!open && onModeChange && (
+        <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
+          <button
+            type="button"
+            onClick={() => onModeChange('ai')}
+            className="rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            AI Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => onModeChange('support')}
+            className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            CSKH
+          </button>
+        </div>
+      )}
+
       {open && (
-        <div className="w-[340px] h-[480px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden mb-3">
+        <div
+          className="absolute right-0 bottom-16 w-[min(340px,calc(100vw-16px))] max-w-[calc(100vw-16px)] h-[min(480px,calc(100vh-96px))] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+        >
           <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
             <div>
               <p className="font-semibold">Chăm sóc khách hàng</p>

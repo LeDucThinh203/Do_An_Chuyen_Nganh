@@ -3,7 +3,9 @@ import Session from './Session/session';
 
 // API Base URL - sử dụng biến môi trường hoặc empty string để dùng proxy
 // Khi REACT_APP_API_URL trống, requests sẽ đi qua proxy trong package.json
-const API_BASE_URL = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? ''
+  : (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
 
 if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
   console.warn("[API] REACT_APP_API_URL is empty in production. Requests may hit the frontend domain instead of backend API.");

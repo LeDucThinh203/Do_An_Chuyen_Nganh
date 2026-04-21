@@ -158,7 +158,7 @@ export default function ProductLoadMore() {
 
   const handleLogout = () => {
     Session.logout();
-    window.location.reload();
+    navigate("/login");
   };
 
   const handleImageClick = (productId) => {
@@ -201,7 +201,7 @@ export default function ProductLoadMore() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 min-h-screen overflow-x-hidden">
       <Header
         user={user}
         handleLogout={handleLogout}
@@ -267,7 +267,7 @@ export default function ProductLoadMore() {
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] lg:[grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
                   {visibleProducts.map((product) => (
                     <ProductCard
                       key={product.id}
@@ -548,7 +548,7 @@ const ProductCard = ({
   const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col w-[clamp(150px,22vw,250px)] sm:w-[clamp(170px,20vw,250px)] lg:w-[250px] flex-shrink-0">
       <div 
         className="relative overflow-hidden aspect-square cursor-pointer group group/image"
         onClick={() => handleImageClick(product.id)}
@@ -562,7 +562,7 @@ const ProductCard = ({
           className="peer w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover/image:scale-105"
         />
         <div
-          className={`absolute inset-x-2 bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} group-hover/image:opacity-100 group-hover/image:translate-y-0`}
+          className={`absolute inset-x-1.5 sm:inset-x-2 bottom-1.5 sm:bottom-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500/90 text-white shadow-xl p-2 sm:p-3 transition-all duration-300 ease-out z-10 backdrop-blur-sm pointer-events-auto ${overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'} group-hover/image:opacity-100 group-hover/image:translate-y-0`}
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between text-[11px] font-semibold mb-2">
@@ -615,25 +615,25 @@ const ProductCard = ({
         </div>
       </div>
 
-      <div className="p-3 flex-1 flex flex-col justify-between">
+      <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
         <div>
           <h3 
-            className="text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-10"
+            className="text-xs sm:text-sm font-medium text-gray-900 mb-1 line-clamp-2 cursor-pointer hover:text-blue-600 leading-tight h-9 sm:h-10"
             onClick={() => handleImageClick(product.id)}
           >
             {product.name}
           </h3>
           <div className="mt-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-base ${discount > 0 ? 'font-extrabold text-red-600' : 'font-normal text-gray-900'}`}>
+              <span className={`text-sm sm:text-base ${discount > 0 ? 'font-extrabold text-red-600' : 'font-normal text-gray-900'}`}>
                 {Math.round(finalPrice).toLocaleString()}đ
               </span>
               {discount > 0 && (
                 <>
-                  <span className="text-xs font-semibold bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] sm:text-xs font-semibold bg-blue-600 text-white px-1.5 sm:px-2 py-0.5 rounded-full">
                     -{Number.isFinite(discount) ? discount : 0}%
                   </span>
-                  <span className="text-xs text-gray-400 line-through">
+                  <span className="text-[10px] sm:text-xs text-gray-400 line-through">
                     {Math.round(price).toLocaleString()}đ
                   </span>
                 </>
@@ -647,7 +647,7 @@ const ProductCard = ({
             <Link
               to={`/edit/${product.id}`}
               state={{ returnTo: `/category/${categoryId}` }}
-              className="flex-1 text-center text-xs font-medium text-white bg-blue-500 px-3 py-1.5 rounded-full hover:bg-blue-600 transition"
+              className="flex-1 text-center text-[10px] sm:text-xs font-medium text-white bg-blue-500 px-2 sm:px-3 py-1.5 rounded-full hover:bg-blue-600 transition"
             >
               Sửa
             </Link>
@@ -656,7 +656,7 @@ const ProductCard = ({
                 e.stopPropagation();
                 handleDelete(product.id);
               }}
-              className="flex-1 text-center text-xs font-medium text-white bg-red-500 px-3 py-1.5 rounded-full hover:bg-red-600 transition"
+                className="flex-1 text-center text-[10px] sm:text-xs font-medium text-white bg-red-500 px-2 sm:px-3 py-1.5 rounded-full hover:bg-red-600 transition"
             >
               Xóa
             </button>

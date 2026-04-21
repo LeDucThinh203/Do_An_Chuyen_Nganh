@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import Session from '../../Session/session';
 import './ChatWidget.css';
 
-const API_BASE_URL = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+const API_BASE_URL = process.env.NODE_ENV === 'development'
+  ? ''
+  : (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
 const AI_CHAT_API_URL = `${API_BASE_URL}/ai/chat`;
 
 // Resolve image URL for products
@@ -17,7 +19,7 @@ const resolveImage = (img) => {
   return `/images/${encodeURIComponent(trimmed)}`;
 };
 
-const ChatWidget = () => {
+const ChatWidget = ({ onModeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
@@ -152,6 +154,26 @@ const ChatWidget = () => {
 
   return (
     <div className="chat-widget-container">
+      {!isOpen && onModeChange && (
+        <div className="chat-mode-switcher">
+          <button
+            type="button"
+            className="chat-mode-switcher-btn"
+            onClick={() => onModeChange('ai')}
+            aria-pressed
+          >
+            AI Chat
+          </button>
+          <button
+            type="button"
+            className="chat-mode-switcher-btn"
+            onClick={() => onModeChange('support')}
+          >
+            CSKH
+          </button>
+        </div>
+      )}
+
       {/* Chat Window */}
       {isOpen && (
         <div className={`chat-window ${isMinimized ? 'minimized' : ''}`}>

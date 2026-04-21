@@ -6,6 +6,36 @@ body {
   @apply bg-gray-50 text-gray-800 font-sans;
 }
 
+.chat-mode-toggle {
+  position: fixed;
+  right: 368px;
+  bottom: 16px;
+  z-index: 1250;
+}
+
+.chat-mode-toggle button {
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .chat-mode-toggle {
+    right: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .chat-mode-toggle {
+    right: 8px;
+    bottom: 84px;
+  }
+
+  .chat-mode-toggle button {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    font-size: 0.7rem;
+  }
+}
+
 .skeleton-shimmer {
   position: relative;
   overflow: hidden;
