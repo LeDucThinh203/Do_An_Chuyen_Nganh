@@ -1,5 +1,6 @@
 import express from 'express';
-import { chat, history } from '../controllers/aiController.js';
+import { chat, history, clearMyHistory } from '../controllers/aiController.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -53,5 +54,19 @@ router.post('/chat', chat);
  *         description: Lịch sử hội thoại
  */
 router.get('/history', history);
+
+/**
+ * @swagger
+ * /ai/history/me:
+ *   delete:
+ *     summary: Xóa toàn bộ lịch sử chat AI của user hiện tại
+ *     tags: [AI]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Đã xóa lịch sử
+ */
+router.delete('/history/me', authenticate, clearMyHistory);
 
 export default router;

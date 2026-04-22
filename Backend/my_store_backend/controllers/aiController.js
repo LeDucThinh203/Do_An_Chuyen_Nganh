@@ -1,6 +1,6 @@
 import { getChatModelWithTools, getFastModelWithTools } from '../services/ai/gemini.js';
 import { ensureEmbeddingsForProducts, semanticSearchProducts } from '../services/ai/vectorStore.js';
-import { saveMessage, getRecentMessages, recallLongTermMemory, upsertLongTermMemory } from '../services/ai/memory.js';
+import { saveMessage, getRecentMessages, recallLongTermMemory, upsertLongTermMemory, clearUserAiData } from '../services/ai/memory.js';
 import { deleteOrderTracking, getOrderTracking } from '../services/ai/memory.js';
 import { toolDeclarations, toolsImpl } from '../services/ai/tools.js';
 import { 
@@ -536,4 +536,19 @@ export const history = async (req, res) => {
   if (!sessionId) return res.status(400).json({ error: 'sessionId is required' });
   const rows = await getRecentMessages(sessionId, 50);
   res.json(rows);
+};
+
+export const clearMyHistory = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Chưa xác thực người dùng' });
+    }
+
+    await clearUserAiData(userId);
+    return res.json({ message: 'Đã xóa lịch sử chat AI của người dùng' });
+  } catch (err) {
+    console.error('[AI clear history] error', err);
+    return res.status(500).json({ error: err.message });
+  }
 };

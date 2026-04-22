@@ -104,7 +104,7 @@ function AppContent() {
   // Kiểm tra route để không render header trên ProductList và ProductLoadMore
   const showHeader = pathname !== "/" && !pathname.startsWith("/category/");
   const isAdminPage = pathname.startsWith("/admin");
-  const isAdminUser = user?.role === "admin";
+  const isAdminUser = Session.isAdmin();
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col font-sans">
@@ -228,7 +228,7 @@ function AppContent() {
         </>
       )}
 
-      {isAdminPage && isAdminUser && <AdminSupportChatWidget />}
+      {isAdminUser && pathname !== "/" && !pathname.startsWith("/category/") && <AdminSupportChatWidget />}
     </div>
   );
 }

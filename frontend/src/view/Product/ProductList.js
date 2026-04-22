@@ -3,28 +3,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { getAllProducts, deleteProduct, getAllCategories, getAllSizes, getAllProductSizes } from "../../api";
 import { Link, useNavigate } from "react-router-dom";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
-
-// Session utility - định nghĩa trước để sử dụng trong component
-const Session = {
-  setUser(id, username, role = "user", email = "") {
-    const user = { id, username, role, email };
-    localStorage.setItem("user", JSON.stringify(user));
-  },
-  isLoggedIn() {
-    return localStorage.getItem("user") !== null;
-  },
-  isAdmin() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role === "admin";
-  },
-  getUser() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.username ? user : null;
-  },
-  logout() {
-    localStorage.removeItem("user");
-  }
-};
+import Session from "../../Session/session";
+import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -501,6 +481,8 @@ export default function ProductList() {
           )}
         </div>
       </div>
+
+      {isAdmin && <AdminSupportChatWidget forceAdmin />}
     </div>
   );
 }

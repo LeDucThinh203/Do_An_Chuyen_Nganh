@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Session from '../../Session/session';
+import { clearMyAiHistory } from '../../api';
 import './ChatWidget.css';
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
@@ -31,8 +32,15 @@ const ChatWidget = ({ onModeChange }) => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [sessionId, setSessionId] = useState(() => `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const messagesEndRef = useRef(null);
+
+  const initialBotMessage = {
+    type: 'bot',
+    text: 'Xin chào! Tôi là trợ lý AI. Tôi có thể giúp gì cho bạn?',
+    timestamp: new Date()
+  };
 
   // Auto scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -59,23 +67,36 @@ const ChatWidget = ({ onModeChange }) => {
 
   // Reset chat - create new session and clear all messages
   const handleNewChat = () => {
-    // Create new session ID
     const newSessionId = `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setSessionId(newSessionId);
-    
-    // Reset messages to initial state
-    setMessages([
-      {
-        type: 'bot',
-        text: 'Xin chào! Tôi là trợ lý AI. Tôi có thể giúp gì cho bạn?',
-        timestamp: new Date()
-      }
-    ]);
-    
-    // Clear input
+    setMessages([{ ...initialBotMessage, timestamp: new Date() }]);
     setInputMessage('');
-    
     console.log(`[Chat] New chat session started: ${newSessionId}`);
+  };
+
+  const handleClearHistory = async () => {
+    if (isClearing) return;
+    if (!Session.isLoggedIn()) {
+      alert('Bạn cần đăng nhập để xóa lịch sử chat AI.');
+      return;
+    }
+
+    const ok = window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử chat AI của tài khoản này?');
+    if (!ok) return;
+
+    setIsClearing(true);
+    try {
+      await clearMyAiHistory();
+      const newSessionId = `chat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      setSessionId(newSessionId);
+      setMessages([{ ...initialBotMessage, timestamp: new Date() }]);
+      setInputMessage('');
+      alert('Đã xóa lịch sử chat AI thành công.');
+    } catch (error) {
+      alert(error.message || 'Xóa lịch sử chat AI thất bại.');
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   const handleSendMessage = async () => {
@@ -153,12 +174,12 @@ const ChatWidget = ({ onModeChange }) => {
   };
 
   return (
-    <div className="chat-widget-container">
+    <div className="fixed right-3 md:right-24 bottom-6 z-[1200]">
       {!isOpen && onModeChange && (
-        <div className="chat-mode-switcher">
+        <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
           <button
             type="button"
-            className="chat-mode-switcher-btn"
+            className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
             onClick={() => onModeChange('ai')}
             aria-pressed
           >
@@ -166,7 +187,7 @@ const ChatWidget = ({ onModeChange }) => {
           </button>
           <button
             type="button"
-            className="chat-mode-switcher-btn"
+            className="rounded-full px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
             onClick={() => onModeChange('support')}
           >
             CSKH
@@ -194,6 +215,16 @@ const ChatWidget = ({ onModeChange }) => {
               </div>
             </div>
             <div className="chat-actions">
+              <button
+                className="chat-action-btn"
+                onClick={handleClearHistory}
+                title="Xóa lịch sử chat AI"
+                disabled={isClearing}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm1 6h2v9h-2V9zm4 0h2v9h-2V9zM8 9h2v9H8V9z" />
+                </svg>
+              </button>
               <button 
                 className="chat-action-btn" 
                 onClick={handleNewChat}
@@ -340,15 +371,21 @@ const ChatWidget = ({ onModeChange }) => {
       )}
 
       {/* Floating Chat Button */}
-      {!isOpen && (
-        <button className="chat-toggle-btn" onClick={toggleChat}>
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
-            <path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+      <button
+        type="button"
+        className="group relative w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-[0_12px_28px_rgba(37,99,235,0.42)] ring-4 ring-white hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center"
+        onClick={toggleChat}
+        title={isOpen ? 'Đóng chat AI' : 'Mở chat AI'}
+        aria-expanded={isOpen}
+      >
+        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white" aria-hidden="true" />
+        <span className="flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 opacity-95" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8L12 3z" />
           </svg>
-          <span className="chat-badge">AI</span>
-        </button>
-      )}
+          <span className="text-xs font-extrabold tracking-wide leading-none">AI</span>
+        </span>
+      </button>
     </div>
   );
 };

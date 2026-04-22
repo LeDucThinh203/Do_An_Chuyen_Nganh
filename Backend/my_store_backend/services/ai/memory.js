@@ -80,3 +80,19 @@ export const recallLongTermMemory = async (user_id, query, topK = 3) => {
   // Only return memories with meaningful similarity (> 0.5)
   return scored.filter(r => r.score > 0.5).slice(0, topK).map(r => r.summary);
 };
+
+export const clearUserAiData = async (user_id) => {
+  if (!user_id) return;
+
+  // Clear conversation rows bound to user_id and deterministic session id pattern.
+  await db.query(
+    `DELETE FROM ai_conversations WHERE user_id = ? OR session_id = ?`,
+    [user_id, `u-${user_id}`]
+  );
+
+  // Clear long-term memory rows for this user.
+  await db.query(
+    `DELETE FROM ai_memory WHERE user_id = ?`,
+    [user_id]
+  );
+};

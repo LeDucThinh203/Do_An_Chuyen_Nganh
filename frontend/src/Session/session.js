@@ -3,8 +3,12 @@
  * Sử dụng localStorage để lưu thông tin người dùng và JWT token
  */
 const Session = {
+  normalizeRole(role) {
+    return String(role || "").trim().toLowerCase();
+  },
+
   setUser(id, username, role = "user", email = "", token = "") {
-    const user = { id, username, role, email };
+    const user = { id, username, role: Session.normalizeRole(role) || "user", email };
     localStorage.setItem("user", JSON.stringify(user));
     if (token) {
       localStorage.setItem("token", token);
@@ -25,17 +29,17 @@ const Session = {
 
   isAdmin() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role === "admin";
+    return Session.normalizeRole(user?.role) === "admin";
   },
 
   getRole() {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role || "guest";
+    return Session.normalizeRole(user?.role) || "guest";
   },
 
   hasRole(role) {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role === role;
+    return Session.normalizeRole(user?.role) === Session.normalizeRole(role);
   },
 
   getAccountId() {

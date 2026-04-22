@@ -4,9 +4,9 @@ import { getSupportRooms } from '../../api';
 import { getSupportSocket } from '../../socket/supportSocket';
 import SupportChatManager from './SupportChatManager';
 
-export default function AdminSupportChatWidget() {
+export default function AdminSupportChatWidget({ forceAdmin = false }) {
   const user = Session.getUser();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = forceAdmin || Session.isAdmin();
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
 
@@ -47,7 +47,17 @@ export default function AdminSupportChatWidget() {
   return (
     <>
       {open && (
-        <div className="fixed right-4 bottom-20 z-[1260] w-[min(92vw,1100px)] h-[min(82vh,760px)] rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+        <div
+          className="rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+          style={{
+            position: 'fixed',
+            right: '24px',
+            bottom: '96px',
+            width: 'min(92vw, 1100px)',
+            height: 'min(82vh, 760px)',
+            zIndex: 2147483000,
+          }}
+        >
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
             <div>
               <h2 className="font-semibold text-slate-800">CSKH realtime</h2>
@@ -71,11 +81,28 @@ export default function AdminSupportChatWidget() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="fixed right-4 bottom-4 z-[1250] relative w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 transition flex items-center justify-center"
+        className="relative transition"
+        style={{
+          position: 'fixed',
+          right: '24px',
+          bottom: '24px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '9999px',
+          background: '#2563eb',
+          color: '#ffffff',
+          border: '4px solid #ffffff',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2147483000,
+          cursor: 'pointer',
+        }}
         title="Mở CSKH realtime"
         aria-expanded={open}
       >
-        <span className="text-xl leading-none">🛎</span>
+        <span className="text-xs font-bold leading-none">CSKH</span>
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center">
             {unread > 99 ? '99+' : unread}

@@ -3,28 +3,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { getAllProducts, getAllCategories, getAllSizes, getAllProductSizes, deleteProduct } from "../../api";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
-
-// Session utility
-const Session = {
-  setUser(id, username, role = "user", email = "") {
-    const user = { id, username, role, email };
-    localStorage.setItem("user", JSON.stringify(user));
-  },
-  isLoggedIn() {
-    return localStorage.getItem("user") !== null;
-  },
-  isAdmin() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role === "admin";
-  },
-  getUser() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.username ? user : null;
-  },
-  logout() {
-    localStorage.removeItem("user");
-  }
-};
+import Session from "../../Session/session";
+import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 
 export default function ProductLoadMore() {
   const { categoryId } = useParams();
@@ -320,6 +300,8 @@ export default function ProductLoadMore() {
           </div>
         </div>
       </div>
+
+      {isAdmin && <AdminSupportChatWidget forceAdmin />}
     </div>
   );
 }

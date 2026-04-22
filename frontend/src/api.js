@@ -376,6 +376,18 @@ export const aiHistory = async (sessionId) => {
   return await safeJson(res);
 };
 
+export const clearMyAiHistory = async () => {
+  const res = await fetch(`${AI_API_URL}/history/me`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const data = await safeJson(res);
+    throw new Error(data?.error || 'Xóa lịch sử chat AI thất bại');
+  }
+  return await safeJson(res);
+};
+
 // ================= ProductSize API =================
 const PRODUCT_SIZE_API_URL = `${API_BASE_URL}/product_sizes`;
 

@@ -11,7 +11,7 @@ import { getSupportSocket } from '../../socket/supportSocket';
 export default function SupportChatWidget({ onModeChange }) {
   const user = Session.getUser();
   const isLoggedIn = Session.isLoggedIn();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = Session.isAdmin();
 
   const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState(null);
@@ -131,7 +131,7 @@ export default function SupportChatWidget({ onModeChange }) {
   };
 
   return (
-    <div className="fixed right-4 bottom-4 z-[1200]">
+    <div className="fixed right-3 md:right-24 bottom-6 z-[1200]">
       {!open && onModeChange && (
         <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
           <button
@@ -213,10 +213,10 @@ export default function SupportChatWidget({ onModeChange }) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 transition"
+        className="relative w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl ring-4 ring-white hover:bg-blue-700 transition flex items-center justify-center"
         title="Mở chat chăm sóc khách hàng"
       >
-        💬
+        <span className="text-xs font-bold tracking-wide leading-none">CSKH</span>
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center">
             {unread > 99 ? '99+' : unread}
