@@ -116,9 +116,10 @@ function AppContent() {
         <Suspense fallback={<RouteFallbackSkeleton />}>
           <Routes>
             {/* Public */}
-            <Route path="/" element={<ProductList />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/product/:id/" element={<ProductDetail />} />
             <Route path="/category/:categoryId" element={<ProductLoadMore />} />
+            <Route path="/category/:categoryId/" element={<ProductLoadMore />} />
             <Route path="/login" element={<Login setUser={setUser} />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -211,6 +212,9 @@ function AppContent() {
                 </UserRoute>
               }
             />
+
+            {/* Home route đặt gần cuối để tránh bắt nhầm khi URL là route cụ thể */}
+            <Route path="/" element={<ProductList />} />
 
             {/* 404 */}
             <Route path="*" element={<p className="text-center mt-10">404 - Page not found</p>} />
