@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Session from '../../Session/session';
 import {
-  ensureSupportRoom,
   getSupportMessages,
   markSupportRoomRead,
   sendSupportMessage,
@@ -115,20 +114,8 @@ export default function SupportChatWidget({ onModeChange }) {
 
     setSending(true);
     try {
-      let readyRoomId = targetRoomId;
-
-      if (!roomId) {
-        const ensured = await ensureSupportRoom({
-          userId: senderId,
-          guestId: null,
-          username: senderName,
-        });
-        readyRoomId = ensured?.room?.room_id || targetRoomId;
-        setRoomId(readyRoomId);
-      }
-
       const res = await sendSupportMessage({
-        roomId: readyRoomId,
+        roomId: targetRoomId,
         senderRole: 'user',
         senderId,
         senderName,
@@ -136,6 +123,7 @@ export default function SupportChatWidget({ onModeChange }) {
       });
 
       setInput('');
+      if (!roomId) setRoomId(targetRoomId);
 
       if (res?.message) appendMessageUnique(res.message);
     } catch (err) {

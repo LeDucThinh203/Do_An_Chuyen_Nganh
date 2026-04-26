@@ -76,9 +76,9 @@ model address {
   account_id    BigInt?
   name          String
   phone         String
-  provinceName  String?
-  districtName  String?
-  wardName      String?
+  provinceName  String?  @map("provincename")
+  districtName  String?  @map("districtname")
+  wardName      String?  @map("wardname")
   address_detail String
   account       account? @relation(fields: [account_id], references: [id], onDelete: SetNull)
 

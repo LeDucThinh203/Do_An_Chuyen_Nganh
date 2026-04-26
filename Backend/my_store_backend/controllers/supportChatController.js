@@ -8,6 +8,13 @@ const buildRoomId = ({ userId, guestId }) => {
   return `support-guest-${String(guestId).trim()}`;
 };
 
+const resolveAuthUserId = (user) => {
+  const rawId = user?.id ?? user?.account_id ?? user?.user_id ?? user?.sub ?? null;
+  const normalized = Number(rawId);
+  if (!Number.isFinite(normalized) || normalized <= 0) return null;
+  return normalized;
+};
+
 const getRoomById = async (roomId) => {
   await ensureSupportNotificationTable();
   const [rows] = await db.query(
@@ -159,38 +166,19 @@ const sendSupportNotificationEmail = async ({ room, message, senderName }) => {
 
 export const ensureRoom = async (req, res) => {
   try {
-    const userId = req.user?.id ? Number(req.user.id) : null;
+    const userId = resolveAuthUserId(req.user);
     if (!userId) return res.status(401).json({ error: 'Không tìm thấy user đã xác thực' });
 
-    const { username = 'Khach hang' } = req.body || {};
-
     const roomId = buildRoomId({ userId, guestId: null });
-    const normalizedName = String(username || 'Khach hang').trim() || 'Khach hang';
 
     const [existingRows] = await db.query('SELECT * FROM support_chat_rooms WHERE room_id = ? LIMIT 1', [roomId]);
     if (existingRows?.length) {
-      await db.query(
-        `
-        UPDATE support_chat_rooms
-        SET username = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE room_id = ?
-      `,
-        [normalizedName, roomId]
-      );
       const latestRoom = await getRoomById(roomId);
       return res.json({ room: latestRoom || existingRows[0] });
     }
 
-    await db.query(
-      `
-      INSERT INTO support_chat_rooms (room_id, user_id, guest_id, username)
-      VALUES (?, ?, ?, ?)
-    `,
-      [roomId, Number(userId), null, normalizedName]
-    );
-
-    const latestRoom = await getRoomById(roomId);
-    return res.status(201).json({ room: latestRoom || null });
+    // Do not create empty room here; room is created on first message.
+    return res.json({ room: null, requiresFirstMessage: true });
   } catch (err) {
     console.error('[Support Chat] ensureRoom error:', err);
     return res.status(500).json({ error: err.message });
@@ -224,17 +212,12 @@ export const getMessagesByRoom = async (req, res) => {
   try {
     const roomId = String(req.params.roomId || '').trim();
     const limit = Math.min(Math.max(Number(req.query.limit || 100), 1), 500);
-    const authUserId = req.user?.id ? Number(req.user.id) : null;
+    const authUserId = resolveAuthUserId(req.user);
     const isAdmin = req.user?.role === 'admin';
 
     if (!roomId) return res.status(400).json({ error: 'roomId không hợp lệ' });
 
-    if (!isAdmin) {
-      const expectedRoomId = buildRoomId({ userId: authUserId, guestId: null });
-      if (roomId !== expectedRoomId) {
-        return res.status(403).json({ error: 'Bạn không có quyền truy cập phòng chat này' });
-      }
-    }
+    const effectiveRoomId = isAdmin ? roomId : buildRoomId({ userId: authUserId, guestId: null });
 
     const [rows] = await db.query(
       `
@@ -244,7 +227,7 @@ export const getMessagesByRoom = async (req, res) => {
       ORDER BY created_at ASC
       LIMIT ?
     `,
-      [roomId, limit]
+      [effectiveRoomId, limit]
     );
 
     return res.json(rows || []);
@@ -257,25 +240,38 @@ export const getMessagesByRoom = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { roomId, senderName = '', message = '' } = req.body || {};
-    const authUserId = req.user?.id ? Number(req.user.id) : null;
+    const authUserId = resolveAuthUserId(req.user);
     const isAdmin = req.user?.role === 'admin';
 
-    const normalizedRoomId = String(roomId || '').trim();
+    const requestedRoomId = String(roomId || '').trim();
     const normalizedRole = isAdmin ? 'admin' : 'user';
     const normalizedMessage = String(message || '').trim();
+    const normalizedRoomId = isAdmin
+      ? requestedRoomId
+      : buildRoomId({ userId: authUserId, guestId: null });
 
     if (!normalizedRoomId) return res.status(400).json({ error: 'roomId là bắt buộc' });
     if (!normalizedMessage) return res.status(400).json({ error: 'message là bắt buộc' });
 
-    const room = await getRoomById(normalizedRoomId);
+    let room = await getRoomById(normalizedRoomId);
     if (!room) {
-      return res.status(404).json({ error: 'Không tìm thấy phòng chat' });
-    }
+      if (isAdmin) {
+        return res.status(404).json({ error: 'Không tìm thấy phòng chat' });
+      }
 
-    if (!isAdmin) {
-      const expectedRoomId = buildRoomId({ userId: authUserId, guestId: null });
-      if (normalizedRoomId !== expectedRoomId) {
-        return res.status(403).json({ error: 'Bạn không có quyền gửi tin vào phòng này' });
+      const normalizedName = String(senderName || req.user?.username || 'Khach hang').trim() || 'Khach hang';
+      await db.query(
+        `
+        INSERT INTO support_chat_rooms (room_id, user_id, guest_id, username)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT (room_id) DO NOTHING
+      `,
+        [normalizedRoomId, Number(authUserId), null, normalizedName]
+      );
+
+      room = await getRoomById(normalizedRoomId);
+      if (!room) {
+        return res.status(500).json({ error: 'Không thể khởi tạo phòng chat hỗ trợ' });
       }
     }
 
@@ -423,18 +419,14 @@ export const resumeRoomNotifications = async (req, res) => {
 export const markRoomRead = async (req, res) => {
   try {
     const { roomId } = req.body || {};
-    const normalizedRoomId = String(roomId || '').trim();
-    const authUserId = req.user?.id ? Number(req.user.id) : null;
+    const requestedRoomId = String(roomId || '').trim();
+    const authUserId = resolveAuthUserId(req.user);
     const normalizedRole = req.user?.role === 'admin' ? 'admin' : 'user';
+    const normalizedRoomId = normalizedRole === 'admin'
+      ? requestedRoomId
+      : buildRoomId({ userId: authUserId, guestId: null });
 
     if (!normalizedRoomId) return res.status(400).json({ error: 'roomId là bắt buộc' });
-
-    if (normalizedRole !== 'admin') {
-      const expectedRoomId = buildRoomId({ userId: authUserId, guestId: null });
-      if (normalizedRoomId !== expectedRoomId) {
-        return res.status(403).json({ error: 'Bạn không có quyền cập nhật phòng chat này' });
-      }
-    }
 
     if (normalizedRole === 'admin') {
       await db.query(
