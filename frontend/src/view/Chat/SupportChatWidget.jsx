@@ -39,6 +39,11 @@ export default function SupportChatWidget({ onModeChange }) {
     return null;
   }, [user]);
 
+  const computedRoomId = useMemo(() => {
+    if (!senderId) return null;
+    return `support-user-${senderId}`;
+  }, [senderId]);
+
   useEffect(() => {
     if (isAdmin || !isLoggedIn) return;
 
@@ -47,17 +52,6 @@ export default function SupportChatWidget({ onModeChange }) {
 
     const bootstrap = async () => {
       try {
-        const ensured = await ensureSupportRoom({
-          userId: senderId,
-          guestId: null,
-          username: senderName,
-        });
-
-        const nextRoomId = ensured?.room?.room_id;
-        if (!nextRoomId || !mounted) return;
-
-        setRoomId(nextRoomId);
-
         socket.emit('support:register', {
           role: 'user',
           userId: senderId,
@@ -65,9 +59,14 @@ export default function SupportChatWidget({ onModeChange }) {
           username: senderName,
         });
 
-        const history = await getSupportMessages(nextRoomId);
+        if (!computedRoomId) return;
+
+        const history = await getSupportMessages(computedRoomId);
         if (mounted) {
           setMessages(history || []);
+          if ((history || []).length > 0) {
+            setRoomId(computedRoomId);
+          }
         }
       } catch (err) {
         console.error('[Support Widget] init error:', err);
@@ -77,6 +76,10 @@ export default function SupportChatWidget({ onModeChange }) {
     const onNewMessage = (msg) => {
       if (!msg) return;
       appendMessageUnique(msg);
+
+      if (msg.room_id === computedRoomId) {
+        setRoomId(computedRoomId);
+      }
 
       if (!open && msg.sender_role === 'admin') {
         setUnread((prev) => prev + 1);
@@ -91,7 +94,7 @@ export default function SupportChatWidget({ onModeChange }) {
       mounted = false;
       socket.off('support:new-message', onNewMessage);
     };
-  }, [isAdmin, isLoggedIn, senderId, senderName]);
+  }, [computedRoomId, isAdmin, isLoggedIn, senderId, senderName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -107,12 +110,25 @@ export default function SupportChatWidget({ onModeChange }) {
 
   const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || !roomId || sending) return;
+    const targetRoomId = roomId || computedRoomId;
+    if (!trimmed || !targetRoomId || sending) return;
 
     setSending(true);
     try {
+      let readyRoomId = targetRoomId;
+
+      if (!roomId) {
+        const ensured = await ensureSupportRoom({
+          userId: senderId,
+          guestId: null,
+          username: senderName,
+        });
+        readyRoomId = ensured?.room?.room_id || targetRoomId;
+        setRoomId(readyRoomId);
+      }
+
       const res = await sendSupportMessage({
-        roomId,
+        roomId: readyRoomId,
         senderRole: 'user',
         senderId,
         senderName,
