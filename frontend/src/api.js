@@ -715,6 +715,26 @@ export const sendSupportMessage = async ({ roomId, senderRole, senderId = null, 
   return await safeJson(res);
 };
 
+export const acknowledgeSupportRoom = async ({ roomId }) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/acknowledge`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ roomId })
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Xác nhận phòng chat thất bại'));
+  return await safeJson(res);
+};
+
+export const resumeSupportRoomNotifications = async ({ roomId }) => {
+  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/resume-notifications`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ roomId })
+  });
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Bật lại thông báo thất bại'));
+  return await safeJson(res);
+};
+
 export const markSupportRoomRead = async ({ roomId, readerRole }) => {
   const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/mark-read`, {
     method: 'POST',

@@ -209,7 +209,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="flex-1 overflow-auto bg-gray-50 p-6">
+        <div className={`flex-1 min-h-0 bg-gray-50 p-6 ${activeTab === 'supportChat' ? 'overflow-hidden' : 'overflow-auto'}`}>
           {activeTab === "info" && <AdminInfo />}
           {activeTab === "address" && <AdminAddressManager />}
           {activeTab === "userManager" && <UserManager />}
@@ -217,7 +217,11 @@ export default function AdminDashboard() {
           {activeTab === "category" && <CategoryManager />}
           {activeTab === "size" && <SizeManager />}
           {activeTab === "orderManager" && <OrderManager />}
-          {activeTab === "supportChat" && <SupportChatManager />}
+          {activeTab === "supportChat" && (
+            <div className="h-full min-h-0">
+              <SupportChatManager />
+            </div>
+          )}
           {activeTab === "revenue" && <Revenue />}
         </div>
       </div>

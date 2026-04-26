@@ -8,7 +8,15 @@ export default function AdminSupportChatWidget({ forceAdmin = false }) {
   const user = Session.getUser();
   const isAdmin = forceAdmin || Session.isAdmin();
   const [unread, setUnread] = useState(0);
+  const [pausedRooms, setPausedRooms] = useState(0);
   const [open, setOpen] = useState(false);
+
+  const countPausedRooms = (rooms = []) =>
+    (rooms || []).filter((room) => {
+      if (!room?.support_suppress_until) return false;
+      const suppressUntil = new Date(room.support_suppress_until);
+      return !Number.isNaN(suppressUntil.getTime()) && suppressUntil.getTime() > Date.now();
+    }).length;
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -21,6 +29,7 @@ export default function AdminSupportChatWidget({ forceAdmin = false }) {
         if (!mounted) return;
         const total = (rooms || []).filter((room) => Number(room?.admin_unread_count || 0) > 0).length;
         setUnread(total);
+        setPausedRooms(countPausedRooms(rooms));
       } catch (err) {
         console.error('[Admin Support Widget] unread error:', err);
       }
@@ -106,6 +115,14 @@ export default function AdminSupportChatWidget({ forceAdmin = false }) {
         {unread > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center">
             {unread > 99 ? '99+' : unread}
+          </span>
+        )}
+        {pausedRooms > 0 && (
+          <span
+            className={`absolute ${unread > 0 ? 'top-4 -right-1' : '-top-1 -right-1'} bg-amber-500 text-white text-[10px] font-bold rounded-full min-w-5 h-5 px-1 flex items-center justify-center`}
+            title={`Đang tắt thông báo mail ở ${pausedRooms} phòng`}
+          >
+            {pausedRooms > 99 ? '99+' : pausedRooms}
           </span>
         )}
       </button>
