@@ -95,6 +95,69 @@ app.get('/health', (req, res) => {
   });
 });
 
+// --- Internal test endpoint: SendGrid + SMTP connectivity ---
+// Protect with INTERNAL_TEST_TOKEN env var: /internal/test-mail?token=XXX
+app.get('/internal/test-mail', async (req, res) => {
+  const token = String(req.query.token || '').trim();
+  const expected = String(process.env.INTERNAL_TEST_TOKEN || '').trim();
+  if (!expected) return res.status(403).json({ error: 'INTERNAL_TEST_TOKEN not configured' });
+  if (!token || token !== expected) return res.status(401).json({ error: 'invalid token' });
+
+  const result = { sendgrid: null, smtp: null };
+  const to = String(process.env.EMAIL_TEST_TO || process.env.EMAIL_USER || '').trim();
+
+  // Test SendGrid API
+  try {
+    const apiKey = String(process.env.SENDGRID_API_KEY || '').trim();
+    const from = String(process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || '').trim();
+    if (!apiKey || !from) {
+      result.sendgrid = { ok: false, error: 'SendGrid not configured (SENDGRID_API_KEY or SENDGRID_FROM_EMAIL missing)' };
+    } else {
+      const payload = {
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: from },
+        subject: 'Connectivity test (SendGrid API)',
+        content: [{ type: 'text/plain', value: 'SendGrid connectivity test' }]
+      };
+      const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await r.text();
+      result.sendgrid = { ok: r.ok, status: r.status, body: text.slice(0, 200) };
+    }
+  } catch (e) {
+    result.sendgrid = { ok: false, error: e?.message || String(e) };
+  }
+
+  // Test SMTP verify (no email send)
+  try {
+    const nodemailer = await import('nodemailer');
+    const host = String(process.env.SMTP_HOST || 'smtp.gmail.com').trim();
+    const port = Number(process.env.SMTP_PORT || 587);
+    const secure = String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true';
+    const user = String(process.env.EMAIL_USER || '').trim();
+    const pass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+
+    if (!user || !pass) {
+      result.smtp = { ok: false, error: 'SMTP credentials not configured (EMAIL_USER / EMAIL_PASS)' };
+    } else {
+      const transporter = nodemailer.createTransport({ host, port, secure, auth: { user, pass }, connectionTimeout: 15000, greetingTimeout: 15000, socketTimeout: 20000 });
+      try {
+        await transporter.verify();
+        result.smtp = { ok: true, message: 'SMTP reachable and auth OK' };
+      } catch (err) {
+        result.smtp = { ok: false, error: err?.code || err?.message || String(err) };
+      }
+    }
+  } catch (e) {
+    result.smtp = { ok: false, error: e?.message || String(e) };
+  }
+
+  res.json(result);
+});
+
 // --- Start server ---
 initSupportSocket(httpServer);
 
