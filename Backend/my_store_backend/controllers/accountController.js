@@ -16,8 +16,10 @@ const getEmailAuthConfig = () => {
 const getSendGridConfig = () => {
   const apiKey = String(process.env.SENDGRID_API_KEY || '').trim();
   const from = String(process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || '').trim();
+  const replyTo = String(process.env.SENDGRID_REPLY_TO || '').trim();
+  const unsubscribe = String(process.env.SENDGRID_UNSUBSCRIBE_EMAIL || '').trim();
   if (!apiKey || !from) return null;
-  return { apiKey, from };
+  return { apiKey, from, replyTo: replyTo || undefined, unsubscribe: unsubscribe || undefined };
 };
 
 const normalizeRecipients = (to) => {
@@ -43,12 +45,25 @@ const sendMailWithSendGrid = async ({ mailOptions, context }) => {
     throw err;
   }
 
+  const html = String(mailOptions.html || '');
+  const text = String(mailOptions.text || (html ? html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''));
+
+  const personalizations = [{ to: recipients }];
+  if (sendGrid.unsubscribe) {
+    personalizations[0].headers = { 'List-Unsubscribe': `mailto:${sendGrid.unsubscribe}` };
+  }
+
   const payload = {
-    personalizations: [{ to: recipients }],
+    personalizations,
     from: { email: sendGrid.from },
     subject: String(mailOptions.subject || ''),
-    content: [{ type: 'text/html', value: String(mailOptions.html || '') }],
+    content: [
+      { type: 'text/plain', value: text },
+      { type: 'text/html', value: html },
+    ],
   };
+
+  if (sendGrid.replyTo) payload.reply_to = { email: sendGrid.replyTo };
 
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
