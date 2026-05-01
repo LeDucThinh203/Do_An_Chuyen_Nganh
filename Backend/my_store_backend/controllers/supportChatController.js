@@ -127,11 +127,13 @@ const getSmtpConfigs = () => {
 };
 
 const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
+  const forceSendGrid = String(process.env.FORCE_SENDGRID || '').toLowerCase() === 'true';
   try {
     const sentViaSendGrid = await sendMailWithSendGrid({ mailOptions, context });
     if (sentViaSendGrid) return;
   } catch (err) {
-    console.error(`[Mail][${context}] SendGrid failed, falling back to SMTP`, err?.code || err?.message || err);
+    console.error(`[Mail][${context}] SendGrid failed${forceSendGrid ? ' (FORCE_SENDGRID enabled — not falling back)' : ', falling back to SMTP'}`, err?.code || err?.message || err);
+    if (forceSendGrid) throw err;
   }
 
   const smtpConfigs = getSmtpConfigs();

@@ -74,47 +74,54 @@ export default function ProductDetail() {
       
       setProduct(productData);
       setSizes(sizesData);
-      
-      // Lọc các size có sẵn cho sản phẩm này
-      const availableSizes = productSizesData.filter(ps => ps.product_id === parseInt(id));
+
+      // Lọc các size có sẵn cho sản phẩm này (coerce ID types to handle string/number from DB)
+      const availableSizes = productSizesData.filter(ps => Number(ps.product_id) === Number(id));
       setProductSizes(availableSizes);
+      console.debug('[ProductDetail] availableSizes:', availableSizes);
       
       // -------- Rating: build list for this product --------
-      const detailById = new Map(orderDetailsData.map(d => [d.id, d]));
-      const productSizeById = new Map(productSizesData.map(ps => [ps.id, ps]));
-      const ordersById = new Map(ordersData.map(o => [o.id, o]));
-      const accountsById = new Map(accountsData.map(a => [a.id, a]));
+      // Use string keys for maps to avoid bigint/number/string mismatches
+      const detailById = new Map(orderDetailsData.map(d => [String(d.id), d]));
+      const productSizeById = new Map(productSizesData.map(ps => [String(ps.id), ps]));
+      const ordersById = new Map(ordersData.map(o => [String(o.id), o]));
+      const accountsById = new Map(accountsData.map(a => [String(a.id), a]));
 
       const productRatings = ratingsData
         .map(r => {
-          const detail = detailById.get(r.order_detail_id);
+          const detail = detailById.get(String(r.order_detail_id));
           if (!detail) return null;
-          const ps = productSizeById.get(detail.product_sizes_id);
+          const ps = productSizeById.get(String(detail.product_sizes_id));
           return { r, detail, ps };
         })
-        .filter(x => x && x.ps && x.ps.product_id === parseInt(id))
+        .filter(x => x && x.ps && Number(x.ps.product_id) === Number(id))
         .map(({ r, detail }) => {
-          const order = ordersById.get(detail.order_id);
-          const account = order ? accountsById.get(order.account_id) : null;
+          const order = ordersById.get(String(detail.order_id));
+          const account = order ? accountsById.get(String(order.account_id)) : null;
+          // Prefer username included in rating row (from backend join), then account.username, then fallback
+          const username = r.username || account?.username || (order ? `User #${String(order.account_id)}` : "Người dùng");
           return {
             ...r,
-            username: account?.username || "Người dùng"
+            username
           };
         });
       setRatings(productRatings);
+      console.debug('[ProductDetail] ratingsData length:', ratingsData?.length, 'productRatings length:', productRatings.length);
+      console.debug('[ProductDetail] productRatings sample:', productRatings.slice(0,3));
 
       // Determine if current user can rate: must have a purchase (order_detail) for this product not yet rated
       // AND the order must have status 'received' (đã giao thành công)
       if (currentUser?.id) {
+        const receivedStatuses = new Set(['received', 'delivered']);
         const myOrderIds = new Set(
           ordersData
-            .filter(o => o.account_id === currentUser.id && o.status === 'received')
+            .filter(o => Number(o.account_id) === Number(currentUser.id) && receivedStatuses.has(String(o.status)))
             .map(o => o.id)
         );
         const myDetailsForProduct = orderDetailsData.filter(d => {
           if (!myOrderIds.has(d.order_id)) return false;
-          const ps = productSizeById.get(d.product_sizes_id);
-          return ps && ps.product_id === parseInt(id);
+          const ps = productSizeById.get(String(d.product_sizes_id));
+          return ps && Number(ps.product_id) === Number(id);
         });
         const ratedDetailIds = new Set(ratingsData.map(r => r.order_detail_id));
         const available = myDetailsForProduct.find(d => !ratedDetailIds.has(d.id));
@@ -150,11 +157,12 @@ export default function ProductDetail() {
       return;
     }
     try {
-      await createRating({
+      const resp = await createRating({
         rating_value: userRating.rating_value,
         comment: userRating.comment,
         order_detail_id: eligibleOrderDetailId
       });
+      console.debug('[ProductDetail] createRating response:', resp);
       alert("✅ Đã gửi đánh giá thành công!");
       setUserRating({ rating_value: 5, comment: "" });
       fetchProductDetail();

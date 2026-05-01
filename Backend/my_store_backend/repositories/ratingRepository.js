@@ -1,13 +1,32 @@
 import db from '../db.js';
 
 export const getAllRatings = async () => {
-  const [rows] = await db.query('SELECT * FROM rating');
-  return rows;
+  const sql = `
+    SELECT r.*, od.order_id as _order_id, o.account_id as _account_id, a.username as _username
+    FROM rating r
+    LEFT JOIN order_details od ON r.order_detail_id = od.id
+    LEFT JOIN orders o ON od.order_id = o.id
+    LEFT JOIN account a ON o.account_id = a.id
+    ORDER BY r.id DESC
+  `;
+  const [rows] = await db.query(sql);
+  // Normalize username field to `username` on each row for frontend convenience
+  return rows.map(row => ({ ...row, username: row._username || null }));
 };
 
 export const getRatingById = async (id) => {
-  const [rows] = await db.query('SELECT * FROM rating WHERE id=?', [id]);
-  return rows[0] || null;
+  const sql = `
+    SELECT r.*, od.order_id as _order_id, o.account_id as _account_id, a.username as _username
+    FROM rating r
+    LEFT JOIN order_details od ON r.order_detail_id = od.id
+    LEFT JOIN orders o ON od.order_id = o.id
+    LEFT JOIN account a ON o.account_id = a.id
+    WHERE r.id = ?
+    LIMIT 1
+  `;
+  const [rows] = await db.query(sql, [id]);
+  if (!rows[0]) return null;
+  return { ...rows[0], username: rows[0]._username || null };
 };
 
 export const createRating = async ({ rating_value, comment, order_detail_id }) => {
