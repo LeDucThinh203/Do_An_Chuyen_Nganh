@@ -1,0 +1,318 @@
+HƯỚNG DẪN SỬ DỤNG GIAO DIỆN WEB
+(Cho người không biết lập trình)
+----------------------------------------------------------------------
+
+Tài liệu này được viết theo cách đơn giản nhất để:
+  - Khách hàng có thể mua hàng, thanh toán, theo dõi đơn.
+  - Admin có thể quản lý sản phẩm, đơn hàng, người dùng và chat hỗ trợ.
+
+Bạn chỉ cần biết dùng trình duyệt web và làm theo các bước dưới đây.
+
+----------------------------------------------------------------------
+
+
+1. CÁC VAI TRÒ TRÊN WEB
+======================================================================
+Web có 2 nhóm người dùng chính:
+  1. Khách hàng (người mua)
+  2. Admin (quản trị viên)
+
+* Nếu bạn là Khách hàng: Đọc phần 2.
+* Nếu bạn là Admin: Đọc phần 3.
+
+
+
+2. HƯỚNG DẪN CHO KHÁCH HÀNG
+======================================================================
+
+  [ 2.1 Đăng ký tài khoản mới ]
+    1. Mở trang web.
+    2. Bấm "Register / Đăng ký".
+    3. Nhập:
+       - Email
+       - Tên đăng nhập
+       - Mật khẩu
+       - Xác nhận mật khẩu
+    4. Bấm "Đăng ký".
+    5. Hệ thống sẽ chuyển sang trang đăng nhập.
+    
+    * Mẹo: Nên dùng email thật để có thể khôi phục mật khẩu khi quên.
+
+
+  [ 2.2 Đăng nhập ]
+    1. Bấm "Login / Đăng nhập".
+    2. Nhập email và mật khẩu.
+    3. Bấm "Đăng nhập".
+    
+    * Nếu đăng nhập đúng, hệ thống đưa bạn về trang chủ sản phẩm.
+
+
+  [ 2.3 Nếu quên mật khẩu ]
+    1. Ở trang đăng nhập, bấm "Quên mật khẩu?".
+    2. Nhập email tài khoản.
+    3. Bấm "Gửi email khôi phục".
+    4. Mở email và bấm link đặt lại mật khẩu.
+    5. Nhập mật khẩu mới, bấm "Xác nhận".
+
+
+  [ 2.4 Xem và tìm sản phẩm ]
+    Tại trang chủ:
+    - Dùng ô tìm kiếm để gõ tên sản phẩm.
+    - Dùng bộ lọc để lọc theo: Danh mục, Khoảng giá.
+    - Bấm vào ảnh hoặc tên để vào trang chi tiết sản phẩm.
+
+
+  [ 2.5 Xem chi tiết và thêm vào giỏ hàng ]
+    Tại trang chi tiết sản phẩm:
+    1. Xem giá, mô tả, khuyến mãi.
+    2. Chọn "size" (kích thước).
+    3. Bấm "Thêm vào giỏ hàng".
+    
+    * Lưu ý quan trọng:
+      - Nếu chưa chọn size, hệ thống sẽ nhắc bạn chọn size.
+      - Nếu size hết hàng, không thể thêm vào giỏ.
+
+
+  [ 2.6 Xem giỏ hàng và sửa số lượng ]
+    1. Bấm "Giỏ hàng" trên đầu trang.
+    2. Tại đây bạn có thể:
+       - Tăng/giảm số lượng.
+       - Xóa sản phẩm khỏi giỏ.
+    3. Bấm "Thanh toán" để chuyển sang bước đặt hàng.
+
+
+  [ 2.7 Đặt hàng và thanh toán ]
+    Bước 1 - Điền thông tin giao hàng:
+      - Họ tên
+      - Số điện thoại
+      - Tỉnh/Thành phố
+      - Quận/Huyện
+      - Phường/Xã
+      - Địa chỉ chi tiết
+
+    Bước 2 - Chọn cách thanh toán:
+      - COD (trả tiền khi nhận hàng)
+      - VNPay (thanh toán online)
+
+    Bước 3 - Xác nhận đơn:
+      1. Kiểm tra lại thông tin.
+      2. Bấm "Xác nhận đơn hàng".
+      3. Nếu chọn VNPay, hệ thống sẽ chuyển qua cổng thanh toán.
+
+
+  [ 2.8 Theo dõi đơn hàng của tôi ]
+    1. Bấm vào tên tài khoản.
+    2. Chọn "Thông tin tài khoản người dùng".
+    3. Vào tab "Đơn hàng của tôi".
+
+    Tại đây, bạn có thể:
+    - Xem danh sách đơn.
+    - Xem chi tiết từng đơn.
+    - Theo dõi trạng thái đơn.
+
+    * Ý nghĩa trạng thái:
+      - pending   : chờ xác nhận
+      - confirmed : đã xác nhận
+      - shipping  : đang giao
+      - received  : đã giao thành công
+      - cancelled : đã hủy
+
+    * Lưu ý: Bạn chỉ hủy đơn được khi đơn đang ở trạng thái 'pending'.
+
+
+  [ 2.9 Quản lý địa chỉ cá nhân ]
+    Trong trang tài khoản người dùng:
+    - Tab "Cập nhật địa chỉ": Thêm/sửa/xóa địa chỉ.
+    - Tab "Danh sách địa chỉ": Xem các địa chỉ đã lưu.
+
+
+  [ 2.10 Đổi mật khẩu ]
+    Trong trang tài khoản người dùng:
+    1. Vào tab "Đổi mật khẩu".
+    2. Nhập mật khẩu hiện tại.
+    3. Nhập mật khẩu mới và xác nhận.
+    4. Bấm "Đổi mật khẩu".
+
+
+  [ 2.11 Chat hỗ trợ (AI Chat và CSKH) ]
+    Góc phải dưới màn hình có 2 nút:
+    - AI Chat : hỏi nhanh về sản phẩm, size, giá, khuyến mãi.
+    - CSKH    : nhắn trực tiếp với nhân viên hỗ trợ.
+
+    * Khi nào nên dùng loại nào:
+      - AI Chat : Khi cần tư vấn nhanh trước khi mua.
+      - CSKH    : Khi liên quan đến đơn hàng cụ thể, đổi/trả, giao hàng, thanh toán lỗi.
+
+    * Cách nhắn CSKH hiệu quả:
+      1. Bấm nút "CSKH".
+      2. Nhập nội dung cần hỗ trợ rõ ràng.
+      3. Nếu liên quan đơn hàng, ghi thêm: mã đơn, số điện thoại đặt hàng.
+      4. Chờ phản hồi từ nhân viên và tiếp tục trao đổi trong cùng cửa sổ chat.
+
+    * Mẹo:
+      - Viết ngắn gọn, đúng vấn đề để được xử lý nhanh hơn.
+      - KHÔNG gửi mật khẩu hoặc mã OTP qua khung chat.
+
+
+
+3. HƯỚNG DẪN CHO ADMIN
+======================================================================
+
+  [ 3.1 Đăng nhập tài khoản admin ]
+    1. Vào trang Login.
+    2. Nhập tài khoản admin.
+    3. Bấm Đăng nhập.
+    4. Bấm vào tên tài khoản, chọn "Thông tin tài khoản quản trị viên".
+    (Hệ thống sẽ mở trang Dashboard Admin)
+
+
+  [ 3.2 Các mục trong Dashboard Admin ]
+    Menu bên trái gồm:
+    1. Thông tin tài khoản quản trị
+    2. Doanh thu
+    3. Quản lý sản phẩm
+    4. Quản lý đơn hàng
+    5. CSKH realtime
+    6. Quản lý người dùng
+    7. Quản lý địa chỉ
+    8. Quản lý danh mục
+    9. Quản lý size
+
+
+  [ 3.3 Quản lý đơn hàng (Quan trọng nhất) ]
+    Vào tab "Quản lý đơn hàng".
+
+    Bạn có thể:
+    - Tìm đơn theo mã đơn, tên, SĐT, địa chỉ, username.
+    - Lọc theo trạng thái.
+    - Xem chi tiết đơn.
+    - Cập nhật trạng thái đơn.
+
+    * Quy trình thao tác đề xuất:
+      1. Đơn mới -> 'pending'
+      2. Đã kiểm tra thông tin -> 'confirmed'
+      3. Đã bàn giao đơn vị vận chuyển -> 'shipping'
+      4. Giao thành công -> 'received'
+
+    * Lưu ý COD: Khi đơn COD đã 'received', hệ thống xem như đã thanh toán.
+
+
+  [ 3.4 Quản lý sản phẩm ]
+    Vào tab "Quản lý sản phẩm".
+
+    Bạn có thể:
+    - Thêm sản phẩm mới.
+    - Sửa thông tin sản phẩm.
+    - Ẩn sản phẩm (soft delete).
+    - Khôi phục sản phẩm đã ẩn.
+    - Xóa vĩnh viễn (nếu được phép).
+
+
+  [ 3.5 Quản lý size và tồn kho ]
+    Trong mỗi thẻ sản phẩm, Admin có thể:
+    - Thêm size cho sản phẩm.
+    - Xóa size khỏi sản phẩm.
+    - Sửa số lượng tồn kho theo size.
+
+    * Rất quan trọng: Ảnh hưởng trực tiếp đến việc khách có mua được không.
+
+
+  [ 3.6 Quản lý danh mục ]
+    Vào tab "Quản lý danh mục".
+
+    Bạn có thể:
+    - Thêm danh mục mới.
+    - Sửa tên danh mục.
+    - Xóa danh mục.
+
+
+  [ 3.7 Quản lý người dùng ]
+    Vào tab "Quản lý người dùng".
+
+    Bạn có thể:
+    - Tìm tài khoản theo email.
+    - Đổi role (user/admin).
+    - Đổi mật khẩu cho tài khoản.
+    - Xóa tài khoản.
+
+    * Cẩn trọng: Chỉ cấp quyền admin cho người được phép.
+
+
+  [ 3.8 Quản lý địa chỉ ]
+    Vào tab "Quản lý địa chỉ".
+    Bạn có thể thêm/sửa/xóa dữ liệu địa chỉ khi cần chỉnh lại thông tin.
+
+
+  [ 3.9 Doanh thu ]
+    Vào tab "Doanh thu".
+
+    Bạn có thể:
+    - Chọn tuần cần xem.
+    - Xem tổng doanh thu.
+    - Xem danh sách đơn theo nhóm trạng thái.
+    (Giúp admin nắm được tình hình bán hàng nhanh)
+
+
+  [ 3.10 CSKH realtime ]
+    Vào tab "CSKH realtime".
+
+    Bạn có thể:
+    - Xem danh sách phòng chat của khách.
+    - Thấy số tin chưa đọc.
+    - Chọn phòng và trả lời ngay.
+    - Quản lý thông báo email CSKH (chống spam):
+      + Nút "Đã nhận": Bấm khi bạn đã tiếp nhận hỗ trợ khách hàng này. Hệ thống sẽ tạm dừng gửi email thông báo cho phòng chat này trong 12 giờ tới.
+      + Nút "Mở lại" (thông báo): Bấm để bật lại việc gửi email thông báo cho phòng này ngay lập tức.
+
+    * Quy trình xử lý chat đề xuất cho Admin:
+      1. Mở phòng có nhiều tin chưa đọc trước.
+      2. Chào khách và xác nhận nhu cầu.
+      3. Nếu liên quan đơn hàng, xin mã đơn hoặc SĐT để kiểm tra.
+      4. Trả lời ngắn gọn, nêu rõ bước tiếp theo cho khách.
+      5. Sau khi xử lý xong, xác nhận lại với khách trước khi kết thúc.
+
+    * Mẫu trả lời nhanh:
+      - "Em đã nhận thông tin, anh/chị chờ em kiểm tra trong ít phút ạ."
+      - "Nhờ anh/chị gửi giúp mã đơn hoặc số điện thoại đặt hàng để em hỗ trợ chính xác hơn."
+      - "Vấn đề đã xử lý xong, anh/chị kiểm tra lại giúp em nhé."
+
+    * Mẹo:
+      - Ưu tiên trả lời phòng có nhiều tin chưa đọc trước.
+      - KHÔNG yêu cầu khách cung cấp mật khẩu hoặc mã OTP.
+
+
+
+4. HƯỚNG DẪN NHANH CHO NGƯỜI MỚI
+======================================================================
+Nếu bạn mới sử dụng, hãy làm thử theo thứ tự sau:
+
+  1. Đăng nhập.
+  2. Thử mua 1 sản phẩm test (nếu là khách).
+  3. Xem lại đơn hàng trong tài khoản.
+  4. (Admin) Vào tab Quản lý đơn hàng để cập nhật trạng thái.
+  5. (Admin) Thử mở CSKH realtime và gửi 1 tin nhắn test.
+
+Chỉ cần làm đúng 5 bước trên là bạn đã nắm được luồng chính của hệ thống.
+
+
+
+5. LỖI THƯỜNG GẶP VÀ CÁCH XỬ LÝ
+======================================================================
+
+  [ 1. Không thanh toán được ]
+    - Kiểm tra đã đăng nhập chưa.
+    - Kiểm tra sản phẩm còn tồn kho đúng size không.
+
+  [ 2. Không xem được Dashboard Admin ]
+    - Kiểm tra tài khoản có quyền (role) admin không.
+
+  [ 3. Không gửi được chat CSKH ]
+    - Thử tải lại trang.
+    - Đăng nhập lại.
+    - Kiểm tra mạng internet có ổn định không.
+    - Nếu vẫn lỗi, liên hệ admin hệ thống để kiểm tra.
+
+  [ 4. Không xóa được sản phẩm ]
+    - Dùng chức năng "Ẩn sản phẩm" nếu sản phẩm đã có lịch sử mua.
+
+======================================================================

@@ -1,0 +1,162 @@
+HƯỚNG DẪN QUẢN TRỊ GIAO DIỆN WEB DÀNH CHO ADMIN
+(Tài liệu chi tiết từng bước cho người không biết lập trình)
+----------------------------------------------------------------------
+
+Tài liệu này hướng dẫn chi tiết cách để Admin:
+  - Quản lý toàn bộ thông tin sản phẩm, danh mục, kích thước (size).
+  - Quản lý và xử lý đơn hàng của khách hàng từ lúc đặt đến lúc giao.
+  - Quản lý tài khoản người dùng và phân quyền.
+  - Theo dõi doanh thu.
+  - Trực chat CSKH và hỗ trợ người dùng theo thời gian thực.
+
+----------------------------------------------------------------------
+
+1. HƯỚNG DẪN QUẢN LÝ CHO ADMIN
+======================================================================
+
+  [ 1.1 Đăng nhập tài khoản admin ]
+    Hệ thống phân quyền dựa trên tài khoản. Bạn phải có tài khoản được cấp quyền Admin thì mới vào được trang quản trị.
+    
+    1. Vào trang web, bấm vào nút "Login" (hoặc "Đăng nhập") ở góc trên màn hình.
+    2. Nhập Email và Mật khẩu của tài khoản admin.
+    3. Bấm "Đăng nhập".
+    4. Sau khi đăng nhập thành công, bấm vào Tên tài khoản ở góc trên bên phải.
+    5. Chọn "Thông tin tài khoản quản trị viên".
+    -> Hệ thống sẽ tự động chuyển bạn vào trang Dashboard (Bảng điều khiển) dành riêng cho Admin.
+
+
+  [ 1.2 Tổng quan các mục trong Dashboard Admin ]
+    Nhìn sang thanh Menu bên trái màn hình, bạn sẽ thấy các tính năng chính:
+    1. Thông tin tài khoản: Xem thông tin cá nhân của bạn.
+    2. Doanh thu: Thống kê tiền bán hàng và trạng thái đơn.
+    3. Quản lý sản phẩm: Thêm, sửa, xóa, ẩn mặt hàng.
+    4. Quản lý đơn hàng: Xử lý đơn khách đặt.
+    5. CSKH realtime: Nhắn tin trực tiếp với khách hàng.
+    6. Quản lý người dùng: Xem và cấp quyền cho khách hàng/admin khác.
+    7. Quản lý địa chỉ: Xem thông tin địa chỉ.
+    8. Quản lý danh mục: Phân loại mặt hàng (Áo, Quần, Giày...).
+    9. Quản lý size: Thiết lập kích thước chuẩn.
+
+
+  [ 1.3 Quản lý đơn hàng (Mục quan trọng nhất) ]
+    Đây là nơi bạn xử lý đơn hàng mỗi khi có khách mua.
+    Vào tab "Quản lý đơn hàng".
+
+    * Cách tìm kiếm và lọc đơn hàng:
+      - Ô tìm kiếm: Nhập mã đơn hàng, tên khách, số điện thoại, địa chỉ hoặc username để tìm nhanh đơn cụ thể.
+      - Nút Lọc: Lọc để chỉ hiển thị các đơn đang chờ xác nhận, đang giao, hoặc đã hủy.
+
+    * Quy trình xử lý 1 đơn hàng tiêu chuẩn (Cập nhật trạng thái):
+      Khi bấm vào mục "Trạng thái" của một đơn hàng, bạn sẽ thấy các tùy chọn sau. Hãy chuyển trạng thái theo đúng trình tự thực tế:
+      1. 'pending' (Chờ xác nhận): Đơn khách vừa đặt xong sẽ tự động ở trạng thái này.
+      2. 'confirmed' (Đã xác nhận): Sau khi bạn gọi điện hoặc kiểm tra đơn hợp lệ, bạn chuyển sang trạng thái này để chốt đơn.
+      3. 'shipping' (Đang giao hàng): Khi bạn đã gói hàng và giao cho shipper / bưu điện.
+      4. 'received' (Đã giao thành công): Khi shipper báo khách đã nhận được hàng.
+      5. 'cancelled' (Đã hủy): Bấm khi khách yêu cầu hủy hoặc không liên lạc được để giao hàng.
+
+    * Lưu ý đặc biệt với thanh toán COD (Nhận hàng trả tiền):
+      Khi bạn chuyển trạng thái đơn sang 'received' (Giao thành công), hệ thống sẽ tự động đánh dấu đơn đó là "Đã thanh toán" và tính vào Doanh thu.
+
+
+  [ 1.4 Quản lý sản phẩm ]
+    Vào tab "Quản lý sản phẩm" để đưa hàng lên web bán.
+
+    * Thêm sản phẩm mới:
+      - Bấm nút "Thêm mới".
+      - Điền đầy đủ: Tên sản phẩm, Giá tiền, Khuyến mãi (nếu có), Mô tả chi tiết.
+      - Chọn Danh mục cho sản phẩm (vd: Áo thun).
+      - Tải hình ảnh lên (Nên chọn ảnh rõ nét, đẹp để khách dễ mua).
+      - Bấm Lưu.
+
+    * Chỉnh sửa thông tin:
+      - Bấm nút Sửa (icon cây bút) cạnh sản phẩm để đổi giá, đổi tên, hoặc thay ảnh.
+
+    * Ẩn hoặc Xóa sản phẩm:
+      - Ẩn sản phẩm (Soft delete): Nếu mặt hàng đã hết hoặc ngừng kinh doanh, hãy bấm "Ẩn". Sản phẩm sẽ biến mất khỏi web của khách nhưng dữ liệu lịch sử mua hàng vẫn được giữ lại. (Khuyên dùng)
+      - Khôi phục: Bạn có thể bỏ ẩn bất cứ lúc nào.
+      - Xóa vĩnh viễn (Hard delete): Chỉ xóa khi bạn tạo nhầm. Nếu sản phẩm đã có khách mua trong quá khứ, hệ thống sẽ KHÔNG CHO PHÉP xóa vĩnh viễn để bảo toàn hóa đơn cũ.
+
+
+  [ 1.5 Quản lý size và tồn kho ]
+    Sản phẩm dù có hình ảnh nhưng nếu không có Size và Số lượng tồn kho thì khách sẽ không thể thêm vào giỏ hàng.
+
+    * Cách thiết lập:
+      Trong trang danh sách sản phẩm, bấm vào sản phẩm cần chỉnh sửa:
+      1. Thêm size cho sản phẩm: Bấm thêm size (VD: S, M, L, XL, hoặc size số 38, 39, 40).
+      2. Nhập số lượng tồn kho cho từng size: VD: Size M còn 10 cái, Size L còn 5 cái.
+      3. Sửa tồn kho: Mỗi khi nhập thêm hàng về, hãy vào đây cộng thêm số lượng. Khi khách mua, số lượng này tự động trừ đi.
+      4. Xóa size: Nếu xưởng không sản xuất size đó nữa, bạn có thể xóa đi.
+
+
+  [ 1.6 Quản lý danh mục ]
+    Vào tab "Quản lý danh mục".
+    - Danh mục giúp phân loại sản phẩm (VD: Quần Jean, Áo Thun, Phụ kiện).
+    - Thêm mới: Tạo tên danh mục để gom nhóm sản phẩm.
+    - Sửa/Xóa: Thay đổi tên hoặc xóa các danh mục không cần thiết. Nếu xóa danh mục, hãy đảm bảo các sản phẩm bên trong đã được chuyển sang danh mục khác.
+
+
+  [ 1.7 Quản lý người dùng ]
+    Vào tab "Quản lý người dùng" để kiểm soát các tài khoản trên web.
+    - Tìm kiếm: Nhập email để tìm nhanh một tài khoản.
+    - Đổi mật khẩu: Cấp lại mật khẩu mới nếu khách hàng hoặc nhân viên quên.
+    - Đổi Role (Quyền): Bạn có thể nâng cấp một khách hàng ('user') lên làm quản trị viên ('admin') hoặc ngược lại.
+    - Xóa tài khoản: Chỉ xóa đối với các tài khoản rác.
+
+    * Cẩn trọng: Việc cấp quyền 'admin' sẽ cho phép người đó toàn quyền can thiệp vào doanh thu và sản phẩm. Chỉ cấp cho nhân viên đáng tin cậy.
+
+
+  [ 1.8 Doanh thu ]
+    Vào tab "Doanh thu" để xem báo cáo bán hàng.
+    - Thống kê tuần/tháng: Chọn mốc thời gian để xem biểu đồ.
+    - Số liệu: Xem được tổng tiền thu về, tổng số đơn hàng đã bán.
+    - Phân loại đơn: Xem được trong tuần có bao nhiêu đơn đang chờ, bao nhiêu đơn đã hủy. Mục này rất tiện để Admin tính lương hoặc báo cáo cuối tháng.
+
+
+  [ 1.9 CSKH realtime (Chăm sóc khách hàng trực tuyến) ]
+    Vào tab "CSKH realtime" để trả lời tin nhắn của khách hàng.
+
+    * Giao diện phòng chat:
+      - Cột bên trái: Danh sách các khách hàng đang nhắn tin tới. Bạn sẽ thấy chấm đỏ báo hiệu số tin nhắn chưa đọc.
+      - Cột bên phải: Cửa sổ chat để bạn trả lời.
+
+    * Quản lý thông báo Email (Chống spam):
+      Mỗi khi có tin nhắn mới, hệ thống sẽ tự động gửi email báo cho Admin. Để tránh bị làm phiền liên tục:
+      + Nút "Đã nhận": Khi bạn mở đoạn chat và bắt đầu hỗ trợ, hãy BẤM NÚT NÀY. Hệ thống sẽ tạm dừng việc gửi email thông báo cho riêng khách hàng này trong 12 tiếng tiếp theo.
+      + Nút "Mở lại": Bấm nút này nếu bạn đã hỗ trợ xong và muốn tiếp tục nhận email báo động ngay lập tức nếu khách này nhắn lại.
+
+    * Quy trình xử lý chat chuẩn cho Admin:
+      1. Ưu tiên mở phòng chat có nhiều tin nhắn chưa đọc nhất.
+      2. Chào khách và xác nhận nhu cầu (hỏi về sản phẩm, khiếu nại, hay kiểm tra đơn).
+      3. Nếu khách hỏi đơn hàng: Yêu cầu cung cấp Mã đơn hàng hoặc SĐT.
+      4. Tra cứu đơn ở tab "Quản lý đơn hàng" và trả lời khách nhanh gọn, nêu rõ bước tiếp theo.
+      5. Trước khi kết thúc, hỏi khách xem còn cần hỗ trợ gì không.
+
+    * Mẫu câu trả lời nhanh (Nên copy sẵn để dùng):
+      - "Dạ em chào anh/chị. Em đã nhận được thông tin, anh/chị chờ em kiểm tra hệ thống trong ít phút ạ."
+      - "Dạ nhờ anh/chị cung cấp giúp em mã đơn hàng hoặc số điện thoại đặt hàng để em tra cứu chính xác hơn nhé."
+      - "Vấn đề của anh/chị đã được xử lý xong, anh/chị load lại trang để kiểm tra giúp em ạ."
+
+    * Nguyên tắc bảo mật:
+      - KHÔNG BAO GIỜ yêu cầu khách hàng cung cấp Mật khẩu cá nhân hoặc mã OTP ngân hàng qua khung chat.
+
+
+
+2. LỖI THƯỜNG GẶP TRONG QUÁ TRÌNH QUẢN TRỊ
+======================================================================
+  [ 1. Không xem được Dashboard Admin dù đã đăng nhập ]
+    -> Nguyên nhân: Tài khoản của bạn chỉ là 'user' bình thường, chưa được cấp quyền 'admin'.
+    -> Khắc phục: Dùng tài khoản admin tổng (chủ shop) vào tab Quản lý người dùng để cấp quyền admin cho tài khoản của bạn.
+
+  [ 2. Không xóa được sản phẩm ]
+    -> Nguyên nhân: Sản phẩm này đã từng có người mua (có hóa đơn liên kết). Nếu xóa sẽ làm hỏng dữ liệu doanh thu cũ.
+    -> Khắc phục: Thay vì xóa, hãy dùng chức năng "Ẩn sản phẩm" (Soft delete).
+
+  [ 3. Khách hàng không thể thêm hàng vào giỏ ]
+    -> Nguyên nhân: Sản phẩm đó chưa được cài đặt "Size" hoặc Số lượng tồn kho của size đó đang bằng 0.
+    -> Khắc phục: Vào Quản lý sản phẩm -> Chọn sản phẩm -> Thêm size và nhập số lượng tồn kho > 0.
+
+  [ 4. Không gửi hoặc nhận được tin nhắn CSKH ]
+    -> Nguyên nhân: Mất kết nối mạng hoặc phiên đăng nhập hết hạn.
+    -> Khắc phục: Nhấn F5 (Tải lại trang) hoặc Đăng xuất ra rồi Đăng nhập lại. Nếu vẫn lỗi, hãy báo kỹ thuật viên kiểm tra máy chủ (Server).
+
+======================================================================

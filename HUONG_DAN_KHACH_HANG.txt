@@ -1,0 +1,132 @@
+HƯỚNG DẪN SỬ DỤNG GIAO DIỆN WEB DÀNH CHO KHÁCH HÀNG
+(Cho người không biết lập trình)
+----------------------------------------------------------------------
+
+Tài liệu này hướng dẫn chi tiết cách để:
+  - Mua hàng, thanh toán, theo dõi đơn hàng.
+  - Tìm kiếm và xem thông tin sản phẩm.
+  - Nhắn tin hỗ trợ với hệ thống AI hoặc nhân viên CSKH.
+
+----------------------------------------------------------------------
+
+1. HƯỚNG DẪN SỬ DỤNG CÁC TÍNH NĂNG CHÍNH
+======================================================================
+
+  [ 1.1 Đăng ký tài khoản mới ]
+    1. Mở trang web.
+    2. Bấm "Register / Đăng ký".
+    3. Nhập:
+       - Email
+       - Tên đăng nhập
+       - Mật khẩu
+       - Xác nhận mật khẩu
+    4. Bấm "Đăng ký".
+    5. Hệ thống sẽ chuyển sang trang đăng nhập.
+    
+    * Mẹo: Nên dùng email thật để có thể khôi phục mật khẩu khi quên.
+
+  [ 1.2 Đăng nhập ]
+    1. Bấm "Login / Đăng nhập".
+    2. Nhập email và mật khẩu.
+    3. Bấm "Đăng nhập".
+    
+    * Nếu đăng nhập đúng, hệ thống đưa bạn về trang chủ sản phẩm.
+
+  [ 1.3 Nếu quên mật khẩu ]
+    1. Ở trang đăng nhập, bấm "Quên mật khẩu?".
+    2. Nhập email tài khoản.
+    3. Bấm "Gửi email khôi phục".
+    4. Mở email và bấm link đặt lại mật khẩu.
+    5. Nhập mật khẩu mới, bấm "Xác nhận".
+
+  [ 1.4 Xem và tìm sản phẩm ]
+    Tại trang chủ:
+    - Dùng ô tìm kiếm để gõ tên sản phẩm.
+    - Dùng bộ lọc để lọc theo: Danh mục, Khoảng giá.
+    - Bấm vào ảnh hoặc tên để vào trang chi tiết sản phẩm.
+
+  [ 1.5 Xem chi tiết và thêm vào giỏ hàng ]
+    Tại trang chi tiết sản phẩm:
+    1. Xem giá, mô tả, khuyến mãi.
+    2. Chọn "size" (kích thước).
+    3. Bấm "Thêm vào giỏ hàng".
+    
+    * Lưu ý quan trọng:
+      - Nếu chưa chọn size, hệ thống sẽ nhắc bạn chọn size.
+      - Nếu size hết hàng, không thể thêm vào giỏ.
+
+  [ 1.6 Xem giỏ hàng và sửa số lượng ]
+    1. Bấm "Giỏ hàng" trên đầu trang.
+    2. Tại đây bạn có thể:
+       - Tăng/giảm số lượng.
+       - Xóa sản phẩm khỏi giỏ.
+    3. Bấm "Thanh toán" để chuyển sang bước đặt hàng.
+
+  [ 1.7 Đặt hàng và thanh toán ]
+    Bước 1 - Điền thông tin giao hàng:
+      - Họ tên, Số điện thoại, Tỉnh/Thành phố, Quận/Huyện, Phường/Xã, Địa chỉ chi tiết.
+
+    Bước 2 - Chọn cách thanh toán:
+      - COD (trả tiền khi nhận hàng)
+      - VNPay (thanh toán online)
+
+    Bước 3 - Xác nhận đơn:
+      1. Kiểm tra lại thông tin.
+      2. Bấm "Xác nhận đơn hàng".
+      3. Nếu chọn VNPay, hệ thống sẽ chuyển qua cổng thanh toán.
+
+  [ 1.8 Theo dõi đơn hàng của tôi ]
+    1. Bấm vào tên tài khoản.
+    2. Chọn "Thông tin tài khoản người dùng".
+    3. Vào tab "Đơn hàng của tôi".
+
+    Tại đây, bạn có thể:
+    - Xem danh sách đơn, chi tiết từng đơn, trạng thái đơn.
+
+    * Ý nghĩa trạng thái:
+      - pending   : chờ xác nhận
+      - confirmed : đã xác nhận
+      - shipping  : đang giao
+      - received  : đã giao thành công
+      - cancelled : đã hủy
+
+    * Lưu ý: Bạn chỉ hủy đơn được khi đơn đang ở trạng thái 'pending'.
+
+  [ 1.9 Quản lý địa chỉ cá nhân ]
+    Trong trang tài khoản người dùng:
+    - Tab "Cập nhật địa chỉ": Thêm/sửa/xóa địa chỉ.
+    - Tab "Danh sách địa chỉ": Xem các địa chỉ đã lưu.
+
+  [ 1.10 Đổi mật khẩu ]
+    Trong trang tài khoản người dùng:
+    1. Vào tab "Đổi mật khẩu".
+    2. Nhập mật khẩu hiện tại và mật khẩu mới.
+    3. Bấm "Đổi mật khẩu".
+
+  [ 1.11 Chat hỗ trợ (AI Chat và CSKH) ]
+    Góc phải dưới màn hình có 2 nút:
+    - AI Chat : hỏi nhanh về sản phẩm, size, giá, khuyến mãi.
+    - CSKH    : nhắn trực tiếp với nhân viên hỗ trợ.
+
+    * Khi nào nên dùng loại nào:
+      - AI Chat : Khi cần tư vấn nhanh trước khi mua.
+      - CSKH    : Khi liên quan đến đơn hàng cụ thể, đổi/trả, giao hàng, thanh toán lỗi.
+
+    * Cách nhắn CSKH hiệu quả:
+      1. Bấm nút "CSKH".
+      2. Nhập nội dung cần hỗ trợ rõ ràng.
+      3. Nếu liên quan đơn hàng, ghi thêm: mã đơn, số điện thoại đặt hàng.
+      4. Chờ phản hồi từ nhân viên và tiếp tục trao đổi trong cùng cửa sổ chat.
+      - KHÔNG gửi mật khẩu hoặc mã OTP qua khung chat.
+
+2. LỖI THƯỜNG GẶP VÀ CÁCH XỬ LÝ
+======================================================================
+  [ 1. Không thanh toán được ]
+    - Kiểm tra đã đăng nhập chưa.
+    - Kiểm tra sản phẩm còn tồn kho đúng size không.
+
+  [ 2. Không gửi được chat CSKH ]
+    - Thử tải lại trang hoặc đăng nhập lại.
+    - Kiểm tra mạng internet có ổn định không.
+
+======================================================================

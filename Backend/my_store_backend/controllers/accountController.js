@@ -4,6 +4,15 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { generateToken } from '../middleware/auth.js';
 
+const getEmailAuthConfig = () => {
+  const user = String(process.env.EMAIL_USER || '').trim();
+  // Gmail app password is often copied with spaces every 4 chars.
+  const pass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+
+  if (!user || !pass) return null;
+  return { user, pass };
+};
+
 /** ================= Đăng ký tài khoản ================= */
 export const register = async (req, res) => {
   const { email, username, password, role } = req.body;
@@ -126,7 +135,7 @@ export const forgotPassword = async (req, res) => {
 
     await accountRepo.saveResetToken(account.id, token, expiryDate);
 
-    const frontendBaseUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const frontendBaseUrl = (process.env.FRONTEND_URL || process.env.FONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
     const resetLink = `${frontendBaseUrl}/reset-password/${token}`;
 
     // Giao diện email HTML đẹp
@@ -146,7 +155,8 @@ export const forgotPassword = async (req, res) => {
       </div>
     `;
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    const emailAuth = getEmailAuthConfig();
+    if (!emailAuth) {
       return res.status(500).json({
         error: 'Thiếu cấu hình EMAIL_USER/EMAIL_PASS trên server'
       });
@@ -157,14 +167,14 @@ export const forgotPassword = async (req, res) => {
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      auth: { user: emailAuth.user, pass: emailAuth.pass },
       connectionTimeout: 15000,
       greetingTimeout: 15000,
       socketTimeout: 20000,
     });
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: emailAuth.user,
       to: email,
       subject: 'Khôi phục mật khẩu CoolShop',
       html: emailHtml,

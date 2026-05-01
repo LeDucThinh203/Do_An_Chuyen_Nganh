@@ -3,6 +3,15 @@ import * as accountRepo from '../repositories/accountRepository.js';
 import nodemailer from 'nodemailer';
 import { getSupportIo } from '../services/supportChat/socketHub.js';
 
+const getEmailAuthConfig = () => {
+  const user = String(process.env.EMAIL_USER || '').trim();
+  // Gmail app password is often copied with spaces every 4 chars.
+  const pass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+
+  if (!user || !pass) return null;
+  return { user, pass };
+};
+
 const buildRoomId = ({ userId, guestId }) => {
   if (userId) return `support-user-${Number(userId)}`;
   return `support-guest-${String(guestId).trim()}`;
@@ -71,7 +80,8 @@ const ensureSupportNotificationTable = async () => {
 };
 
 const createSmtpTransport = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  const emailAuth = getEmailAuthConfig();
+  if (!emailAuth) {
     return null;
   }
 
@@ -79,7 +89,7 @@ const createSmtpTransport = () => {
     host: 'smtp.gmail.com',
     port: 587,
     secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    auth: { user: emailAuth.user, pass: emailAuth.pass },
     connectionTimeout: 15000,
     greetingTimeout: 15000,
     socketTimeout: 20000,
@@ -126,10 +136,11 @@ const getSupportNotificationRecipients = async () => {
 };
 
 const sendSupportNotificationEmail = async ({ room, message, senderName }) => {
+  const emailAuth = getEmailAuthConfig();
   const transporter = createSmtpTransport();
   const recipients = await getSupportNotificationRecipients();
 
-  if (!recipients.length || !transporter) {
+  if (!recipients.length || !transporter || !emailAuth) {
     console.warn('[Support Chat] Skip notification email: missing EMAIL_USER/EMAIL_PASS or recipients');
     return;
   }
@@ -146,7 +157,7 @@ const sendSupportNotificationEmail = async ({ room, message, senderName }) => {
   const safeCustomerName = escapeHtml(customerName);
 
   await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+    from: emailAuth.user,
     to: recipients,
     subject: `[CSKH] ${customerName} vừa nhắn tin`,
     html: `
