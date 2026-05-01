@@ -12,6 +12,65 @@ const getEmailAuthConfig = () => {
   return { user, pass };
 };
 
+const parseBoolEnv = (value) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+};
+
+const getSmtpConfigs = () => {
+  const smtpHost = String(process.env.SMTP_HOST || '').trim();
+  const smtpPortRaw = String(process.env.SMTP_PORT || '').trim();
+  const smtpSecureEnv = parseBoolEnv(process.env.SMTP_SECURE);
+
+  if (smtpHost || smtpPortRaw) {
+    const port = Number(smtpPortRaw) || 587;
+    return [{
+      host: smtpHost || 'smtp.gmail.com',
+      port,
+      secure: smtpSecureEnv ?? port === 465,
+      label: 'custom',
+    }];
+  }
+
+  return [
+    { host: 'smtp.gmail.com', port: 465, secure: true, label: 'gmail-465' },
+    { host: 'smtp.gmail.com', port: 587, secure: false, label: 'gmail-587' },
+  ];
+};
+
+const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
+  const smtpConfigs = getSmtpConfigs();
+  let lastError = null;
+
+  for (const smtpConfig of smtpConfigs) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        auth: { user: emailAuth.user, pass: emailAuth.pass },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
+      });
+
+      await transporter.sendMail({
+        ...mailOptions,
+        from: mailOptions.from || emailAuth.user,
+      });
+      return;
+    } catch (err) {
+      lastError = err;
+      console.error(
+        `[Mail][${context}] SMTP ${smtpConfig.label} failed (${smtpConfig.host}:${smtpConfig.port}, secure=${smtpConfig.secure})`,
+        err?.code || err?.message || err
+      );
+    }
+  }
+
+  throw lastError || new Error('SMTP send failed');
+};
+
 const buildRoomId = ({ userId, guestId }) => {
   if (userId) return `support-user-${Number(userId)}`;
   return `support-guest-${String(guestId).trim()}`;
@@ -79,23 +138,6 @@ const ensureSupportNotificationTable = async () => {
   await supportNotificationTableInitPromise;
 };
 
-const createSmtpTransport = () => {
-  const emailAuth = getEmailAuthConfig();
-  if (!emailAuth) {
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: { user: emailAuth.user, pass: emailAuth.pass },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-  });
-};
-
 const escapeHtml = (value) =>
   String(value || '')
     .replace(/&/g, '&amp;')
@@ -137,10 +179,9 @@ const getSupportNotificationRecipients = async () => {
 
 const sendSupportNotificationEmail = async ({ room, message, senderName }) => {
   const emailAuth = getEmailAuthConfig();
-  const transporter = createSmtpTransport();
   const recipients = await getSupportNotificationRecipients();
 
-  if (!recipients.length || !transporter || !emailAuth) {
+  if (!recipients.length || !emailAuth) {
     console.warn('[Support Chat] Skip notification email: missing EMAIL_USER/EMAIL_PASS or recipients');
     return;
   }
@@ -156,22 +197,26 @@ const sendSupportNotificationEmail = async ({ room, message, senderName }) => {
   const safeMessage = escapeHtml(message);
   const safeCustomerName = escapeHtml(customerName);
 
-  await transporter.sendMail({
-    from: emailAuth.user,
-    to: recipients,
-    subject: `[CSKH] ${customerName} vừa nhắn tin`,
-    html: `
-      <div style="font-family: Arial, sans-serif; background:#f8fafc; padding:24px; color:#0f172a;">
-        <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:24px;">
-          <h2 style="margin:0 0 16px; color:#1e40af;">Có khách hàng nhắn tin mới</h2>
-          <p style="margin:0 0 8px;"><strong>Khách hàng:</strong> ${safeCustomerName}</p>
-          <p style="margin:0 0 8px;"><strong>Phòng chat:</strong> ${safeRoomId}</p>
-          <p style="margin:0 0 8px;"><strong>Nội dung:</strong></p>
-          <div style="background:#f1f5f9; border-radius:8px; padding:16px; white-space:pre-wrap; line-height:1.6;">${safeMessage}</div>
-          <p style="margin:16px 0 0; color:#64748b; font-size:13px;">Email này được gửi tự động từ hệ thống CSKH.</p>
+  await sendMailWithFallback({
+    emailAuth,
+    context: 'support-notification',
+    mailOptions: {
+      from: emailAuth.user,
+      to: recipients,
+      subject: `[CSKH] ${customerName} vừa nhắn tin`,
+      html: `
+        <div style="font-family: Arial, sans-serif; background:#f8fafc; padding:24px; color:#0f172a;">
+          <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:24px;">
+            <h2 style="margin:0 0 16px; color:#1e40af;">Có khách hàng nhắn tin mới</h2>
+            <p style="margin:0 0 8px;"><strong>Khách hàng:</strong> ${safeCustomerName}</p>
+            <p style="margin:0 0 8px;"><strong>Phòng chat:</strong> ${safeRoomId}</p>
+            <p style="margin:0 0 8px;"><strong>Nội dung:</strong></p>
+            <div style="background:#f1f5f9; border-radius:8px; padding:16px; white-space:pre-wrap; line-height:1.6;">${safeMessage}</div>
+            <p style="margin:16px 0 0; color:#64748b; font-size:13px;">Email này được gửi tự động từ hệ thống CSKH.</p>
+          </div>
         </div>
-      </div>
-    `,
+      `,
+    },
   });
 };
 

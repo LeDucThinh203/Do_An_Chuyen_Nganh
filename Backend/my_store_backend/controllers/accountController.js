@@ -13,6 +13,65 @@ const getEmailAuthConfig = () => {
   return { user, pass };
 };
 
+const parseBoolEnv = (value) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+};
+
+const getSmtpConfigs = () => {
+  const smtpHost = String(process.env.SMTP_HOST || '').trim();
+  const smtpPortRaw = String(process.env.SMTP_PORT || '').trim();
+  const smtpSecureEnv = parseBoolEnv(process.env.SMTP_SECURE);
+
+  if (smtpHost || smtpPortRaw) {
+    const port = Number(smtpPortRaw) || 587;
+    return [{
+      host: smtpHost || 'smtp.gmail.com',
+      port,
+      secure: smtpSecureEnv ?? port === 465,
+      label: 'custom',
+    }];
+  }
+
+  return [
+    { host: 'smtp.gmail.com', port: 465, secure: true, label: 'gmail-465' },
+    { host: 'smtp.gmail.com', port: 587, secure: false, label: 'gmail-587' },
+  ];
+};
+
+const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
+  const smtpConfigs = getSmtpConfigs();
+  let lastError = null;
+
+  for (const smtpConfig of smtpConfigs) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: smtpConfig.host,
+        port: smtpConfig.port,
+        secure: smtpConfig.secure,
+        auth: { user: emailAuth.user, pass: emailAuth.pass },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
+      });
+
+      await transporter.sendMail({
+        ...mailOptions,
+        from: mailOptions.from || emailAuth.user,
+      });
+      return;
+    } catch (err) {
+      lastError = err;
+      console.error(
+        `[Mail][${context}] SMTP ${smtpConfig.label} failed (${smtpConfig.host}:${smtpConfig.port}, secure=${smtpConfig.secure})`,
+        err?.code || err?.message || err
+      );
+    }
+  }
+
+  throw lastError || new Error('SMTP send failed');
+};
+
 /** ================= Đăng ký tài khoản ================= */
 export const register = async (req, res) => {
   const { email, username, password, role } = req.body;
@@ -162,22 +221,15 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
-    // Gmail SMTP ổn định hơn service:'gmail' trên một số cloud runtime.
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: emailAuth.user, pass: emailAuth.pass },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
-    });
-
-    await transporter.sendMail({
-      from: emailAuth.user,
+    await sendMailWithFallback({
+      emailAuth,
+      context: 'forgot-password',
+      mailOptions: {
+        from: emailAuth.user,
       to: email,
       subject: 'Khôi phục mật khẩu CoolShop',
       html: emailHtml,
+      },
     });
 
     res.json({ message: 'Email khôi phục mật khẩu đã gửi. Vui lòng kiểm tra hộp thư.' });
@@ -186,6 +238,16 @@ export const forgotPassword = async (req, res) => {
     if (err?.code === 'ETIMEDOUT' || String(err?.message || '').toLowerCase().includes('timeout')) {
       return res.status(504).json({
         error: 'Gửi email bị timeout. Vui lòng kiểm tra SMTP (EMAIL_USER/EMAIL_PASS) hoặc thử lại sau.'
+      });
+    }
+    if (err?.code === 'EAUTH') {
+      return res.status(502).json({
+        error: 'SMTP xác thực thất bại (EAUTH). Kiểm tra EMAIL_USER/EMAIL_PASS (Gmail App Password).'
+      });
+    }
+    if (err?.code === 'ENOTFOUND' || err?.code === 'EAI_AGAIN') {
+      return res.status(502).json({
+        error: 'Không phân giải được host SMTP. Kiểm tra SMTP_HOST/SMTP_PORT hoặc thử lại sau.'
       });
     }
     res.status(500).json({ error: err.message });
