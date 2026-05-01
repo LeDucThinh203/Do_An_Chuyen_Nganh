@@ -13,6 +13,63 @@ const getEmailAuthConfig = () => {
   return { user, pass };
 };
 
+const getSendGridConfig = () => {
+  const apiKey = String(process.env.SENDGRID_API_KEY || '').trim();
+  const from = String(process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || '').trim();
+  if (!apiKey || !from) return null;
+  return { apiKey, from };
+};
+
+const normalizeRecipients = (to) => {
+  if (Array.isArray(to)) {
+    return to
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .map((email) => ({ email }));
+  }
+
+  const single = String(to || '').trim();
+  return single ? [{ email: single }] : [];
+};
+
+const sendMailWithSendGrid = async ({ mailOptions, context }) => {
+  const sendGrid = getSendGridConfig();
+  if (!sendGrid) return false;
+
+  const recipients = normalizeRecipients(mailOptions.to);
+  if (!recipients.length) {
+    const err = new Error('No recipients for SendGrid');
+    err.code = 'SENDGRID_NO_RECIPIENTS';
+    throw err;
+  }
+
+  const payload = {
+    personalizations: [{ to: recipients }],
+    from: { email: sendGrid.from },
+    subject: String(mailOptions.subject || ''),
+    content: [{ type: 'text/html', value: String(mailOptions.html || '') }],
+  };
+
+  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sendGrid.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    const err = new Error(`SendGrid failed (${response.status}): ${detail}`);
+    err.code = `SENDGRID_${response.status}`;
+    throw err;
+  }
+
+  console.log(`[Mail][${context}] Sent via SendGrid API`);
+  return true;
+};
+
 const parseBoolEnv = (value) => {
   if (value === undefined || value === null || value === '') return undefined;
   return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
@@ -56,6 +113,13 @@ const getSmtpConfigs = () => {
 };
 
 const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
+  try {
+    const sentViaSendGrid = await sendMailWithSendGrid({ mailOptions, context });
+    if (sentViaSendGrid) return;
+  } catch (err) {
+    console.error(`[Mail][${context}] SendGrid failed, falling back to SMTP`, err?.code || err?.message || err);
+  }
+
   const smtpConfigs = getSmtpConfigs();
   let lastError = null;
 
@@ -69,6 +133,8 @@ const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
         connectionTimeout: 15000,
         greetingTimeout: 15000,
         socketTimeout: 20000,
+        logger: !!parseBoolEnv(process.env.MAIL_DEBUG),
+        debug: !!parseBoolEnv(process.env.MAIL_DEBUG),
       });
 
       await transporter.sendMail({
@@ -264,6 +330,11 @@ export const forgotPassword = async (req, res) => {
     if (err?.code === 'ENOTFOUND' || err?.code === 'EAI_AGAIN') {
       return res.status(502).json({
         error: 'Không phân giải được host SMTP. Kiểm tra SMTP_HOST/SMTP_PORT hoặc thử lại sau.'
+      });
+    }
+    if (String(err?.code || '').startsWith('SENDGRID_')) {
+      return res.status(502).json({
+        error: 'SendGrid gửi mail thất bại. Kiểm tra SENDGRID_API_KEY/SENDGRID_FROM_EMAIL.'
       });
     }
     res.status(500).json({ error: err.message });
