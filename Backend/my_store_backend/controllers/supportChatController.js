@@ -22,20 +22,36 @@ const getSmtpConfigs = () => {
   const smtpPortRaw = String(process.env.SMTP_PORT || '').trim();
   const smtpSecureEnv = parseBoolEnv(process.env.SMTP_SECURE);
 
+  const configs = [];
+  const seen = new Set();
+  const addConfig = ({ host, port, secure, label }) => {
+    const key = `${host}:${port}:${secure}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    configs.push({ host, port, secure, label });
+  };
+
   if (smtpHost || smtpPortRaw) {
+    const host = smtpHost || 'smtp.gmail.com';
     const port = Number(smtpPortRaw) || 587;
-    return [{
-      host: smtpHost || 'smtp.gmail.com',
+    addConfig({
+      host,
       port,
       secure: smtpSecureEnv ?? port === 465,
       label: 'custom',
-    }];
+    });
+
+    // Keep Gmail fallback even when custom env is set, because some runtimes block 465 or 587 intermittently.
+    if (host.toLowerCase() === 'smtp.gmail.com') {
+      addConfig({ host: 'smtp.gmail.com', port: 465, secure: true, label: 'gmail-465' });
+      addConfig({ host: 'smtp.gmail.com', port: 587, secure: false, label: 'gmail-587' });
+    }
+  } else {
+    addConfig({ host: 'smtp.gmail.com', port: 465, secure: true, label: 'gmail-465' });
+    addConfig({ host: 'smtp.gmail.com', port: 587, secure: false, label: 'gmail-587' });
   }
 
-  return [
-    { host: 'smtp.gmail.com', port: 465, secure: true, label: 'gmail-465' },
-    { host: 'smtp.gmail.com', port: 587, secure: false, label: 'gmail-587' },
-  ];
+  return configs;
 };
 
 const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
