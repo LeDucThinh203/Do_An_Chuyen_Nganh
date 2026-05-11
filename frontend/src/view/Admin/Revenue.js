@@ -1,7 +1,20 @@
 // src/view/Admin/Revenue.js
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { getAllOrders, getAllProducts } from "../../api";
 import { RevenueTabContentSkeleton } from "../common/Skeletons";
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function getCurrentWeek() {
   const now = new Date();
@@ -386,72 +399,64 @@ export default function Revenue() {
     });
   };
 
-  // Vẽ biểu đồ
+  // Vẽ biểu đồ bằng Chart.js (Bar)
   const renderSimpleChart = () => {
     const weekDates = getDatesOfWeek(selectedWeek);
-    const maxRevenue = Math.max(...Object.values(revenueData.dailyRevenue), 1);
-    
+    const labels = weekDates.map(d => getDayName(d));
+    const dataValues = weekDates.map(d => {
+      const key = d.toISOString().split('T')[0];
+      return Math.round((revenueData.dailyRevenue[key] || 0));
+    });
+
+    const data = {
+      labels,
+      datasets: [
+        {
+          label: 'Doanh thu (VND)',
+          data: dataValues,
+          backgroundColor: function(context) {
+            const value = context.dataset.data[context.dataIndex];
+            return value > 0 ? 'rgba(34,197,94,0.85)' : 'rgba(209,213,219,0.7)';
+          },
+          borderRadius: 6,
+          barThickness: 28,
+        }
+      ]
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed.y || 0;
+              return ` ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v)}`;
+            }
+          }
+        },
+        title: {
+          display: false
+        }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          ticks: {
+            callback: (value) => {
+              return value >= 1000 ? `${value.toLocaleString('vi-VN')}` : value;
+            }
+          },
+          grid: { color: 'rgba(229,231,235,0.6)' }
+        }
+      }
+    };
+
     return (
-      <div className="relative">
-        {/* Grid lines nền */}
-        <div className="absolute inset-0 flex flex-col justify-between py-6 px-4">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="border-t border-gray-200 border-dashed"></div>
-          ))}
-        </div>
-        
-        {/* Biểu đồ cột */}
-        <div className="h-80 flex items-end justify-between space-x-4 px-4 py-6 relative">
-          {weekDates.map((date, index) => {
-            const dateKey = date.toISOString().split('T')[0];
-            const revenue = revenueData.dailyRevenue[dateKey] || 0;
-            const dayName = getDayName(date).substring(0, 3);
-            const height = maxRevenue > 0 ? (revenue / maxRevenue) * 85 : 0;
-            const barHeight = Math.max(height, revenue > 0 ? 5 : 0);
-            
-            return (
-              <div key={index} className="flex flex-col items-center flex-1 group">
-                {/* Tooltip hiển thị khi hover */}
-                <div className="absolute opacity-0 group-hover:opacity-100 -translate-y-20 bg-gray-800 text-white px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-all duration-200 shadow-lg z-10 pointer-events-none">
-                  <div className="font-semibold">{formatDate(dateKey)}</div>
-                  <div className="text-green-400">{formatCurrency(revenue)}</div>
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
-                </div>
-                
-                {/* Cột biểu đồ */}
-                <div 
-                  className={`w-full rounded-t-lg transition-all duration-500 shadow-md relative overflow-hidden ${
-                    revenue > 0 
-                      ? 'bg-gradient-to-t from-green-600 via-green-500 to-green-400 hover:from-green-700 hover:via-green-600 hover:to-green-500' 
-                      : 'bg-gray-200'
-                  }`}
-                  style={{ 
-                    height: `${barHeight}%`,
-                    minHeight: revenue > 0 ? '20px' : '4px'
-                  }}
-                >
-                  {/* Hiệu ứng ánh sáng */}
-                  {revenue > 0 && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"></div>
-                  )}
-                  
-                  {/* Giá trị hiển thị trên cột */}
-                  {revenue > 0 && (
-                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-gray-700 whitespace-nowrap">
-                      {formatCurrency(revenue).replace(' ₫', 'đ')}
-                    </div>
-                  )}
-                </div>
-                
-                {/* Tên ngày */}
-                <div className="text-xs font-medium text-gray-600 mt-2">{dayName}</div>
-                <div className="text-xs text-gray-500">
-                  {formatDate(dateKey).split('/')[0]}/{formatDate(dateKey).split('/')[1]}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div style={{ height: 320, padding: '12px' }}>
+        <Bar data={data} options={options} />
       </div>
     );
   };
@@ -995,10 +1000,10 @@ export default function Revenue() {
 
       {/* Tabs Navigation */}
       <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           <button
             onClick={() => setActiveTab("revenue")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-colors ${
               activeTab === "revenue" 
                 ? "bg-blue-600 text-white" 
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1008,7 +1013,7 @@ export default function Revenue() {
           </button>
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-colors ${
               activeTab === "pending" 
                 ? "bg-yellow-600 text-white" 
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1018,7 +1023,7 @@ export default function Revenue() {
           </button>
           <button
             onClick={() => setActiveTab("confirmed")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-colors ${
               activeTab === "confirmed" 
                 ? "bg-blue-600 text-white" 
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1028,7 +1033,7 @@ export default function Revenue() {
           </button>
           <button
             onClick={() => setActiveTab("shipping")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-colors ${
               activeTab === "shipping" 
                 ? "bg-purple-600 text-white" 
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1038,7 +1043,7 @@ export default function Revenue() {
           </button>
           <button
             onClick={() => setActiveTab("paid")}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+            className={`px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium text-sm md:text-base transition-colors ${
               activeTab === "paid" 
                 ? "bg-green-600 text-white" 
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1061,9 +1066,9 @@ export default function Revenue() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-600">Doanh thu tuần</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl md:text-3xl font-bold text-gray-900 leading-tight break-words">
                     {formatCurrency(revenueData.weeklyRevenue)}
                   </p>
                 </div>
@@ -1077,9 +1082,9 @@ export default function Revenue() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-600">Đơn hàng đã nhận</p>
-                  <p className="text-2xl font-bold text-gray-900">{revenueData.totalOrders}</p>
+                  <p className="text-xl md:text-3xl font-bold text-gray-900 leading-tight break-words">{revenueData.totalOrders}</p>
                 </div>
               </div>
             </div>
@@ -1091,9 +1096,9 @@ export default function Revenue() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-600">Giá trị trung bình</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl md:text-3xl font-bold text-gray-900 leading-tight break-words">
                     {formatCurrency(revenueData.averageOrderValue)}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">Trên mỗi đơn hàng</p>
@@ -1108,9 +1113,9 @@ export default function Revenue() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-600">Tuần</p>
-                  <p className="text-2xl font-bold text-gray-900">#{selectedWeek}</p>
+                  <p className="text-xl md:text-3xl font-bold text-gray-900 leading-tight break-words">#{selectedWeek}</p>
                   <p className="text-xs text-gray-500 mt-1">Năm {new Date().getFullYear()}</p>
                 </div>
               </div>
@@ -1239,14 +1244,14 @@ export default function Revenue() {
       )}
 
       {/* Modal chi tiết đơn hàng theo ngày */}
-      {dayDetailModal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 pr-4 pb-8 pl-64">
-          <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[80vh] overflow-hidden ml-20">
+      {dayDetailModal.show && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000] p-2 sm:p-4 md:p-6">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[92vh] md:h-[88vh] max-h-[920px] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-6 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-green-600 to-green-500 text-white p-4 md:p-6 flex justify-between items-center shrink-0">
               <div>
-                <h3 className="text-2xl font-bold">Chi tiết đơn hàng đã thanh toán</h3>
-                <p className="text-green-100 mt-1">
+                <h3 className="text-xl md:text-2xl font-bold">Chi tiết đơn hàng đã thanh toán</h3>
+                <p className="text-green-100 mt-1 text-sm md:text-base">
                   Ngày: {formatDate(dayDetailModal.date)} - Tổng: {dayDetailModal.orders.length} đơn hàng
                 </p>
               </div>
@@ -1261,7 +1266,7 @@ export default function Revenue() {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            <div className="p-3 md:p-6 overflow-y-auto flex-1 min-h-0">
               {dayDetailModal.orders.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1275,7 +1280,7 @@ export default function Revenue() {
                     <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gradient-to-r from-white to-green-50">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h4 className="text-lg font-bold text-gray-900">#{order.id} - {order.name}</h4>
+                          <h4 className="text-lg font-bold text-gray-900 break-words">#{order.id} - {order.name}</h4>
                           <p className="text-sm text-gray-600">SĐT: {order.phone}</p>
                           <p className="text-xs text-gray-500">Địa chỉ: {order.address}</p>
                           <p className="text-xs text-gray-500">{formatDateTime(order.created_at)}</p>
@@ -1304,7 +1309,7 @@ export default function Revenue() {
                             <div key={pIdx} className="flex items-start bg-white p-3 rounded border border-gray-100">
                               <span className="text-green-500 mr-2 mt-0.5">•</span>
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-800">{product.name}</p>
+                                <p className="text-sm font-medium text-gray-800 break-words">{product.name}</p>
                                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
                                   <span className="bg-gray-100 px-2 py-0.5 rounded">Size: {product.size}</span>
                                   <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-medium">SL: {product.quantity}</span>
@@ -1322,7 +1327,7 @@ export default function Revenue() {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between sm:items-center shrink-0">
               <div className="text-sm text-gray-600">
                 Tổng doanh thu: <span className="font-bold text-green-600 text-lg">
                   {formatCurrency(dayDetailModal.orders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0))}
@@ -1336,7 +1341,8 @@ export default function Revenue() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
