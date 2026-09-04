@@ -101,9 +101,15 @@ function AppContent() {
     return children;
   };
 
-  // Kiểm tra route để không render header trên ProductList và ProductLoadMore
-  const showHeader = pathname !== "/" && !pathname.startsWith("/category/");
-  const isAdminPage = pathname.startsWith("/admin");
+  // Kiểm tra route để không render header/footer trên trang chủ (đã có header riêng) và các trang quản trị Admin
+  const isAdminPage =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/categories") ||
+    pathname === "/add" ||
+    pathname.startsWith("/add/") ||
+    pathname.startsWith("/edit");
+
+  const showHeader = pathname !== "/" && !pathname.startsWith("/category/") && !isAdminPage;
   const isAdminUser = Session.isAdmin();
 
   return (
@@ -223,7 +229,7 @@ function AppContent() {
       </div>
 
       {/* Footer */}
-      <Footer />
+      {!isAdminPage && <Footer />}
 
       {!isAdminPage && (
         <>

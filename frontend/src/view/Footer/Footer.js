@@ -1,10 +1,22 @@
 // src/view/Footer/Footer.js
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const location = useLocation();
+
+  const isAdminPath =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/categories") ||
+    location.pathname === "/add" ||
+    location.pathname.startsWith("/add/") ||
+    location.pathname.startsWith("/edit");
+
+  if (isAdminPath) {
+    return null;
+  }
 
   const handleSubscribe = (e) => {
     e.preventDefault();

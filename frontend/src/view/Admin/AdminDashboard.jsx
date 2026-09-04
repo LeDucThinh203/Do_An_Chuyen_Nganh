@@ -11,7 +11,7 @@ import Revenue from "./Revenue";
 import SupportChatManager from "./SupportChatManager";
 import { getSupportRooms } from "../../api";
 import { getSupportSocket } from "../../socket/supportSocket";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -200,6 +200,13 @@ export default function AdminDashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-bold text-xs transition duration-200 flex items-center gap-1.5 shadow-sm border border-blue-100"
+              >
+                <span>🏪</span>
+                <span>Về cửa hàng</span>
+              </Link>
               <div className="text-right">
                 <p className="font-semibold text-gray-800">{user.username}</p>
                 <p className="text-sm text-gray-500">{user.email || "Admin"}</p>
