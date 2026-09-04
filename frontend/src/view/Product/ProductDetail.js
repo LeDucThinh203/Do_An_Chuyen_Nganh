@@ -426,15 +426,32 @@ export default function ProductDetail() {
           {/* Nút thêm vào giỏ hàng */}
           <button
             onClick={handleAddToCart}
-            className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition mb-4"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-3.5 rounded-2xl font-extrabold text-base shadow-xl shadow-blue-600/30 hover:shadow-blue-500/50 hover:scale-101 transition duration-200 flex items-center justify-center gap-2 mb-6"
           >
-            🛒 Thêm vào giỏ hàng
+            <span>🛒</span>
+            <span>Thêm vào giỏ hàng ngay</span>
           </button>
 
+          {/* Cam kết mua sắm an tâm */}
+          <div className="grid grid-cols-3 gap-2 py-3 px-2 bg-slate-50 rounded-xl border border-slate-200/60 mb-6 text-center text-xs text-slate-600">
+            <div>
+              <p className="font-bold text-slate-800">🔄 Đổi trả 60 ngày</p>
+              <p className="text-[10px] text-slate-400">Tận nơi miễn phí</p>
+            </div>
+            <div>
+              <p className="font-bold text-slate-800">🚀 Giao siêu tốc</p>
+              <p className="text-[10px] text-slate-400">Nội thành 2-4h</p>
+            </div>
+            <div>
+              <p className="font-bold text-slate-800">💎 100% Chính hãng</p>
+              <p className="text-[10px] text-slate-400">Bảo hành đường may</p>
+            </div>
+          </div>
+
           {/* Mô tả sản phẩm */}
-          <div className="border-t pt-4">
-            <h3 className="text-lg font-semibold mb-2">Mô tả sản phẩm</h3>
-            <p className="text-gray-600 leading-relaxed">
+          <div className="border-t border-slate-100 pt-4">
+            <h3 className="text-base font-bold text-slate-800 mb-2">Mô tả sản phẩm</h3>
+            <p className="text-slate-600 leading-relaxed text-sm">
               {product.description || "Không có mô tả cho sản phẩm này."}
             </p>
           </div>
