@@ -121,109 +121,117 @@ body {
 }
 
 /* =========================================================
-   LIGHT THEME: Sparkling Stars Effect (Ánh sao lấp lánh)
+   LIGHT THEME: Gentle Sparkling Stars Effect (Ánh sao lấp lánh nhẹ nhàng)
    ========================================================= */
-@keyframes twinkle-star {
+@keyframes gentle-twinkle {
   0%, 100% {
-    opacity: 0.25;
-    transform: scale(0.7) rotate(0deg);
+    opacity: 0.18;
+    transform: scale(0.9) rotate(0deg);
   }
   50% {
-    opacity: 1;
-    transform: scale(1.35) rotate(90deg);
-    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.9));
+    opacity: 0.65;
+    transform: scale(1.1) rotate(45deg);
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.5));
   }
 }
 
-@keyframes diamond-sparkle {
+@keyframes gentle-diamond {
   0%, 100% {
-    opacity: 0.15;
-    transform: scale(0.6);
+    opacity: 0.12;
+    transform: scale(0.85);
   }
-  40% {
-    opacity: 0.9;
-    transform: scale(1.25);
-    filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.9));
-  }
-  60% {
-    opacity: 1;
-    transform: scale(1.4);
-    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1));
+  50% {
+    opacity: 0.65;
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 7px rgba(253, 230, 138, 0.6));
   }
 }
 
-.animate-twinkle {
-  animation: twinkle-star var(--duration, 3s) ease-in-out infinite var(--delay, 0s);
+.animate-gentle-twinkle {
+  animation: gentle-twinkle var(--duration, 6s) ease-in-out infinite var(--delay, 0s);
 }
 
-.animate-diamond-sparkle {
-  animation: diamond-sparkle var(--duration, 4s) ease-in-out infinite var(--delay, 0s);
+.animate-gentle-diamond {
+  animation: gentle-diamond var(--duration, 6.5s) ease-in-out infinite var(--delay, 0s);
 }
 
 /* =========================================================
-   DARK THEME: Meteor Shower Effect (Mưa sao băng)
+   DARK THEME: Gentle Flowing Meteor Rain (Mưa sao băng nhẹ nhàng uyển chuyển)
    ========================================================= */
-@keyframes meteor-fall {
+@keyframes gentle-meteor-fall {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(215deg);
+    transform: translate3d(0, 0, 0) rotate(105deg);
   }
-  10% {
-    opacity: 1;
+  15% {
+    opacity: 0.85;
   }
-  75% {
-    opacity: 1;
+  65% {
+    opacity: 0.75;
   }
   100% {
     opacity: 0;
-    transform: translate3d(-900px, 900px, 0) rotate(215deg);
+    transform: translate3d(-160px, 980px, 0) rotate(105deg);
   }
 }
 
-.meteor-streak {
+.meteor-rain-streak {
   position: absolute;
   top: 0;
-  right: 0;
-  height: 2.5px;
-  background: linear-gradient(90deg, #ffffff, rgba(147, 197, 253, 0.9) 35%, rgba(59, 130, 246, 0.4) 65%, transparent 100%);
+  height: 1.8px;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(147, 197, 253, 0.85) 30%, rgba(59, 130, 246, 0.25) 65%, transparent 100%);
   border-radius: 9999px;
-  box-shadow: 0 0 14px 2px rgba(147, 197, 253, 0.95), 0 0 30px 4px rgba(59, 130, 246, 0.5);
-  animation-name: meteor-fall;
+  box-shadow: 0 0 8px 1px rgba(147, 197, 253, 0.85);
+  animation-name: gentle-meteor-fall;
   animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
   animation-iteration-count: infinite;
   pointer-events: none;
 }
 
-.meteor-head {
+.meteor-rain-head {
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   background-color: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 12px 3px #ffffff, 0 0 20px 6px rgba(96, 165, 250, 0.9);
+  box-shadow: 0 0 8px 2px #ffffff, 0 0 14px 3px rgba(147, 197, 253, 0.8);
 }
 
 /* =========================================================
-   THEME ADAPTATION
+   THEME ADAPTATION & HIGH-CONTRAST BUTTONS
    ========================================================= */
 body.theme-dark {
   background-color: #060913;
   color: #f1f5f9;
 }
 
+/* Transparency on background wrappers so ThemeBackground shines through across all pages */
+body.theme-dark .bg-\[\#f8fafc\],
+body.theme-dark [class*="bg-[#f8fafc]"],
+body.theme-dark [class*="bg-slate-50"],
+body.theme-dark [class*="bg-slate-100"],
+body.theme-dark [class*="bg-gray-50"],
+body.theme-light .bg-\[\#f8fafc\],
+body.theme-light [class*="bg-[#f8fafc]"],
+body.theme-light [class*="bg-slate-50"],
+body.theme-light [class*="bg-slate-100"],
+body.theme-light [class*="bg-gray-50"] {
+  background-color: transparent !important;
+}
+
 body.theme-dark .glass-nav {
-  background: rgba(10, 15, 29, 0.82);
+  background: rgba(10, 15, 29, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
 body.theme-dark .glass-card {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.78);
+  border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
 }
 
@@ -239,39 +247,92 @@ body.theme-dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
 
-body.theme-dark .bg-white {
-  background-color: rgba(15, 23, 42, 0.88);
-}
-
-body.theme-dark .bg-slate-50,
-body.theme-dark .bg-gray-50 {
-  background-color: rgba(15, 23, 42, 0.65);
-}
-
+/* Dark mode text readability */
 body.theme-dark .text-slate-900,
 body.theme-dark .text-slate-800 {
-  color: #f1f5f9;
+  color: #f8fafc !important;
 }
 
 body.theme-dark .text-slate-700,
 body.theme-dark .text-slate-600 {
-  color: #cbd5e1;
+  color: #cbd5e1 !important;
+}
+
+body.theme-dark .text-slate-500 {
+  color: #94a3b8 !important;
 }
 
 body.theme-dark .border-slate-100,
 body.theme-dark .border-slate-200 {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+/* All Cards, Panels, Modals in Dark Mode */
+body.theme-dark .bg-white:not(button):not(a):not(input):not(select):not(textarea):not([class*="bg-gradient"]) {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+/* High-Contrast, Crystal Clear Buttons in Dark Mode */
+body.theme-dark button.bg-slate-900,
+body.theme-dark button.bg-slate-800,
+body.theme-dark button[class*="bg-slate-900"],
+body.theme-dark button[class*="bg-slate-800"],
+body.theme-dark a.bg-slate-900,
+body.theme-dark a.bg-slate-800,
+body.theme-dark a[class*="bg-slate-900"],
+body.theme-dark a[class*="bg-slate-800"] {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+
+body.theme-dark button.bg-slate-900:hover,
+body.theme-dark button.bg-slate-800:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Secondary / White / Ghost Buttons in Dark Mode */
+body.theme-dark button.bg-white,
+body.theme-dark button[class*="bg-white"],
+body.theme-dark button[class*="bg-slate-100"],
+body.theme-dark button[class*="bg-gray-100"],
+body.theme-dark a.bg-white,
+body.theme-dark a[class*="bg-white"] {
+  background-color: rgba(30, 41, 59, 0.9) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.theme-dark button.bg-white:hover,
+body.theme-dark button[class*="bg-white"]:hover {
+  background-color: rgba(51, 65, 85, 0.95) !important;
+  color: #93c5fd !important;
+  border-color: rgba(147, 197, 253, 0.6) !important;
+}
+
+/* Ensure text inside buttons is always crisp and visible */
+body.theme-dark button:not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-red"]) {
+  color: #ffffff;
+}
+
+body.theme-dark button span:not([class*="text-"]):not([class*="bg-"]) {
+  color: inherit;
+}
+
+/* Form Inputs in Dark Mode */
 body.theme-dark input:not([type="checkbox"]):not([type="radio"]),
 body.theme-dark select,
 body.theme-dark textarea {
-  background-color: rgba(30, 41, 59, 0.75);
-  color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
 }
 
 body.theme-dark input::placeholder,
 body.theme-dark textarea::placeholder {
-  color: #94a3b8;
+  color: #94a3b8 !important;
 }

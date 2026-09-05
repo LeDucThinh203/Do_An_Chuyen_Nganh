@@ -635,9 +635,9 @@ function ProductCard({
         )}
 
         {/* Discount Badge */}
-        {product.discount_percent > 0 && (
+        {Number(product.discount_percent || 0) > 0 && (
           <div className="absolute top-3 right-3 bg-rose-500 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-md">
-            -{product.discount_percent}%
+            -{Math.round(Number(product.discount_percent))}%
           </div>
         )}
       </div>

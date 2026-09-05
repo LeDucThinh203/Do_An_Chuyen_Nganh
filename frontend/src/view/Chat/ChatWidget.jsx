@@ -297,7 +297,7 @@ const ChatWidget = ({ onModeChange }) => {
                                           fontSize: '0.8em',
                                           fontWeight: 'bold'
                                         }}>
-                                          -{product.discount_percent}%
+                                          -{Math.round(Number(product.discount_percent))}%
                                         </span>
                                       </div>
                                       <span style={{ 

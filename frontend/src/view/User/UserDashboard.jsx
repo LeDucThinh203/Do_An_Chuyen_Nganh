@@ -7,6 +7,7 @@ import ChangePassword from "./ChangePassword";
 import ManageAddress from "./ManageAddress";
 import Address from "./Address";
 import OrderManager from "./OrderManager";
+import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 export default function UserDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -147,7 +148,7 @@ export default function UserDashboard() {
   const userInitial = (user.username || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-100/70 font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
+    <div className="flex h-screen overflow-hidden bg-transparent font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
       {/* Backdrop for Mobile */}
       {menuOpen && (
         <div
@@ -318,6 +319,10 @@ export default function UserDashboard() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center text-base shadow-md shadow-blue-500/20">
                 {userInitial}
               </div>
+
+              {/* Theme Toggle Button */}
+              <ThemeToggleBtn variant="navbar" />
+
               <Link
                 to="/cart"
                 className="p-2.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 transition flex items-center justify-center"
@@ -330,7 +335,7 @@ export default function UserDashboard() {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50/80">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
           <div className="max-w-6xl mx-auto">
             {activeTab === "info" && <UserInfo onNavigate={setActiveTab} />}
             {activeTab === "orders" && <OrderManager onNavigate={setActiveTab} />}

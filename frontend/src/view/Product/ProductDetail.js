@@ -329,7 +329,7 @@ export default function ProductDetail() {
                 </span>
                 {Number(product.discount_percent || 0) > 0 && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 to-amber-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
-                    -{product.discount_percent}% GIẢM
+                    -{Math.round(Number(product.discount_percent))}% GIẢM
                   </span>
                 )}
               </div>

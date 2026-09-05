@@ -179,7 +179,7 @@ export default function ProductLoadMore() {
   };
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen overflow-x-hidden">
+    <div className="bg-transparent min-h-screen overflow-x-hidden">
       <Header
         user={user}
         handleLogout={handleLogout}
@@ -554,7 +554,7 @@ const ProductCard = ({
         {discount > 0 && (
           <div className="absolute top-2.5 left-2.5 z-10">
             <span className="bg-gradient-to-r from-rose-500 to-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full shadow-md shadow-red-500/25">
-              -{discount}%
+              -{Math.round(discount)}%
             </span>
           </div>
         )}

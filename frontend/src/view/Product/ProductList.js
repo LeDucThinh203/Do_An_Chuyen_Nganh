@@ -235,7 +235,7 @@ export default function ProductList() {
   };
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen overflow-x-hidden">
+    <div className="bg-transparent min-h-screen overflow-x-hidden">
       {/* Elevated Glass Header */}
       <Header
         user={user}
@@ -273,63 +273,31 @@ export default function ProductList() {
                 className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
               />
               
-              {/* Floating Bubble Metric 1: Top Left - Rating & Social Proof */}
-              <div className="absolute top-6 left-6 hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900/75 backdrop-blur-xl border border-white/20 text-white shadow-2xl animate-bounce duration-1000">
-                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-black text-base border border-amber-400/30">
-                  ★
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-sm">4.9 / 5.0</span>
-                    <span className="text-[10px] text-amber-300 font-bold">★★★★★</span>
-                  </div>
-                  <p className="text-[11px] text-slate-300 font-medium">15,000+ Khách hàng tin dùng</p>
-                </div>
-              </div>
-
-              {/* Floating Bubble Metric 2: Bottom Right - Live Buying Pulse */}
-              <div className="absolute bottom-6 right-6 hidden md:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/20 text-white shadow-2xl">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <div>
-                  <p className="text-xs font-black text-emerald-400">🔥 99.4% Hài lòng về chất liệu</p>
-                  <p className="text-[10px] text-slate-300 font-medium">Đang có 48 đơn đặt trong hôm nay</p>
-                </div>
-              </div>
-
-              {/* Floating Bubble Metric 3: Top Right - Speed & Guarantee */}
-              <div className="absolute top-6 right-6 hidden lg:flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span>🚀 Freeship từ 299K • Đổi trả 60 ngày</span>
-              </div>
-              
-              {/* Premium Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-900/40 to-black/30 flex items-center justify-center p-6 sm:p-12">
-                <div className="text-center max-w-3xl space-y-4 sm:space-y-6">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-extrabold tracking-wide shadow-lg">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              {/* Premium Subtle Gradient Overlay - Anchored at the bottom so video is completely visible */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent flex flex-col justify-end p-6 sm:p-10 lg:p-12">
+                <div className="max-w-3xl space-y-3 sm:space-y-4">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>
                   </div>
 
-                  <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none drop-shadow-lg">
-                    Bứt Phá Giới Hạn <br />
+                  <h1 className="text-white text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-tight drop-shadow-md">
+                    Bứt Phá Giới Hạn •{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-300">
                       Tự Tin Tỏa Sáng
                     </span>
                   </h1>
 
-                  <p className="text-slate-200 text-sm sm:text-base font-medium max-w-xl mx-auto drop-shadow">
+                  <p className="text-slate-200 text-xs sm:text-sm font-medium max-w-xl drop-shadow line-clamp-2 sm:line-clamp-none">
                     Khám phá chất liệu vải thoáng khí Dry-Fit siêu nhẹ, co giãn 4 chiều kháng khuẩn cho cảm giác thoải mái trọn vẹn cả ngày dài.
                   </p>
 
-                  <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2">
+                  <div className="flex flex-wrap items-center gap-3 pt-1">
                     <button
                       onClick={() => scrollToSection('product-sections')}
-                      className="px-7 sm:px-9 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base rounded-full shadow-2xl shadow-blue-600/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-200 flex items-center gap-2.5"
+                      className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-full shadow-lg shadow-blue-600/40 hover:scale-105 transition-all duration-200 flex items-center gap-2"
                     >
-                      <span>Khám Phá Mua Sắm Ngay</span>
+                      <span>Khám Phá Mua Sắm</span>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                       </svg>
@@ -337,7 +305,7 @@ export default function ProductList() {
 
                     <button
                       onClick={() => scrollToSection('featured-row')}
-                      className="px-6 sm:px-8 py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-extrabold text-sm sm:text-base rounded-full border border-white/40 hover:border-white transition-all duration-200 flex items-center gap-2 hover:scale-105"
+                      className="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-900/60 hover:bg-slate-900/80 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-full border border-white/30 hover:border-white/60 transition-all duration-200 flex items-center gap-1.5 hover:scale-105"
                     >
                       <span>Ưu Đãi Hot Hôm Nay 🔥</span>
                     </button>
@@ -1038,7 +1006,7 @@ const ProductCard = ({
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10 pointer-events-none">
           {discount > 0 && (
             <span className="bg-gradient-to-r from-rose-500 to-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full shadow-md shadow-red-500/25 tracking-wide">
-              -{discount}%
+              -{Math.round(discount)}%
             </span>
           )}
           {product.is_featured && (

@@ -1,83 +1,82 @@
 // src/view/common/ThemeBackground.jsx
-import React, { useMemo } from "react";
+import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 
-// Pre-generated static coordinates so animations don't recalculate on every re-render
-const LIGHT_STARS = [
-  { id: 1, top: "6%", left: "8%", size: 14, type: "diamond", color: "#fbbf24", duration: "3.2s", delay: "0.2s" },
-  { id: 2, top: "12%", left: "24%", size: 6, type: "circle", color: "#60a5fa", duration: "2.5s", delay: "0.8s" },
-  { id: 3, top: "8%", left: "45%", size: 18, type: "diamond", color: "#f59e0b", duration: "3.8s", delay: "1.4s" },
-  { id: 4, top: "15%", left: "68%", size: 8, type: "sparkle", color: "#38bdf8", duration: "2.8s", delay: "0.5s" },
-  { id: 5, top: "9%", left: "88%", size: 16, type: "diamond", color: "#fbbf24", duration: "3.5s", delay: "1.9s" },
-  { id: 6, top: "22%", left: "14%", size: 7, type: "circle", color: "#eab308", duration: "2.2s", delay: "1.1s" },
-  { id: 7, top: "28%", left: "35%", size: 15, type: "sparkle", color: "#60a5fa", duration: "4.1s", delay: "0.3s" },
-  { id: 8, top: "24%", left: "58%", size: 12, type: "diamond", color: "#fbbf24", duration: "3.0s", delay: "2.1s" },
-  { id: 9, top: "32%", left: "82%", size: 7, type: "circle", color: "#38bdf8", duration: "2.4s", delay: "1.6s" },
-  { id: 10, top: "38%", left: "4%", size: 16, type: "diamond", color: "#f59e0b", duration: "3.6s", delay: "0.7s" },
-  { id: 11, top: "42%", left: "22%", size: 9, type: "sparkle", color: "#fbbf24", duration: "2.9s", delay: "1.8s" },
-  { id: 12, top: "48%", left: "48%", size: 6, type: "circle", color: "#60a5fa", duration: "2.6s", delay: "2.4s" },
-  { id: 13, top: "44%", left: "74%", size: 17, type: "diamond", color: "#f59e0b", duration: "3.9s", delay: "0.9s" },
-  { id: 14, top: "52%", left: "92%", size: 8, type: "sparkle", color: "#38bdf8", duration: "3.1s", delay: "1.3s" },
-  { id: 15, top: "59%", left: "12%", size: 14, type: "diamond", color: "#fbbf24", duration: "3.4s", delay: "2.7s" },
-  { id: 16, top: "65%", left: "32%", size: 7, type: "circle", color: "#eab308", duration: "2.7s", delay: "0.4s" },
-  { id: 17, top: "62%", left: "62%", size: 18, type: "diamond", color: "#f59e0b", duration: "4.2s", delay: "1.7s" },
-  { id: 18, top: "68%", left: "84%", size: 9, type: "sparkle", color: "#60a5fa", duration: "2.5s", delay: "2.2s" },
-  { id: 19, top: "75%", left: "6%", size: 8, type: "circle", color: "#38bdf8", duration: "2.8s", delay: "1.0s" },
-  { id: 20, top: "79%", left: "26%", size: 16, type: "diamond", color: "#fbbf24", duration: "3.7s", delay: "0.6s" },
-  { id: 21, top: "82%", left: "52%", size: 7, type: "sparkle", color: "#f59e0b", duration: "3.1s", delay: "2.5s" },
-  { id: 22, top: "77%", left: "71%", size: 15, type: "diamond", color: "#60a5fa", duration: "4.0s", delay: "1.5s" },
-  { id: 23, top: "86%", left: "90%", size: 8, type: "circle", color: "#fbbf24", duration: "2.3s", delay: "0.2s" },
-  { id: 24, top: "92%", left: "18%", size: 17, type: "diamond", color: "#f59e0b", duration: "3.6s", delay: "2.0s" },
-  { id: 25, top: "94%", left: "42%", size: 6, type: "circle", color: "#38bdf8", duration: "2.9s", delay: "1.2s" },
-  { id: 26, top: "90%", left: "65%", size: 14, type: "sparkle", color: "#fbbf24", duration: "3.3s", delay: "0.8s" },
-  { id: 27, top: "95%", left: "82%", size: 10, type: "diamond", color: "#60a5fa", duration: "3.5s", delay: "2.6s" },
-  { id: 28, top: "18%", left: "95%", size: 12, type: "sparkle", color: "#f59e0b", duration: "2.7s", delay: "1.4s" },
-  { id: 29, top: "35%", left: "44%", size: 8, type: "circle", color: "#fbbf24", duration: "3.2s", delay: "0.1s" },
-  { id: 30, top: "54%", left: "38%", size: 15, type: "diamond", color: "#38bdf8", duration: "3.9s", delay: "2.3s" }
+// Gentle twinkling stars for Light Mode (nhẹ nhàng, thanh tao, thư giãn)
+const GENTLE_LIGHT_STARS = [
+  { id: 1, top: "7%", left: "9%", size: 8, type: "diamond", color: "#fcd34d", duration: "5.5s", delay: "0.5s" },
+  { id: 2, top: "11%", left: "23%", size: 4, type: "circle", color: "#93c5fd", duration: "6.2s", delay: "1.8s" },
+  { id: 3, top: "9%", left: "42%", size: 9, type: "diamond", color: "#fde68a", duration: "6.8s", delay: "0.2s" },
+  { id: 4, top: "14%", left: "67%", size: 6, type: "sparkle", color: "#bae6fd", duration: "5.0s", delay: "2.5s" },
+  { id: 5, top: "8%", left: "86%", size: 8, type: "diamond", color: "#fcd34d", duration: "7.1s", delay: "1.2s" },
+  { id: 6, top: "21%", left: "15%", size: 4, type: "circle", color: "#fde68a", duration: "5.8s", delay: "3.1s" },
+  { id: 7, top: "27%", left: "33%", size: 8, type: "sparkle", color: "#93c5fd", duration: "6.5s", delay: "0.7s" },
+  { id: 8, top: "23%", left: "57%", size: 7, type: "diamond", color: "#fcd34d", duration: "5.3s", delay: "2.1s" },
+  { id: 9, top: "30%", left: "81%", size: 4, type: "circle", color: "#bae6fd", duration: "6.9s", delay: "1.5s" },
+  { id: 10, top: "37%", left: "5%", size: 8, type: "diamond", color: "#fde68a", duration: "5.7s", delay: "3.5s" },
+  { id: 11, top: "41%", left: "21%", size: 6, type: "sparkle", color: "#fcd34d", duration: "6.3s", delay: "0.9s" },
+  { id: 12, top: "47%", left: "47%", size: 4, type: "circle", color: "#93c5fd", duration: "5.9s", delay: "2.8s" },
+  { id: 13, top: "43%", left: "73%", size: 9, type: "diamond", color: "#fde68a", duration: "7.3s", delay: "1.7s" },
+  { id: 14, top: "51%", left: "91%", size: 5, type: "sparkle", color: "#bae6fd", duration: "5.2s", delay: "3.3s" },
+  { id: 15, top: "58%", left: "11%", size: 8, type: "diamond", color: "#fcd34d", duration: "6.4s", delay: "0.4s" },
+  { id: 16, top: "64%", left: "31%", size: 4, type: "circle", color: "#fde68a", duration: "5.6s", delay: "2.2s" },
+  { id: 17, top: "61%", left: "61%", size: 9, type: "diamond", color: "#fcd34d", duration: "7.0s", delay: "1.1s" },
+  { id: 18, top: "67%", left: "83%", size: 5, type: "sparkle", color: "#93c5fd", duration: "6.1s", delay: "3.7s" },
+  { id: 19, top: "74%", left: "7%", size: 4, type: "circle", color: "#bae6fd", duration: "5.4s", delay: "1.9s" },
+  { id: 20, top: "78%", left: "25%", size: 8, type: "diamond", color: "#fde68a", duration: "6.6s", delay: "0.6s" },
+  { id: 21, top: "81%", left: "51%", size: 5, type: "sparkle", color: "#fcd34d", duration: "5.8s", delay: "2.9s" },
+  { id: 22, top: "76%", left: "70%", size: 8, type: "diamond", color: "#93c5fd", duration: "7.2s", delay: "1.4s" },
+  { id: 23, top: "85%", left: "89%", size: 4, type: "circle", color: "#fde68a", duration: "6.0s", delay: "3.0s" },
+  { id: 24, top: "91%", left: "17%", size: 8, type: "diamond", color: "#fcd34d", duration: "6.7s", delay: "0.8s" },
+  { id: 25, top: "93%", left: "41%", size: 4, type: "circle", color: "#bae6fd", duration: "5.5s", delay: "2.4s" },
+  { id: 26, top: "89%", left: "64%", size: 6, type: "sparkle", color: "#fde68a", duration: "6.2s", delay: "1.6s" },
+  { id: 27, top: "94%", left: "81%", size: 7, type: "diamond", color: "#93c5fd", duration: "7.4s", delay: "3.4s" },
 ];
 
-// Realistic shooting stars (mưa sao băng) with randomized positions & delays
-const METEORS = [
-  { id: 1, top: "-80px", right: "5%", length: 180, duration: "2.4s", delay: "0s" },
-  { id: 2, top: "-60px", right: "22%", length: 140, duration: "2.8s", delay: "1.2s" },
-  { id: 3, top: "-100px", right: "38%", length: 210, duration: "2.1s", delay: "0.5s" },
-  { id: 4, top: "-50px", right: "55%", length: 160, duration: "3.1s", delay: "2.4s" },
-  { id: 5, top: "-90px", right: "72%", length: 190, duration: "2.6s", delay: "1.7s" },
-  { id: 6, top: "-40px", right: "88%", length: 130, duration: "3.4s", delay: "3.2s" },
-  { id: 7, top: "80px", right: "-40px", length: 170, duration: "2.3s", delay: "0.8s" },
-  { id: 8, top: "160px", right: "-30px", length: 220, duration: "2.0s", delay: "2.9s" },
-  { id: 9, top: "240px", right: "-50px", length: 150, duration: "2.9s", delay: "1.5s" },
-  { id: 10, top: "-70px", right: "15%", length: 195, duration: "2.5s", delay: "3.8s" },
-  { id: 11, top: "-50px", right: "30%", length: 165, duration: "2.2s", delay: "4.5s" },
-  { id: 12, top: "-85px", right: "48%", length: 230, duration: "1.9s", delay: "2.1s" },
-  { id: 13, top: "-65px", right: "65%", length: 145, duration: "3.0s", delay: "3.5s" },
-  { id: 14, top: "-95px", right: "82%", length: 175, duration: "2.7s", delay: "0.2s" },
-  { id: 15, top: "320px", right: "-60px", length: 200, duration: "2.4s", delay: "4.1s" },
-  { id: 16, top: "-110px", right: "95%", length: 185, duration: "2.6s", delay: "5.0s" },
+// Gentle, graceful meteor shower for Dark Mode (như mưa rơi êm dịu, mượt mà, uyển chuyển)
+const GENTLE_METEORS = [
+  { id: 1, top: "-40px", left: "8%", length: 110, duration: "6.0s", delay: "0.2s" },
+  { id: 2, top: "-50px", left: "20%", length: 130, duration: "5.4s", delay: "2.1s" },
+  { id: 3, top: "-30px", left: "34%", length: 95, duration: "6.8s", delay: "4.5s" },
+  { id: 4, top: "-60px", left: "48%", length: 140, duration: "5.7s", delay: "1.0s" },
+  { id: 5, top: "-40px", left: "62%", length: 120, duration: "6.3s", delay: "3.3s" },
+  { id: 6, top: "-50px", left: "76%", length: 105, duration: "5.9s", delay: "5.6s" },
+  { id: 7, top: "-35px", left: "89%", length: 125, duration: "6.5s", delay: "2.7s" },
+  { id: 8, top: "80px", left: "4%", length: 100, duration: "5.5s", delay: "4.0s" },
+  { id: 9, top: "140px", left: "27%", length: 135, duration: "6.2s", delay: "1.5s" },
+  { id: 10, top: "100px", left: "55%", length: 115, duration: "5.8s", delay: "6.2s" },
+  { id: 11, top: "160px", left: "70%", length: 120, duration: "6.6s", delay: "3.8s" },
+  { id: 12, top: "60px", left: "84%", length: 110, duration: "5.3s", delay: "0.8s" },
+  { id: 13, top: "-45px", left: "14%", length: 125, duration: "6.4s", delay: "4.8s" },
+  { id: 14, top: "-55px", left: "41%", length: 105, duration: "5.6s", delay: "2.9s" },
+  { id: 15, top: "-35px", left: "68%", length: 130, duration: "6.1s", delay: "0.5s" },
+  { id: 16, top: "-60px", left: "94%", length: 95, duration: "6.7s", delay: "5.1s" },
+  { id: 17, top: "220px", left: "18%", length: 115, duration: "5.9s", delay: "3.4s" },
+  { id: 18, top: "260px", left: "60%", length: 120, duration: "6.3s", delay: "1.8s" },
 ];
 
-// Dark background static twinkling stars
+// Dark background subtle static stars
 const DARK_STARS = [
-  { id: 1, top: "5%", left: "12%", size: 3, delay: "0.5s", duration: "3s" },
-  { id: 2, top: "8%", left: "34%", size: 2, delay: "1.8s", duration: "4s" },
-  { id: 3, top: "14%", left: "56%", size: 4, delay: "0.2s", duration: "2.5s" },
-  { id: 4, top: "11%", left: "78%", size: 3, delay: "2.4s", duration: "3.5s" },
-  { id: 5, top: "19%", left: "92%", size: 2, delay: "1.1s", duration: "4.2s" },
-  { id: 6, top: "25%", left: "18%", size: 3, delay: "3.0s", duration: "3s" },
-  { id: 7, top: "31%", left: "42%", size: 4, delay: "0.8s", duration: "2.8s" },
-  { id: 8, top: "28%", left: "68%", size: 2, delay: "2.1s", duration: "3.7s" },
-  { id: 9, top: "38%", left: "85%", size: 3, delay: "1.5s", duration: "4s" },
-  { id: 10, top: "45%", left: "8%", size: 2, delay: "0.3s", duration: "3.2s" },
-  { id: 11, top: "52%", left: "28%", size: 4, delay: "2.7s", duration: "2.6s" },
-  { id: 12, top: "49%", left: "53%", size: 2, delay: "1.9s", duration: "3.8s" },
-  { id: 13, top: "58%", left: "75%", size: 3, delay: "0.7s", duration: "3.1s" },
-  { id: 14, top: "66%", left: "94%", size: 2, delay: "3.3s", duration: "4.5s" },
-  { id: 15, top: "72%", left: "15%", size: 3, delay: "1.4s", duration: "2.9s" },
-  { id: 16, top: "78%", left: "39%", size: 4, delay: "2.2s", duration: "3.4s" },
-  { id: 17, top: "84%", left: "62%", size: 2, delay: "0.9s", duration: "4.1s" },
-  { id: 18, top: "81%", left: "88%", size: 3, delay: "2.5s", duration: "3s" },
-  { id: 19, top: "92%", left: "25%", size: 2, delay: "1.7s", duration: "3.6s" },
-  { id: 20, top: "95%", left: "70%", size: 3, delay: "0.4s", duration: "2.7s" },
+  { id: 1, top: "6%", left: "11%", size: 2.5, delay: "0.5s", duration: "4.5s" },
+  { id: 2, top: "9%", left: "32%", size: 2, delay: "2.2s", duration: "5.5s" },
+  { id: 3, top: "15%", left: "54%", size: 3, delay: "0.8s", duration: "4.0s" },
+  { id: 4, top: "12%", left: "76%", size: 2, delay: "3.1s", duration: "5.0s" },
+  { id: 5, top: "20%", left: "91%", size: 2.5, delay: "1.4s", duration: "6.0s" },
+  { id: 6, top: "26%", left: "16%", size: 2, delay: "3.7s", duration: "4.8s" },
+  { id: 7, top: "33%", left: "40%", size: 3, delay: "1.1s", duration: "4.2s" },
+  { id: 8, top: "29%", left: "66%", size: 2, delay: "2.6s", duration: "5.2s" },
+  { id: 9, top: "39%", left: "84%", size: 2.5, delay: "1.8s", duration: "5.8s" },
+  { id: 10, top: "46%", left: "7%", size: 2, delay: "0.4s", duration: "4.6s" },
+  { id: 11, top: "54%", left: "27%", size: 3, delay: "3.4s", duration: "4.1s" },
+  { id: 12, top: "50%", left: "51%", size: 2, delay: "2.4s", duration: "5.4s" },
+  { id: 13, top: "60%", left: "73%", size: 2.5, delay: "1.0s", duration: "4.9s" },
+  { id: 14, top: "68%", left: "93%", size: 2, delay: "4.0s", duration: "6.2s" },
+  { id: 15, top: "73%", left: "13%", size: 2.5, delay: "1.7s", duration: "4.4s" },
+  { id: 16, top: "80%", left: "37%", size: 3, delay: "2.8s", duration: "5.1s" },
+  { id: 17, top: "86%", left: "60%", size: 2, delay: "1.3s", duration: "5.7s" },
+  { id: 18, top: "83%", left: "86%", size: 2.5, delay: "3.2s", duration: "4.7s" },
+  { id: 19, top: "93%", left: "23%", size: 2, delay: "2.1s", duration: "5.3s" },
+  { id: 20, top: "96%", left: "68%", size: 2.5, delay: "0.6s", duration: "4.3s" },
 ];
 
 export default function ThemeBackground() {
@@ -85,27 +84,27 @@ export default function ThemeBackground() {
 
   return (
     <div
-      className="fixed inset-0 pointer-events-none overflow-hidden z-0 transition-opacity duration-1000"
+      className="fixed inset-0 pointer-events-none overflow-hidden z-0 transition-opacity duration-700"
       aria-hidden="true"
     >
       {/* =========================================================
-          LIGHT THEME: Luminous Pearl & Sparkling Stars (Ánh sao lấp lánh)
+          LIGHT THEME: Luminous Pearl & Gentle Sparkling Stars
           ========================================================= */}
       {!isDark && (
         <div className="absolute inset-0 bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9] to-[#eef2ff]">
           {/* Subtle Ambient Radial Glows */}
-          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-blue-200/20 blur-[130px]" />
-          <div className="absolute top-1/3 -right-40 w-[650px] h-[650px] rounded-full bg-indigo-200/20 blur-[140px]" />
-          <div className="absolute -bottom-40 left-1/4 w-[700px] h-[700px] rounded-full bg-amber-100/30 blur-[150px]" />
+          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-blue-100/40 blur-[140px]" />
+          <div className="absolute top-1/3 -right-40 w-[650px] h-[650px] rounded-full bg-indigo-100/40 blur-[150px]" />
+          <div className="absolute -bottom-40 left-1/4 w-[700px] h-[700px] rounded-full bg-amber-50/50 blur-[160px]" />
 
-          {/* Sparkling Stars Container */}
+          {/* Gentle Sparkling Stars */}
           <div className="absolute inset-0">
-            {LIGHT_STARS.map((star) => {
+            {GENTLE_LIGHT_STARS.map((star) => {
               if (star.type === "diamond") {
                 return (
                   <div
                     key={star.id}
-                    className="absolute animate-diamond-sparkle"
+                    className="absolute animate-gentle-diamond"
                     style={{
                       top: star.top,
                       left: star.left,
@@ -126,7 +125,7 @@ export default function ThemeBackground() {
                 return (
                   <div
                     key={star.id}
-                    className="absolute animate-twinkle"
+                    className="absolute animate-gentle-twinkle"
                     style={{
                       top: star.top,
                       left: star.left,
@@ -137,9 +136,9 @@ export default function ThemeBackground() {
                     }}
                   >
                     <svg viewBox="0 0 20 20" className="w-full h-full" fill={star.color}>
-                      <circle cx="10" cy="10" r="4" />
-                      <line x1="10" y1="1" x2="10" y2="19" stroke={star.color} strokeWidth="1.8" strokeLinecap="round" />
-                      <line x1="1" y1="10" x2="19" y2="10" stroke={star.color} strokeWidth="1.8" strokeLinecap="round" />
+                      <circle cx="10" cy="10" r="3" />
+                      <line x1="10" y1="2" x2="10" y2="18" stroke={star.color} strokeWidth="1.5" strokeLinecap="round" />
+                      <line x1="2" y1="10" x2="18" y2="10" stroke={star.color} strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
                   </div>
                 );
@@ -148,14 +147,14 @@ export default function ThemeBackground() {
               return (
                 <div
                   key={star.id}
-                  className="absolute rounded-full animate-twinkle"
+                  className="absolute rounded-full animate-gentle-twinkle"
                   style={{
                     top: star.top,
                     left: star.left,
                     width: `${star.size}px`,
                     height: `${star.size}px`,
                     backgroundColor: star.color,
-                    boxShadow: `0 0 8px ${star.color}, 0 0 14px #ffffff`,
+                    boxShadow: `0 0 6px ${star.color}`,
                     "--duration": star.duration,
                     "--delay": star.delay,
                   }}
@@ -167,28 +166,28 @@ export default function ThemeBackground() {
       )}
 
       {/* =========================================================
-          DARK THEME: Cosmic Space & Meteor Shower (Mưa sao băng)
+          DARK THEME: Cosmic Night & Gentle Meteor Rain (Mưa sao băng nhẹ nhàng)
           ========================================================= */}
       {isDark && (
         <div className="absolute inset-0 bg-[#060913]">
-          {/* Deep Cosmic Radial Gradients / Nebulae */}
+          {/* Deep Cosmic Radial Gradients */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#040711] via-[#070d1d] to-[#0a122c] opacity-95" />
           <div className="absolute top-0 right-1/4 w-[650px] h-[650px] rounded-full bg-blue-900/15 blur-[160px]" />
-          <div className="absolute bottom-10 left-10 w-[700px] h-[700px] rounded-full bg-indigo-950/25 blur-[180px]" />
+          <div className="absolute bottom-10 left-10 w-[700px] h-[700px] rounded-full bg-indigo-950/20 blur-[180px]" />
           <div className="absolute top-1/2 left-1/3 w-[500px] h-[500px] rounded-full bg-purple-950/15 blur-[170px]" />
 
-          {/* Background Static Stars */}
+          {/* Gentle Distant Twinkling Stars */}
           <div className="absolute inset-0">
             {DARK_STARS.map((s) => (
               <div
                 key={s.id}
-                className="absolute rounded-full bg-white animate-twinkle"
+                className="absolute rounded-full bg-slate-100 animate-gentle-twinkle"
                 style={{
                   top: s.top,
                   left: s.left,
                   width: `${s.size}px`,
                   height: `${s.size}px`,
-                  boxShadow: "0 0 6px 1px rgba(255, 255, 255, 0.8)",
+                  boxShadow: "0 0 4px 1px rgba(255, 255, 255, 0.6)",
                   "--duration": s.duration,
                   "--delay": s.delay,
                 }}
@@ -196,21 +195,21 @@ export default function ThemeBackground() {
             ))}
           </div>
 
-          {/* Dynamic Meteor Shower (Mưa Sao Băng) */}
+          {/* Gentle Meteor Rain (Mưa sao băng rơi êm dịu, nhẹ nhàng, uyển chuyển) */}
           <div className="absolute inset-0 overflow-hidden">
-            {METEORS.map((m) => (
+            {GENTLE_METEORS.map((m) => (
               <div
                 key={m.id}
-                className="meteor-streak"
+                className="meteor-rain-streak"
                 style={{
                   top: m.top,
-                  right: m.right,
+                  left: m.left,
                   width: `${m.length}px`,
                   animationDuration: m.duration,
                   animationDelay: m.delay,
                 }}
               >
-                <div className="meteor-head" />
+                <div className="meteor-rain-head" />
               </div>
             ))}
           </div>

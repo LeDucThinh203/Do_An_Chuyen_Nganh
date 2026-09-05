@@ -7,7 +7,7 @@ export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
 
   if (variant === "floating") {
     return (
-      <div className={`fixed bottom-6 left-6 z-[1200] ${className}`}>
+      <div className={`fixed bottom-6 right-20 sm:right-24 z-[9999] ${className}`}>
         <button
           onClick={toggleTheme}
           type="button"

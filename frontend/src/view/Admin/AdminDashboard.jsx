@@ -12,6 +12,7 @@ import SupportChatManager from "./SupportChatManager";
 import { getSupportRooms } from "../../api";
 import { getSupportSocket } from "../../socket/supportSocket";
 import { useLocation, Link } from "react-router-dom";
+import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -124,7 +125,7 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden bg-[#f8fafc]"
+      className="flex h-screen overflow-hidden bg-transparent"
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}
     >
       {/* Sidebar Menu - Slate Luxury Theme */}
@@ -224,7 +225,7 @@ export default function AdminDashboard() {
 
       {/* Main Content Area */}
       <div
-        className="flex-1 flex flex-col overflow-hidden bg-[#f8fafc]"
+        className="flex-1 flex flex-col overflow-hidden bg-transparent"
         style={{ marginLeft: menuOpen ? "256px" : "0", transition: "margin-left 0.3s" }}
       >
         {/* Top Header */}
@@ -251,6 +252,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
+              <ThemeToggleBtn variant="navbar" />
               <Link
                 to="/"
                 className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white font-bold text-xs transition duration-200 flex items-center gap-1.5 shadow-sm border border-blue-200/70"
@@ -273,7 +275,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content Area - Scrollable */}
-        <main className={`flex-1 min-h-0 bg-[#f8fafc] p-4 sm:p-6 lg:p-8 ${activeTab === "supportChat" ? "overflow-hidden" : "overflow-y-auto"}`}>
+        <main className={`flex-1 min-h-0 bg-transparent p-4 sm:p-6 lg:p-8 ${activeTab === "supportChat" ? "overflow-hidden" : "overflow-y-auto"}`}>
           {activeTab === "revenue" && <Revenue />}
           {activeTab === "info" && <AdminInfo />}
           {activeTab === "product" && <ProductManager />}
