@@ -273,9 +273,10 @@ export default function ProductList() {
                 className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
               />
               
-              {/* Premium Subtle Gradient Overlay - Anchored at the bottom so video is completely visible */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent flex flex-col justify-end p-4 sm:p-8 lg:p-10 pointer-events-none">
-                <div className="max-w-2xl bg-slate-950/85 backdrop-blur-xl border border-white/20 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 sm:space-y-4 pointer-events-auto">
+              {/* Gradient Overlay - tối dần từ dưới, text nằm gọn vùng dưới banner */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-4 sm:p-8 lg:p-10 pointer-events-none">
+                <div className="max-w-2xl bg-slate-950/70 backdrop-blur-xl border border-white/15 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 sm:space-y-4 pointer-events-auto">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 backdrop-blur-md border border-blue-400/30 text-blue-300 text-xs font-bold shadow-lg">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>

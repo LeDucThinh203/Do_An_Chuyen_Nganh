@@ -292,16 +292,7 @@ export default function Footer() {
             <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">COD (Tiền mặt)</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-emerald-400">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
-              <span>🔒</span>
-              <span>Bảo mật giao dịch SSL 256-bit</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300">
-              <span>✓</span>
-              <span>Đã thông báo Bộ Công Thương</span>
-            </div>
-          </div>
+
         </div>
 
         {/* 5. Original Detailed Company Addresses & Legal Info */}
