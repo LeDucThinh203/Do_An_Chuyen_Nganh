@@ -273,23 +273,23 @@ export default function ProductList() {
                 className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
               />
               
-              {/* Gradient Overlay - tối dần từ dưới, text nằm gọn vùng dưới banner */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent pointer-events-none"></div>
-              <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-4 sm:p-8 lg:p-10 pointer-events-none">
-                <div className="max-w-2xl bg-slate-950/70 backdrop-blur-xl border border-white/15 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 sm:space-y-4 pointer-events-auto">
+              {/* Gradient Overlay - tối dần từ dưới lên, chữ nằm thẳng trên gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent pointer-events-none"></div>
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10 lg:p-12 pointer-events-none">
+                <div className="max-w-2xl space-y-3 sm:space-y-4 pointer-events-auto">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 backdrop-blur-md border border-blue-400/30 text-blue-300 text-xs font-bold shadow-lg">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>
                   </div>
 
-                  <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight leading-tight drop-shadow-md">
+                  <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight leading-tight drop-shadow-lg">
                     Bứt Phá Giới Hạn •{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-300">
                       Tự Tin Tỏa Sáng
                     </span>
                   </h1>
 
-                  <p className="text-slate-200 text-xs sm:text-sm font-medium max-w-xl drop-shadow line-clamp-2 sm:line-clamp-none">
+                  <p className="text-slate-200 text-xs sm:text-sm font-medium max-w-xl drop-shadow-md line-clamp-2 sm:line-clamp-none">
                     Khám phá chất liệu vải thoáng khí Dry-Fit siêu nhẹ, co giãn 4 chiều kháng khuẩn cho cảm giác thoải mái trọn vẹn cả ngày dài.
                   </p>
 
@@ -306,7 +306,7 @@ export default function ProductList() {
 
                     <button
                       onClick={() => scrollToSection('featured-row')}
-                      className="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-full border border-white/30 hover:border-white/60 transition-all duration-200 flex items-center gap-1.5 hover:scale-105"
+                      className="px-5 sm:px-6 py-2.5 sm:py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-full border border-white/40 hover:border-white/70 transition-all duration-200 flex items-center gap-1.5 hover:scale-105"
                     >
                       <span>Ưu Đãi Hot Hôm Nay 🔥</span>
                     </button>
