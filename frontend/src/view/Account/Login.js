@@ -34,58 +34,60 @@ export default function Login({ setUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/60 to-indigo-50/40 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      {/* Radiant light ambient background bubbles */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-blue-400/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-300/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
-        {/* Left Side: Brand Showcase */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-900 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none"></div>
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-blue-500/10 border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+        {/* Left Side: Radiant Royal Athletic Banner */}
+        <div className="lg:col-span-5 bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden shadow-inner">
+          <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-cyan-400/25 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
 
           <div>
             <Link to="/" className="inline-flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-xl shadow-lg group-hover:scale-105 transition">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition">
                 ⚡
               </div>
-              <span className="font-black text-xl tracking-wider uppercase">COOLSHOP</span>
+              <span className="font-black text-xl tracking-wider uppercase drop-shadow">COOLSHOP</span>
             </Link>
 
-            <div className="mt-12 space-y-3">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/15 border border-white/25">
+            <div className="mt-12 space-y-3.5">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
                 Pro Athletic 2026
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-black leading-tight drop-shadow-sm">
                 Chào Mừng Bạn <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-200 to-white">
+                <span className="text-cyan-200">
                   Trở Lại CoolShop
                 </span>
               </h1>
-              <p className="text-blue-100/80 text-xs sm:text-sm leading-relaxed">
-                Đăng nhập để nhận ưu đãi hội viên CoolClub, theo dõi đơn hàng và tiếp tục trải nghiệm trang phục thể thao đỉnh cao.
+              <p className="text-blue-100 text-xs sm:text-sm leading-relaxed">
+                Đăng nhập để nhận ngay ưu đãi hội viên CoolClub, theo dõi đơn hàng và tận hưởng trải nghiệm mua sắm đồ thể thao đỉnh cao.
               </p>
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-white/15 space-y-2.5 text-xs text-blue-100">
+          <div className="mt-10 pt-6 border-t border-white/20 space-y-2.5 text-xs text-blue-100">
             <div className="flex items-center gap-2">
-              <span>🚀</span>
-              <span>Giao hàng thần tốc 24/7 toàn quốc</span>
+              <span className="text-base">🚀</span>
+              <span>Giao hàng hỏa tốc 2h - Miễn phí đơn từ 299K</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>🛡️</span>
-              <span>Bảo hành đổi trả 60 ngày an tâm</span>
+              <span className="text-base">🛡️</span>
+              <span>Đổi trả 60 ngày miễn phí tận nơi an tâm</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>✨</span>
-              <span>Đặc quyền voucher giảm giá hội viên</span>
+              <span className="text-base">✨</span>
+              <span>Tặng voucher 10% cho thành viên CoolClub</span>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Form */}
-        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between">
+        {/* Right Side: Clean Bright Form */}
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white">
           <div>
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -97,7 +99,7 @@ export default function Login({ setUser }) {
             </div>
 
             {error && (
-              <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+              <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
                 <span>⚠️</span>
                 <span>{error}</span>
               </div>
@@ -115,7 +117,7 @@ export default function Login({ setUser }) {
                   <input
                     type="email"
                     placeholder="email@example.com"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition font-medium text-slate-800"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -130,7 +132,7 @@ export default function Login({ setUser }) {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 transition"
                   >
                     Quên mật khẩu?
                   </Link>
@@ -142,7 +144,7 @@ export default function Login({ setUser }) {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Nhập mật khẩu"
-                    className="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition font-medium text-slate-800"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -184,7 +186,7 @@ export default function Login({ setUser }) {
             <span>Chưa có tài khoản CoolShop?</span>
             <Link
               to="/register"
-              className="font-bold text-blue-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100/70 transition"
+              className="font-bold text-blue-600 hover:text-indigo-600 px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100/70 transition"
             >
               Đăng ký tài khoản mới →
             </Link>

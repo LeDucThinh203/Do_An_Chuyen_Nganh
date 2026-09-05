@@ -119,3 +119,159 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* =========================================================
+   LIGHT THEME: Sparkling Stars Effect (Ánh sao lấp lánh)
+   ========================================================= */
+@keyframes twinkle-star {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35) rotate(90deg);
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.9));
+  }
+}
+
+@keyframes diamond-sparkle {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(0.6);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.9));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1));
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle-star var(--duration, 3s) ease-in-out infinite var(--delay, 0s);
+}
+
+.animate-diamond-sparkle {
+  animation: diamond-sparkle var(--duration, 4s) ease-in-out infinite var(--delay, 0s);
+}
+
+/* =========================================================
+   DARK THEME: Meteor Shower Effect (Mưa sao băng)
+   ========================================================= */
+@keyframes meteor-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(215deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-900px, 900px, 0) rotate(215deg);
+  }
+}
+
+.meteor-streak {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #ffffff, rgba(147, 197, 253, 0.9) 35%, rgba(59, 130, 246, 0.4) 65%, transparent 100%);
+  border-radius: 9999px;
+  box-shadow: 0 0 14px 2px rgba(147, 197, 253, 0.95), 0 0 30px 4px rgba(59, 130, 246, 0.5);
+  animation-name: meteor-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-iteration-count: infinite;
+  pointer-events: none;
+}
+
+.meteor-head {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 3px #ffffff, 0 0 20px 6px rgba(96, 165, 250, 0.9);
+}
+
+/* =========================================================
+   THEME ADAPTATION
+   ========================================================= */
+body.theme-dark {
+  background-color: #060913;
+  color: #f1f5f9;
+}
+
+body.theme-dark .glass-nav {
+  background: rgba(10, 15, 29, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark .glass-card {
+  background: rgba(15, 23, 42, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+}
+
+body.theme-dark ::-webkit-scrollbar-track {
+  background: #090d1a;
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+body.theme-dark .bg-white {
+  background-color: rgba(15, 23, 42, 0.88);
+}
+
+body.theme-dark .bg-slate-50,
+body.theme-dark .bg-gray-50 {
+  background-color: rgba(15, 23, 42, 0.65);
+}
+
+body.theme-dark .text-slate-900,
+body.theme-dark .text-slate-800 {
+  color: #f1f5f9;
+}
+
+body.theme-dark .text-slate-700,
+body.theme-dark .text-slate-600 {
+  color: #cbd5e1;
+}
+
+body.theme-dark .border-slate-100,
+body.theme-dark .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body.theme-dark input:not([type="checkbox"]):not([type="radio"]),
+body.theme-dark select,
+body.theme-dark textarea {
+  background-color: rgba(30, 41, 59, 0.75);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder {
+  color: #94a3b8;
+}

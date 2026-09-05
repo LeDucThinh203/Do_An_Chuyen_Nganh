@@ -5,6 +5,7 @@ import { getAllProducts, getAllCategories, getAllSizes, getAllProductSizes, dele
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
+import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 export default function ProductLoadMore() {
   const { categoryId } = useParams();
@@ -452,6 +453,9 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
           </div>
 
           <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Theme Toggle Button */}
+            <ThemeToggleBtn variant="navbar" />
+
             <Link
               to="/cart"
               className="relative p-2.5 text-slate-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-full transition group"

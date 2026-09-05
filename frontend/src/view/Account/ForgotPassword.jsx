@@ -27,10 +27,12 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/60 to-indigo-50/40 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      {/* Radiant light ambient background orbs */}
+      <div className="absolute top-10 left-10 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-lg bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 sm:p-10 relative z-10">
+      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl shadow-blue-500/10 border border-slate-200/80 p-8 sm:p-10 relative z-10">
         <div className="text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-blue-500/25">
             🔑
@@ -44,14 +46,14 @@ export default function ForgotPassword() {
         </div>
 
         {message && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2.5">
             <span>✅</span>
             <span>{message}</span>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
             <span>⚠️</span>
             <span>{error}</span>
           </div>
@@ -69,7 +71,7 @@ export default function ForgotPassword() {
               <input
                 type="email"
                 placeholder="Nhập email của bạn"
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition font-medium text-slate-800"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

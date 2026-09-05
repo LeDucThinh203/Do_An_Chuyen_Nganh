@@ -38,6 +38,9 @@ import OrderSuccess from "./view/Cart/OrderSuccess";
 import VNPayReturn from "./view/Cart/VNPayReturn";
 import VNPayDebug from "./view/Cart/VNPayDebug";
 import { RouteFallbackSkeleton } from "./view/common/Skeletons";
+import { ThemeProvider } from "./context/ThemeContext";
+import ThemeBackground from "./view/common/ThemeBackground";
+import ThemeToggleBtn from "./view/common/ThemeToggleBtn";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -113,12 +116,15 @@ function AppContent() {
   const isAdminUser = Session.isAdmin();
 
   return (
-    <div className="bg-gray-50 min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans relative transition-colors duration-500">
+      {/* Background Star & Meteor Effects */}
+      <ThemeBackground />
+
       {/* Navbar */}
       {showHeader && <Header user={user} handleLogout={handleLogout} />}
 
       {/* Main content */}
-      <div className={`flex-grow w-full ${showHeader ? "pt-28 sm:pt-32 px-4 sm:px-6 lg:px-8" : "p-0"}`}>
+      <div className={`relative z-10 flex-grow w-full ${showHeader ? "pt-28 sm:pt-32 px-4 sm:px-6 lg:px-8" : "p-0"}`}>
         <Suspense fallback={<RouteFallbackSkeleton />}>
           <Routes>
             {/* Public */}
@@ -239,15 +245,20 @@ function AppContent() {
       )}
 
       {isAdminUser && pathname !== "/" && !pathname.startsWith("/category/") && <AdminSupportChatWidget />}
+
+      {/* Floating Theme Quick Switcher for all pages */}
+      <ThemeToggleBtn variant="floating" />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <AppContent />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <ScrollToTop />
+        <AppContent />
+      </Router>
+    </ThemeProvider>
   );
 }

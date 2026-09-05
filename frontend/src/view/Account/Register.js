@@ -47,58 +47,59 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/50 to-teal-50/40 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      {/* Radiant light ambient background orbs */}
+      <div className="absolute top-10 right-10 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-200/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-emerald-500/10 border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
         {/* Left Side: Brand Showcase */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-900 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute -top-16 -left-16 w-64 h-64 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="lg:col-span-5 bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-700 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden shadow-inner">
+          <div className="absolute -top-16 -left-16 w-64 h-64 bg-cyan-300/25 rounded-full blur-2xl pointer-events-none"></div>
 
           <div>
             <Link to="/" className="inline-flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-xl shadow-lg group-hover:scale-105 transition">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition">
                 ⚡
               </div>
-              <span className="font-black text-xl tracking-wider uppercase">COOLSHOP</span>
+              <span className="font-black text-xl tracking-wider uppercase drop-shadow">COOLSHOP</span>
             </Link>
 
-            <div className="mt-12 space-y-3">
-              <span className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+            <div className="mt-12 space-y-3.5">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
                 Gia Nhập CoolClub
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-black leading-tight drop-shadow-sm">
                 Khởi Đầu Hành Trình <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-white">
+                <span className="text-cyan-200">
                   Đẳng Cấp Thể Thao
                 </span>
               </h1>
-              <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Tạo tài khoản ngay hôm nay để nhận voucher giảm giá 10% đơn đầu tiên và tích lũy điểm thưởng thành viên.
+              <p className="text-emerald-50 text-xs sm:text-sm leading-relaxed">
+                Tạo tài khoản ngay hôm nay để nhận voucher giảm giá 10% đơn đầu tiên và tích lũy điểm thưởng thành viên thân thiết.
               </p>
             </div>
           </div>
 
-          <div className="mt-10 pt-6 border-t border-white/15 space-y-2.5 text-xs text-slate-300">
+          <div className="mt-10 pt-6 border-t border-white/20 space-y-2.5 text-xs text-emerald-50">
             <div className="flex items-center gap-2">
-              <span>🎁</span>
-              <span>Tặng voucher 10% chào đón thành viên mới</span>
+              <span className="text-base">🎁</span>
+              <span>Tặng ngay Voucher 10% chào đón thành viên mới</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>⚡</span>
-              <span>Thông báo sớm nhất các đợt mở bán giới hạn</span>
+              <span className="text-base">⚡</span>
+              <span>Thông báo sớm nhất các bộ sưu tập thể thao 2026</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>🔒</span>
+              <span className="text-base">🔒</span>
               <span>Bảo mật dữ liệu cá nhân theo chuẩn quốc tế</span>
             </div>
           </div>
         </div>
 
         {/* Right Side: Register Form */}
-        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between">
+        <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between bg-white">
           <div>
             <div className="mb-5">
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -110,14 +111,14 @@ export default function Register() {
             </div>
 
             {error && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+              <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
                 <span>⚠️</span>
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2.5 animate-fadeIn">
+              <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold flex items-center gap-2.5">
                 <span>✅</span>
                 <span>{success}</span>
               </div>
@@ -135,7 +136,7 @@ export default function Register() {
                   <input
                     type="email"
                     placeholder="email@example.com"
-                    className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-medium text-slate-800"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -154,7 +155,7 @@ export default function Register() {
                   <input
                     type="text"
                     placeholder="Tên tài khoản viết liền hoặc có dấu"
-                    className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-medium text-slate-800"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -173,7 +174,7 @@ export default function Register() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Tối thiểu 6 ký tự"
-                    className="w-full pl-11 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-medium text-slate-800"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -199,7 +200,7 @@ export default function Register() {
                   <input
                     type={showConfirm ? "text" : "password"}
                     placeholder="Nhập lại mật khẩu"
-                    className="w-full pl-11 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+                    className="w-full pl-11 pr-12 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-medium text-slate-800"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -241,7 +242,7 @@ export default function Register() {
             <span>Đã có tài khoản CoolShop?</span>
             <Link
               to="/login"
-              className="font-bold text-blue-600 hover:text-indigo-600 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100/70 transition"
+              className="font-bold text-emerald-600 hover:text-teal-700 px-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100/70 transition"
             >
               Đăng nhập ngay →
             </Link>

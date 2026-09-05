@@ -1,6 +1,6 @@
-// src/view/Header/Header.js
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 export default function Header() {
   const [user, setUser] = useState(null);
@@ -120,6 +120,9 @@ export default function Header() {
 
           {/* Right Action Icons */}
           <div className="flex items-center gap-3 sm:gap-4">
+            {/* Theme Toggle Button */}
+            <ThemeToggleBtn variant="navbar" />
+
             {/* Cart Button */}
             <Link
               to="/cart"

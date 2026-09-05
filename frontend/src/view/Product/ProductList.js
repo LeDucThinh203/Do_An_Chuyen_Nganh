@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
+import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -261,8 +262,8 @@ export default function ProductList() {
           </div>
         ) : (
           <>
-            {/* HERO VIDEO SHOWCASE */}
-            <section className="relative w-full h-80 sm:h-[420px] lg:h-[480px] rounded-3xl overflow-hidden mb-10 shadow-2xl border border-slate-200/60 group">
+            {/* HERO VIDEO SHOWCASE WITH FLOATING BUBBLE METRICS */}
+            <section className="relative w-full h-[460px] sm:h-[520px] lg:h-[560px] rounded-3xl overflow-hidden mb-12 shadow-2xl border border-slate-200/60 group">
               <video
                 src="https://media3.coolmate.me/uploads/videos/banner_chaybo_coolfast.mp4"
                 autoPlay
@@ -272,31 +273,63 @@ export default function ProductList() {
                 className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000 ease-out"
               />
               
+              {/* Floating Bubble Metric 1: Top Left - Rating & Social Proof */}
+              <div className="absolute top-6 left-6 hidden sm:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900/75 backdrop-blur-xl border border-white/20 text-white shadow-2xl animate-bounce duration-1000">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center font-black text-base border border-amber-400/30">
+                  ★
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-sm">4.9 / 5.0</span>
+                    <span className="text-[10px] text-amber-300 font-bold">★★★★★</span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 font-medium">15,000+ Khách hàng tin dùng</p>
+                </div>
+              </div>
+
+              {/* Floating Bubble Metric 2: Bottom Right - Live Buying Pulse */}
+              <div className="absolute bottom-6 right-6 hidden md:flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/20 text-white shadow-2xl">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <div>
+                  <p className="text-xs font-black text-emerald-400">🔥 99.4% Hài lòng về chất liệu</p>
+                  <p className="text-[10px] text-slate-300 font-medium">Đang có 48 đơn đặt trong hôm nay</p>
+                </div>
+              </div>
+
+              {/* Floating Bubble Metric 3: Top Right - Speed & Guarantee */}
+              <div className="absolute top-6 right-6 hidden lg:flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span>🚀 Freeship từ 299K • Đổi trả 60 ngày</span>
+              </div>
+              
               {/* Premium Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-black/20 flex items-center justify-center p-6 sm:p-12">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-900/40 to-black/30 flex items-center justify-center p-6 sm:p-12">
                 <div className="text-center max-w-3xl space-y-4 sm:space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-semibold tracking-wide">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-extrabold tracking-wide shadow-lg">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>
                   </div>
 
-                  <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none drop-shadow-md">
+                  <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none drop-shadow-lg">
                     Bứt Phá Giới Hạn <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-cyan-300">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-300">
                       Tự Tin Tỏa Sáng
                     </span>
                   </h1>
 
-                  <p className="text-slate-200 text-sm sm:text-base font-normal max-w-xl mx-auto drop-shadow">
-                    Khám phá chất liệu vải thoáng khí siêu nhẹ, co giãn 4 chiều kháng khuẩn cho cảm giác thoải mái trọn vẹn cả ngày dài.
+                  <p className="text-slate-200 text-sm sm:text-base font-medium max-w-xl mx-auto drop-shadow">
+                    Khám phá chất liệu vải thoáng khí Dry-Fit siêu nhẹ, co giãn 4 chiều kháng khuẩn cho cảm giác thoải mái trọn vẹn cả ngày dài.
                   </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2">
                     <button
                       onClick={() => scrollToSection('product-sections')}
-                      className="px-6 sm:px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm sm:text-base rounded-full shadow-xl shadow-blue-600/40 hover:shadow-blue-500/60 hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                      className="px-7 sm:px-9 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm sm:text-base rounded-full shadow-2xl shadow-blue-600/50 hover:shadow-blue-500/70 hover:scale-105 transition-all duration-200 flex items-center gap-2.5"
                     >
-                      <span>Mua Sắm Ngay</span>
+                      <span>Khám Phá Mua Sắm Ngay</span>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                       </svg>
@@ -304,54 +337,66 @@ export default function ProductList() {
 
                     <button
                       onClick={() => scrollToSection('featured-row')}
-                      className="px-6 sm:px-8 py-3.5 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-sm sm:text-base rounded-full border border-white/40 hover:border-white transition-all duration-200 flex items-center gap-2 hover:scale-105"
+                      className="px-6 sm:px-8 py-4 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-extrabold text-sm sm:text-base rounded-full border border-white/40 hover:border-white transition-all duration-200 flex items-center gap-2 hover:scale-105"
                     >
-                      <span>Ưu Đãi Hot 🔥</span>
+                      <span>Ưu Đãi Hot Hôm Nay 🔥</span>
                     </button>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* 4 PILLARS TRUST & PERKS BAR */}
-            <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-12">
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl flex-shrink-0">
+            {/* INTERACTIVE BUBBLE METRICS STRIP */}
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-12">
+              <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 p-4 sm:p-5 rounded-3xl border border-blue-200/80 shadow-sm hover:shadow-md hover:scale-[1.02] transition flex items-center gap-3.5 group">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-blue-500/20 group-hover:scale-110 transition flex-shrink-0">
                   🚀
                 </div>
                 <div>
-                  <h4 className="text-slate-900 font-bold text-xs sm:text-sm">Giao Siêu Tốc 2H</h4>
-                  <p className="text-slate-500 text-[11px] sm:text-xs">Nội thành nhanh chóng</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-slate-900 font-black text-base sm:text-lg">2 Giờ</span>
+                    <span className="text-[10px] font-bold text-blue-600 uppercase">Hỏa tốc</span>
+                  </div>
+                  <p className="text-slate-500 text-xs font-medium">Giao nội thành siêu nhanh</p>
                 </div>
               </div>
 
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl flex-shrink-0">
+              <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 p-4 sm:p-5 rounded-3xl border border-amber-200/80 shadow-sm hover:shadow-md hover:scale-[1.02] transition flex items-center gap-3.5 group">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-500 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/20 group-hover:scale-110 transition flex-shrink-0">
                   🔄
                 </div>
                 <div>
-                  <h4 className="text-slate-900 font-bold text-xs sm:text-sm">Đổi Trả 60 Ngày</h4>
-                  <p className="text-slate-500 text-[11px] sm:text-xs">Miễn phí tận nơi</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-slate-900 font-black text-base sm:text-lg">60 Ngày</span>
+                    <span className="text-[10px] font-bold text-amber-600 uppercase">Đổi trả</span>
+                  </div>
+                  <p className="text-slate-500 text-xs font-medium">Miễn phí tận nơi 100%</p>
                 </div>
               </div>
 
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl flex-shrink-0">
+              <div className="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 p-4 sm:p-5 rounded-3xl border border-emerald-200/80 shadow-sm hover:shadow-md hover:scale-[1.02] transition flex items-center gap-3.5 group">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20 group-hover:scale-110 transition flex-shrink-0">
                   💎
                 </div>
                 <div>
-                  <h4 className="text-slate-900 font-bold text-xs sm:text-sm">100% Chính Hãng</h4>
-                  <p className="text-slate-500 text-[11px] sm:text-xs">Vải thể thao cao cấp</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-slate-900 font-black text-base sm:text-lg">50,000+</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Athletes</span>
+                  </div>
+                  <p className="text-slate-500 text-xs font-medium">Vận động viên tin dùng</p>
                 </div>
               </div>
 
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl flex-shrink-0">
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 p-4 sm:p-5 rounded-3xl border border-purple-200/80 shadow-sm hover:shadow-md hover:scale-[1.02] transition flex items-center gap-3.5 group">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center text-xl shadow-md shadow-purple-500/20 group-hover:scale-110 transition flex-shrink-0">
                   🎁
                 </div>
                 <div>
-                  <h4 className="text-slate-900 font-bold text-xs sm:text-sm">Ưu Đãi Hội Viên</h4>
-                  <p className="text-slate-500 text-[11px] sm:text-xs">Tích lũy điểm đến 10%</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-slate-900 font-black text-base sm:text-lg">CoolClub</span>
+                    <span className="text-[10px] font-bold text-purple-600 uppercase">VIP</span>
+                  </div>
+                  <p className="text-slate-500 text-xs font-medium">Tích điểm & giảm giá 10%</p>
                 </div>
               </div>
             </section>
@@ -842,6 +887,9 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
 
           {/* Right Action Icons */}
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            {/* Theme Toggle Button */}
+            <ThemeToggleBtn variant="navbar" />
+
             {/* Cart Button */}
             <Link
               to="/cart"
