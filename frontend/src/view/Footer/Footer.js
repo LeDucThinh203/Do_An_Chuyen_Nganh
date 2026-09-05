@@ -31,15 +31,18 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-300 pt-16 pb-12 border-t border-slate-800/80">
+    <footer 
+      className="relative z-20 w-full text-slate-300 pt-16 pb-12 border-t border-slate-800 shadow-2xl mt-auto"
+      style={{ backgroundColor: "#070c18" }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Newsletter & Club VIP Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900/60 via-indigo-950/80 to-slate-900/90 border border-blue-500/20 p-8 sm:p-12 mb-16 shadow-2xl backdrop-blur-sm">
+        {/* 1. Newsletter & Club VIP Banner */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-950/90 via-indigo-950/90 to-slate-900 border border-blue-500/30 p-8 sm:p-10 mb-14 shadow-2xl">
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-3">
+            <div className="lg:col-span-7 space-y-2.5">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-400/30">
                 ✨ ĐẶC QUYỀN HỘI VIÊN COOLCLUB
               </span>
@@ -79,8 +82,8 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* 4 Pillars Trust Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-y border-slate-800/80 mb-12">
+        {/* 2. 4 Pillars Trust Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-7 border-y border-slate-800/80 mb-12">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl flex-shrink-0 border border-blue-500/20">
               🚀
@@ -122,88 +125,212 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Footer Navigation Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12">
+        {/* 3. Original 5 Content Columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 pb-12">
           
-          {/* Col 1: Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
-                <svg className="w-6 h-6 transform -rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-2xl font-black tracking-tight text-white">COOLSHOP</span>
-            </Link>
-            <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
-              Thương hiệu thời trang thể thao và phong cách sống hiện đại. Tiên phong ứng dụng chất liệu thông minh, thân thiện với môi trường, mang lại cảm giác thoải mái nhất cho người Việt.
+          {/* Column 1: Đóng góp ý kiến & Mạng xã hội */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider">Đóng góp ý kiến</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Chúng tôi luôn trân trọng và mong đợi nhận được mọi ý kiến đóng góp từ khách hàng để nâng cấp trải nghiệm dịch vụ và sản phẩm tốt hơn nữa.
             </p>
-            
-            <div className="pt-2">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Kết nối với chúng tôi</p>
-              <div className="flex items-center gap-3">
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-blue-600 text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1">
-                  f
+            <div className="pt-1">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5">Kênh kết nối</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-blue-600 text-slate-300 hover:text-white text-xs font-semibold transition border border-slate-700/60"
+                >
+                  Facebook
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-pink-600 text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1">
-                  📸
+                <a
+                  href="https://zalo.me"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-blue-500 text-slate-300 hover:text-white text-xs font-semibold transition border border-slate-700/60"
+                >
+                  Zalo
                 </a>
-                <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1">
-                  🎵
+                <a
+                  href="https://tiktok.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition border border-slate-700/60"
+                >
+                  TikTok
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-red-600 text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1">
-                  ▶
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-pink-600 text-slate-300 hover:text-white text-xs font-semibold transition border border-slate-700/60"
+                >
+                  Instagram
+                </a>
+                <a
+                  href="https://youtube.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-red-600 text-slate-300 hover:text-white text-xs font-semibold transition border border-slate-700/60"
+                >
+                  YouTube
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Col 2: Về COOLSHOP */}
+          {/* Column 2: CoolClub */}
           <div>
-            <h3 className="text-white font-bold text-sm tracking-wide uppercase mb-4">Về COOLSHOP</h3>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Câu chuyện thương hiệu</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Nhà máy & Công nghệ dệt</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Care & Share cộng đồng</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Tuyển dụng nhân tài</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Cam kết phát triển bền vững</Link></li>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">CoolClub</h3>
+            <ul className="space-y-2.5 text-xs text-slate-400">
+              <li>
+                <Link to="/" className="hover:text-white transition block">Tài khoản CoolClub</Link>
+              </li>
+              <li>
+                <Link to="/register" className="hover:text-white transition block">Đăng ký thành viên mới</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Ưu đãi & Đặc quyền hội viên</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Chính sách tích điểm đổi quà</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Hạng thành viên VIP</Link>
+              </li>
             </ul>
           </div>
 
-          {/* Col 3: Chính Sách */}
+          {/* Column 3: Chính sách */}
           <div>
-            <h3 className="text-white font-bold text-sm tracking-wide uppercase mb-4">Chính Sách & Dịch Vụ</h3>
-            <ul className="space-y-2.5 text-sm">
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Chính sách đổi trả 60 ngày</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Chính sách vận chuyển siêu tốc</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Chính sách bảo mật thông tin</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Hướng dẫn chọn size chuẩn xác</Link></li>
-              <li><Link to="/" className="text-slate-400 hover:text-white transition">Câu hỏi thường gặp (FAQs)</Link></li>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Chính sách</h3>
+            <ul className="space-y-2.5 text-xs text-slate-400">
+              <li>
+                <Link to="/" className="hover:text-white transition block">Chính sách đổi trả 60 ngày</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Chính sách khuyến mãi & voucher</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Chính sách bảo mật thông tin</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Chính sách giao hàng siêu tốc</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Hướng dẫn chọn size chuẩn xác</Link>
+              </li>
             </ul>
           </div>
 
-          {/* Col 4: Thanh toán & Chứng nhận */}
+          {/* Column 4: Coolmate.me / CSKH */}
           <div>
-            <h3 className="text-white font-bold text-sm tracking-wide uppercase mb-4">Phương Thức Thanh Toán</h3>
-            <p className="text-xs text-slate-400 mb-3">Hỗ trợ đa dạng phương thức thanh toán bảo mật 100%:</p>
-            <div className="grid grid-cols-3 gap-2 text-xs font-bold text-slate-300">
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">VNPay</span>
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">Visa</span>
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">Master</span>
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">MoMo</span>
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">ZaloPay</span>
-              <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">COD</span>
-            </div>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Chăm sóc khách hàng</h3>
+            <ul className="space-y-2.5 text-xs text-slate-400">
+              <li>
+                <Link to="/" className="hover:text-white transition block">Lịch sử thay đổi website</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Trải nghiệm mua sắm 100% hài lòng</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Hỏi đáp thường gặp - FAQs</Link>
+              </li>
+              <li>
+                <span className="text-slate-300 font-semibold">Hotline: </span>
+                <a href="tel:1900272737" className="text-blue-400 hover:underline">1900 272737</a>
+                <span className="text-[10px] text-slate-500 block">(8:30 - 22:00 tất cả các ngày)</span>
+              </li>
+              <li>
+                <span className="text-slate-300 font-semibold">Email: </span>
+                <a href="mailto:cskh@coolshop.vn" className="text-blue-400 hover:underline">cskh@coolshop.vn</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 5: Về COOLSHOP (Coolmate) */}
+          <div>
+            <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Về COOLSHOP</h3>
+            <ul className="space-y-2.5 text-xs text-slate-400">
+              <li>
+                <Link to="/" className="hover:text-white transition block">Quy tắc ứng xử của CoolShop</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">CoolShop 101 - Giá trị cốt lõi</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Dịch vụ khách hàng xuất sắc</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Câu chuyện về CoolShop</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Nhà máy & Công nghệ dệt</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Care & Share cộng đồng</Link>
+              </li>
+              <li>
+                <Link to="/" className="hover:text-white transition block">Cam kết phát triển bền vững</Link>
+              </li>
+            </ul>
           </div>
 
         </div>
 
-        {/* Bottom copyright */}
-        <div className="pt-8 border-t border-slate-800/80 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 COOLSHOP Vietnam. All rights reserved. Bản quyền thuộc về CoolShop Athletic.</p>
+        {/* 4. Payment Methods & Security */}
+        <div className="py-6 border-t border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+            <span className="font-bold text-white mr-2">Phương thức thanh toán:</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">VNPay</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">Visa</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">MasterCard</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">MoMo</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">ZaloPay</span>
+            <span className="px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 font-semibold text-slate-300">COD (Tiền mặt)</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs text-emerald-400">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
+              <span>🔒</span>
+              <span>Bảo mật giao dịch SSL 256-bit</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300">
+              <span>✓</span>
+              <span>Đã thông báo Bộ Công Thương</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Original Detailed Company Addresses & Legal Info */}
+        <div className="border-t border-slate-800/80 pt-7 pb-8 text-xs text-slate-400 space-y-2">
+          <p className="font-bold text-white text-sm mb-2">Địa chỉ liên hệ và trung tâm vận hành:</p>
+          <p className="leading-relaxed">
+            <strong className="text-slate-300">Văn phòng Hà Nội:</strong> Tầng 3-4, Tòa nhà BMM, Km2, Đường Phùng Hưng, Phường Phúc La, Quận Hà Đông, Thành phố Hà Nội
+          </p>
+          <p className="leading-relaxed">
+            <strong className="text-slate-300">Trung tâm vận hành Hà Nội:</strong> Lô C8, KCN Lại Yên, Xã Lại Yên, Huyện Hoài Đức, Thành phố Hà Nội
+          </p>
+          <p className="leading-relaxed">
+            <strong className="text-slate-300">Văn phòng và Trung tâm vận hành TP.HCM:</strong> Lô C3, đường D2, KCN Cát Lái, Phường Thạnh Mỹ Lợi, TP. Thủ Đức, TP. Hồ Chí Minh
+          </p>
+          <p className="leading-relaxed">
+            <strong className="text-slate-300">Trung tâm R&D:</strong> T6-01, The Manhattan Vinhomes Grand Park, Phường Long Bình, TP. Thủ Đức, TP. Hồ Chí Minh
+          </p>
+          <p className="pt-2 text-slate-500 leading-relaxed border-t border-slate-800/50 mt-3">
+            © 2026 CÔNG TY TNHH FASTECH ASIA | Mã số doanh nghiệp: 0108617038 | Giấy chứng nhận đăng ký doanh nghiệp do Sở KH & ĐT TP Hà Nội cấp lần đầu ngày 20/02/2019. Bản quyền thuộc về CoolShop Pro Athletic.
+          </p>
+        </div>
+
+        {/* 6. Legal links */}
+        <div className="pt-4 border-t border-slate-800/60 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p>© 2026 COOLSHOP Vietnam. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link to="/" className="hover:text-slate-300 transition">Điều khoản sử dụng</Link>
             <Link to="/" className="hover:text-slate-300 transition">Chính sách bảo mật</Link>
+            <Link to="/" className="hover:text-slate-300 transition">Quy chế hoạt động</Link>
             <Link to="/" className="hover:text-slate-300 transition">Sơ đồ website</Link>
           </div>
         </div>

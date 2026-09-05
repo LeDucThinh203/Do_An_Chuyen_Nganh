@@ -231,6 +231,20 @@ body.theme-light [class*="bg-gray-50"] {
   background-color: transparent !important;
 }
 
+/* Ensure Footer is always solid dark navy anchor with crisp light text across both themes */
+footer,
+body.theme-light footer,
+body.theme-dark footer {
+  background-color: #070c18 !important;
+  color: #cbd5e1 !important;
+}
+
+footer h2,
+footer h3,
+footer h4 {
+  color: #ffffff !important;
+}
+
 body.theme-dark .glass-nav {
   background: rgba(10, 15, 29, 0.92);
   backdrop-filter: blur(20px);

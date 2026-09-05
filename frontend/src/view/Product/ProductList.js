@@ -274,14 +274,14 @@ export default function ProductList() {
               />
               
               {/* Premium Subtle Gradient Overlay - Anchored at the bottom so video is completely visible */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent flex flex-col justify-end p-6 sm:p-10 lg:p-12">
-                <div className="max-w-3xl space-y-3 sm:space-y-4">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent flex flex-col justify-end p-4 sm:p-8 lg:p-10 pointer-events-none">
+                <div className="max-w-2xl bg-slate-950/85 backdrop-blur-xl border border-white/20 rounded-3xl p-5 sm:p-7 shadow-2xl space-y-3 sm:space-y-4 pointer-events-auto">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/20 backdrop-blur-md border border-blue-400/30 text-blue-300 text-xs font-bold shadow-lg">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>
                   </div>
 
-                  <h1 className="text-white text-2xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight leading-tight drop-shadow-md">
+                  <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight leading-tight drop-shadow-md">
                     Bứt Phá Giới Hạn •{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-200 to-cyan-300">
                       Tự Tin Tỏa Sáng
@@ -305,7 +305,7 @@ export default function ProductList() {
 
                     <button
                       onClick={() => scrollToSection('featured-row')}
-                      className="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-900/60 hover:bg-slate-900/80 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-full border border-white/30 hover:border-white/60 transition-all duration-200 flex items-center gap-1.5 hover:scale-105"
+                      className="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md text-white font-bold text-xs sm:text-sm rounded-full border border-white/30 hover:border-white/60 transition-all duration-200 flex items-center gap-1.5 hover:scale-105"
                     >
                       <span>Ưu Đãi Hot Hôm Nay 🔥</span>
                     </button>
