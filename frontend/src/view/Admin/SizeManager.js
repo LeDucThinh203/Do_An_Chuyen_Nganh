@@ -28,17 +28,19 @@ export default function SizeManager() {
   const handleAdd = async () => {
     const value = newSize.trim();
     if (!value) {
-      setMessage("⚠️ Vui lòng nhập tên size.");
+      setMessage("⚠️ Vui lòng nhập tên kích cỡ (Size).");
       return;
     }
 
     try {
       await createSize({ size: value });
       setNewSize("");
-      setMessage(`✅ Đã thêm size ${value}.`);
+      setMessage(`✅ Đã thêm size ${value} thành công.`);
       await fetchSizes();
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setMessage(`❌ Thêm size thất bại: ${err.message}`);
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -58,8 +60,10 @@ export default function SizeManager() {
       });
       setMessage(`✅ Đã cập nhật size thành ${value}.`);
       await fetchSizes();
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setMessage(`❌ Cập nhật size thất bại: ${err.message}`);
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -70,78 +74,108 @@ export default function SizeManager() {
       await deleteSize(id);
       setMessage(`🗑️ Đã xóa size ${sizeName}.`);
       await fetchSizes();
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setMessage(`❌ Xóa size thất bại: ${err.message}`);
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-8 bg-white rounded-2xl shadow-lg">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-8">
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Top Header Card */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Quản lý size</h1>
-          <p className="text-gray-500 mt-1">Thêm, sửa, xóa size dùng chung cho sản phẩm.</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Quản Lý Kích Cỡ Sản Phẩm (Size)</h2>
+          <p className="text-xs text-slate-500 mt-1">Thiết lập các tiêu chuẩn kích cỡ (S, M, L, XL, 39, 40...) cho cửa hàng</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        {/* Add Size Input */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <input
             type="text"
             value={newSize}
             onChange={(e) => setNewSize(e.target.value)}
-            placeholder="Nhập size mới"
-            className="border border-gray-300 rounded-full px-4 py-2 min-w-56 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="Nhập tên size (VD: XXL, 42)..."
+            className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-48"
           />
           <button
             onClick={handleAdd}
-            className="bg-green-500 hover:bg-green-600 text-white px-5 py-2 rounded-full shadow-md transition-all"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-xl shadow-md shadow-blue-500/25 transition whitespace-nowrap"
           >
-            + Thêm size
+            ➕ Thêm
           </button>
         </div>
       </div>
 
+      {/* Notification */}
       {message && (
-        <div className="mb-4 rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-700">
+        <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-semibold">
           {message}
         </div>
       )}
 
+      {/* Sizes List */}
       {loading ? (
         <AdminPanelSkeleton cardCount={4} />
       ) : sizes.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">Chưa có size nào.</p>
+        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8">
+          <p className="text-slate-500 font-bold">Chưa có kích cỡ nào trong hệ thống.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {sizes.map((size) => (
-            <div key={size.id} className="border rounded-2xl p-4 shadow-sm bg-gray-50">
-              <div className="text-xs text-gray-500 mb-2">ID: {size.id}</div>
-              <input
-                type="text"
-                value={editing[size.id] ?? size.size}
-                onChange={(e) =>
-                  setEditing((prev) => ({
-                    ...prev,
-                    [size.id]: e.target.value,
-                  }))
-                }
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-lg font-semibold bg-white"
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => handleSave(size.id)}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-full text-sm"
-                >
-                  Lưu
-                </button>
-                <button
-                  onClick={() => handleDelete(size.id, size.size)}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-full text-sm"
-                >
-                  Xóa
-                </button>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {sizes.map((size) => {
+            const isEditing = editing[size.id] !== undefined;
+            return (
+              <div
+                key={size.id}
+                className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    ID: #{size.id}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(size.id, size.size)}
+                    className="text-slate-400 hover:text-rose-600 transition text-xs p-1"
+                    title="Xóa kích cỡ"
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+                <div className="text-center py-2">
+                  <input
+                    type="text"
+                    value={editing[size.id] ?? size.size}
+                    onChange={(e) =>
+                      setEditing((prev) => ({
+                        ...prev,
+                        [size.id]: e.target.value,
+                      }))
+                    }
+                    className="w-full text-center border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded-xl py-2 text-xl font-black text-slate-800 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 uppercase"
+                  />
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-slate-100">
+                  {isEditing ? (
+                    <button
+                      onClick={() => handleSave(size.id)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded-xl text-xs transition"
+                    >
+                      Lưu thay đổi
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 text-center block">
+                      Click để chỉnh sửa
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

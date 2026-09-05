@@ -229,7 +229,7 @@ function AppContent() {
       </div>
 
       {/* Footer */}
-      {!isAdminPage && <Footer />}
+      {!isAdminPage && !pathname.startsWith("/user") && <Footer />}
 
       {!isAdminPage && (
         <>

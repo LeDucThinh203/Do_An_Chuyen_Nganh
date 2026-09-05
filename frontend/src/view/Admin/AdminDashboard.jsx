@@ -15,9 +15,8 @@ import { useLocation, Link } from "react-router-dom";
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState("revenue");
   const [menuOpen, setMenuOpen] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(true);
   const [supportUnreadTotal, setSupportUnreadTotal] = useState(0);
   const location = useLocation();
 
@@ -62,164 +61,221 @@ export default function AdminDashboard() {
 
   if (!user)
     return (
-      <div className="text-red-500 font-bold text-center mt-20">
+      <div className="text-rose-500 font-bold text-center mt-20 p-6 bg-white rounded-2xl max-w-md mx-auto shadow-xl border border-rose-100">
         ⚠️ Vui lòng đăng nhập để truy cập trang quản trị
       </div>
     );
 
   if (user.role !== "admin")
     return (
-      <div className="text-red-500 font-bold text-center mt-20">
+      <div className="text-rose-500 font-bold text-center mt-20 p-6 bg-white rounded-2xl max-w-md mx-auto shadow-xl border border-rose-100">
         🚫 Bạn không có quyền truy cập trang quản trị
       </div>
     );
 
-  const menuItems = [
-    { id: "info", label: "Thông tin tài khoản quản trị" },
-    { id: "revenue", label: "Doanh thu" },
-    { id: "product", label: "Quản lý sản phẩm" },
-    { id: "orderManager", label: "Quản lý đơn hàng" },
-    { id: "supportChat", label: "CSKH realtime" },
-    { id: "userManager", label: "Quản lý người dùng" },
-    { id: "address", label: "Quản lý địa chỉ" },
-    { id: "category", label: "Quản lý danh mục" },
-    { id: "size", label: "Quản lý size" }
-    ];
+  const menuGroups = [
+    {
+      groupTitle: "TỔNG QUAN",
+      items: [
+        { id: "revenue", label: "Doanh thu & Báo cáo", icon: "📊" },
+        { id: "info", label: "Hồ sơ quản trị viên", icon: "👤" },
+      ],
+    },
+    {
+      groupTitle: "KHO & SẢN PHẨM",
+      items: [
+        { id: "product", label: "Quản lý sản phẩm", icon: "👕" },
+        { id: "category", label: "Quản lý danh mục", icon: "🏷️" },
+        { id: "size", label: "Quản lý size kích cỡ", icon: "📏" },
+      ],
+    },
+    {
+      groupTitle: "GIAO DỊCH & HỖ TRỢ",
+      items: [
+        { id: "orderManager", label: "Quản lý đơn hàng", icon: "📦" },
+        { id: "supportChat", label: "CSKH trực tuyến", icon: "💬" },
+      ],
+    },
+    {
+      groupTitle: "NGƯỜI DÙNG & VẬN HÀNH",
+      items: [
+        { id: "userManager", label: "Quản lý người dùng", icon: "👥" },
+        { id: "address", label: "Quản lý địa chỉ", icon: "📍" },
+      ],
+    },
+  ];
 
   const getPageTitle = () => {
     const titles = {
-      info: "Bảng Điều Khiển Quản Trị",
-      product: "Quản lý sản phẩm",
-      category: "Quản lý danh mục",
-      orderManager: "Quản lý đơn hàng",
-      supportChat: "Chat chăm sóc khách hàng",
-      userManager: "Quản lý người dùng",
-      address: "Quản lý địa chỉ",
-      revenue: "Bảng giá & Doanh thu",
-      size: "Quản lý size"
+      revenue: { title: "Bảng Giá & Báo Cáo Doanh Thu", subtitle: "Theo dõi chỉ số kinh doanh và phân tích hiệu suất" },
+      info: { title: "Hồ Sơ Quản Trị Viên", subtitle: "Thông tin tài khoản và phân quyền hệ thống" },
+      product: { title: "Quản Lý Sản Phẩm", subtitle: "Kiểm kê kho hàng, chỉnh sửa thông tin và giá bán" },
+      category: { title: "Quản Lý Danh Mục", subtitle: "Phân loại danh mục thời trang và nhóm hàng" },
+      size: { title: "Quản Lý Size Kích Cỡ", subtitle: "Thiết lập các tiêu chuẩn kích cỡ đồng bộ" },
+      orderManager: { title: "Quản Lý Đơn Hàng", subtitle: "Xác nhận, theo dõi vận chuyển và xử lý thanh toán" },
+      supportChat: { title: "Hỗ Trợ Khách Hàng Realtime", subtitle: "Tư vấn và phản hồi khách hàng theo thời gian thực" },
+      userManager: { title: "Quản Lý Tài Khoản Người Dùng", subtitle: "Phân quyền thành viên, đặt lại mật khẩu và bảo mật" },
+      address: { title: "Quản Lý Sổ Địa Chỉ", subtitle: "Danh sách địa chỉ kho hàng và giao nhận" },
     };
-    return titles[activeTab] || "Bảng Điều Khiển";
+    return titles[activeTab] || { title: "Bảng Điều Khiển Quản Trị", subtitle: "Hệ thống quản lý CoolShop" };
   };
 
+  const currentMeta = getPageTitle();
+
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-100" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}>
-      {/* Sidebar Menu - Gắn cứng sát trái tuyệt đối */}
-      <div 
-        className={`bg-white shadow-lg transition-all duration-300 flex-shrink-0 ${
-          menuOpen ? 'w-64' : 'w-0'
-        } overflow-hidden`}
-        style={{ position: 'fixed', top: 0, left: 0, height: '100vh', zIndex: 1000, margin: 0, padding: 0 }}
+    <div
+      className="flex h-screen overflow-hidden bg-[#f8fafc]"
+      style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}
+    >
+      {/* Sidebar Menu - Slate Luxury Theme */}
+      <aside
+        className={`bg-slate-900 text-slate-300 transition-all duration-300 flex-shrink-0 ${
+          menuOpen ? "w-64" : "w-0"
+        } overflow-hidden flex flex-col border-r border-slate-800/80 shadow-2xl`}
+        style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 1000, margin: 0, padding: 0 }}
       >
         <div className="h-full flex flex-col">
-          {/* Menu Header */}
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-            <h2 className="text-lg font-bold text-gray-800">Menu</h2>
-            <button 
+          {/* Brand Header */}
+          <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25">
+                <svg className="w-5 h-5 transform -rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base font-black tracking-tight text-white">COOLSHOP</span>
+                <span className="text-[9px] uppercase tracking-widest text-blue-400 font-bold">Admin Console</span>
+              </div>
+            </Link>
+
+            <button
               onClick={() => setMenuOpen(false)}
-              className="text-gray-500 hover:text-gray-700 transition p-1 rounded hover:bg-gray-100"
+              className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-slate-800"
               title="Thu gọn menu"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               </svg>
             </button>
           </div>
 
-          {/* Menu Content */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {/* Bảng quản lý dropdown - Có thể click */}
-            <div className="mb-2">
-              <button 
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="w-full bg-blue-500 text-white px-4 py-2.5 rounded-lg flex items-center justify-between cursor-pointer hover:bg-blue-600 transition"
-              >
-                <span className="font-medium">Bảng quản lý</span>
-                <svg 
-                  className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </button>
-            </div>
+          {/* System Status Pill */}
+          <div className="px-5 py-3 border-b border-slate-800/60 bg-slate-950/20 flex items-center justify-between text-[11px]">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Hệ thống trực tuyến</span>
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono">v2.5</span>
+          </div>
 
-            {/* Menu Items - Hiển thị khi dropdown mở */}
-            {dropdownOpen && (
-              <div className="space-y-1 pl-0">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full text-left px-4 py-2.5 rounded-lg transition-all ${
-                      activeTab === item.id 
-                        ? "bg-blue-50 text-blue-600 font-medium" 
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <span className="flex items-center justify-between">
-                      <span>{item.label}</span>
+          {/* Grouped Menu List */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-5 scrollbar-hide">
+            {menuGroups.map((group, gIdx) => (
+              <div key={gIdx} className="space-y-1">
+                <div className="text-[10px] font-bold tracking-wider text-slate-500 px-3 uppercase mb-1">
+                  {group.groupTitle}
+                </div>
+                {group.items.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between text-xs sm:text-sm font-semibold group ${
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-101"
+                          : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className={`text-base transition-transform group-hover:scale-110 ${isActive ? "text-white" : "text-slate-400"}`}>
+                          {item.icon}
+                        </span>
+                        <span className="truncate">{item.label}</span>
+                      </div>
+
                       {item.id === "supportChat" && supportUnreadTotal > 0 && (
-                        <span className="ml-2 text-xs bg-red-500 text-white rounded-full min-w-5 h-5 px-1 flex items-center justify-center">
+                        <span className="text-[10px] bg-rose-500 text-white rounded-full min-w-5 h-5 px-1.5 font-bold flex items-center justify-center shadow-md shadow-rose-500/30 badge-pulse">
                           {supportUnreadTotal > 99 ? "99+" : supportUnreadTotal}
                         </span>
                       )}
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
-            )}
+            ))}
+          </div>
+
+          {/* Bottom Admin User Box */}
+          <div className="p-3 border-t border-slate-800 bg-slate-950/40">
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-800/50">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center uppercase">
+                {user.username ? user.username.charAt(0) : "A"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white truncate">{user.username}</p>
+                <p className="text-[10px] text-slate-400 truncate">{user.email || "Administrator"}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Content Area - Margin left để tránh sidebar */}
-      <div 
-        className="flex-1 flex flex-col overflow-hidden"
-        style={{ marginLeft: menuOpen ? '256px' : '0', transition: 'margin-left 0.3s' }}
+      {/* Main Content Area */}
+      <div
+        className="flex-1 flex flex-col overflow-hidden bg-[#f8fafc]"
+        style={{ marginLeft: menuOpen ? "256px" : "0", transition: "margin-left 0.3s" }}
       >
         {/* Top Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80 px-6 py-3.5 flex-shrink-0 z-10">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
               {!menuOpen && (
-                <button 
+                <button
                   onClick={() => setMenuOpen(true)}
-                  className="text-gray-600 hover:text-gray-800 transition p-2 rounded hover:bg-gray-100"
+                  className="text-slate-600 hover:text-slate-900 transition p-2 rounded-xl hover:bg-slate-100 border border-slate-200 shadow-sm"
                   title="Mở menu"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                   </svg>
                 </button>
               )}
-              <h1 className="text-2xl font-bold text-gray-800">
-                {getPageTitle()}
-              </h1>
+              <div>
+                <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                  {currentMeta.title}
+                </h1>
+                <p className="text-xs text-slate-500 hidden sm:block">{currentMeta.subtitle}</p>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-4">
+
+            <div className="flex items-center gap-3 sm:gap-4">
               <Link
                 to="/"
-                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-bold text-xs transition duration-200 flex items-center gap-1.5 shadow-sm border border-blue-100"
+                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white font-bold text-xs transition duration-200 flex items-center gap-1.5 shadow-sm border border-blue-200/70"
               >
                 <span>🏪</span>
-                <span>Về cửa hàng</span>
+                <span className="hidden sm:inline">Về cửa hàng</span>
               </Link>
-              <div className="text-right">
-                <p className="font-semibold text-gray-800">{user.username}</p>
-                <p className="text-sm text-gray-500">{user.email || "Admin"}</p>
+
+              <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  {user.username ? user.username.charAt(0).toUpperCase() : "A"}
+                </div>
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-bold text-slate-800 leading-tight">{user.username}</p>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Super Admin</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Content Area - Scrollable */}
-        <div className={`flex-1 min-h-0 bg-gray-50 p-6 ${activeTab === 'supportChat' ? 'overflow-hidden' : 'overflow-auto'}`}>
+        <main className={`flex-1 min-h-0 bg-[#f8fafc] p-4 sm:p-6 lg:p-8 ${activeTab === "supportChat" ? "overflow-hidden" : "overflow-y-auto"}`}>
+          {activeTab === "revenue" && <Revenue />}
           {activeTab === "info" && <AdminInfo />}
-          {activeTab === "address" && <AdminAddressManager />}
-          {activeTab === "userManager" && <UserManager />}
           {activeTab === "product" && <ProductManager />}
           {activeTab === "category" && <CategoryManager />}
           {activeTab === "size" && <SizeManager />}
@@ -229,8 +285,9 @@ export default function AdminDashboard() {
               <SupportChatManager />
             </div>
           )}
-          {activeTab === "revenue" && <Revenue />}
-        </div>
+          {activeTab === "userManager" && <UserManager />}
+          {activeTab === "address" && <AdminAddressManager />}
+        </main>
       </div>
     </div>
   );

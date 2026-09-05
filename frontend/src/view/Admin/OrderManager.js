@@ -250,211 +250,226 @@ export default function OrderManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Quản lý đơn hàng</h2>
-        <div className="text-sm text-gray-500">
-          Tổng số: {filteredOrders.length} đơn hàng
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80">
+        <div>
+          <h2 className="text-xl font-black text-slate-900">Quản Lý Đơn Hàng</h2>
+          <p className="text-xs text-slate-500 mt-0.5">Theo dõi, điều phối và xử lý đơn hàng toàn hệ thống</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            Tổng cộng: <strong className="text-slate-900 font-black">{filteredOrders.length}</strong> đơn hàng
+          </span>
         </div>
       </div>
 
-      {/* Thống kê nhanh */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      {/* Thống kê nhanh / Quick Filter Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        {/* Tất cả */}
         <button
           onClick={() => {
-            if (filterStatus === "all" && filterPayment === "all") {
-              // Nếu đang ở trạng thái all, không làm gì
-              return;
-            }
+            if (filterStatus === "all" && filterPayment === "all") return;
             setFilterStatus("all");
             setFilterPayment("all");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterStatus === "all" && filterPayment === "all"
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-blue-300 text-white'
-              : 'bg-white border-blue-200 hover:border-blue-400 hover:shadow-blue-200'
+              ? 'bg-blue-50/60 border-blue-500 ring-2 ring-blue-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterStatus === "all" && filterPayment === "all" ? 'text-white' : 'text-blue-600'}`}>
-            {orderStats.all}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">📦</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterStatus === "all" && filterPayment === "all" ? 'text-blue-600' : 'text-slate-400'}`}>Tất cả</span>
           </div>
-          <div className={`text-sm ${filterStatus === "all" && filterPayment === "all" ? 'text-blue-100' : 'text-gray-600'}`}>
-            Tổng đơn hàng
+          <div>
+            <div className={`text-xl font-black ${filterStatus === "all" && filterPayment === "all" ? 'text-blue-600' : 'text-slate-900'}`}>
+              {orderStats.all}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Tổng đơn hàng</div>
           </div>
         </button>
         
+        {/* Chờ xác nhận */}
         <button
           onClick={() => {
-            if (filterStatus === "pending") {
-              // Nếu đã chọn pending, bỏ chọn
-              setFilterStatus("all");
-            } else {
-              setFilterStatus("pending");
-            }
+            if (filterStatus === "pending") setFilterStatus("all");
+            else setFilterStatus("pending");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterStatus === "pending"
-              ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 border-yellow-700 shadow-yellow-300 text-white'
-              : 'bg-white border-yellow-200 hover:border-yellow-400 hover:shadow-yellow-200'
+              ? 'bg-amber-50/60 border-amber-500 ring-2 ring-amber-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterStatus === "pending" ? 'text-white' : 'text-yellow-600'}`}>
-            {orderStats.pending}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">⏳</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterStatus === "pending" ? 'text-amber-600' : 'text-slate-400'}`}>Chờ duyệt</span>
           </div>
-          <div className={`text-sm ${filterStatus === "pending" ? 'text-yellow-100' : 'text-gray-600'}`}>
-            Chờ xác nhận
+          <div>
+            <div className={`text-xl font-black ${filterStatus === "pending" ? 'text-amber-600' : 'text-slate-900'}`}>
+              {orderStats.pending}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Chờ xác nhận</div>
           </div>
         </button>
         
+        {/* Đã xác nhận */}
         <button
           onClick={() => {
-            if (filterStatus === "confirmed") {
-              setFilterStatus("all");
-            } else {
-              setFilterStatus("confirmed");
-            }
+            if (filterStatus === "confirmed") setFilterStatus("all");
+            else setFilterStatus("confirmed");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterStatus === "confirmed"
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-blue-300 text-white'
-              : 'bg-white border-blue-200 hover:border-blue-400 hover:shadow-blue-200'
+              ? 'bg-blue-50/60 border-blue-500 ring-2 ring-blue-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterStatus === "confirmed" ? 'text-white' : 'text-blue-600'}`}>
-            {orderStats.confirmed}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">📋</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterStatus === "confirmed" ? 'text-blue-600' : 'text-slate-400'}`}>Đã duyệt</span>
           </div>
-          <div className={`text-sm ${filterStatus === "confirmed" ? 'text-blue-100' : 'text-gray-600'}`}>
-            Đã xác nhận
+          <div>
+            <div className={`text-xl font-black ${filterStatus === "confirmed" ? 'text-blue-600' : 'text-slate-900'}`}>
+              {orderStats.confirmed}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Đã xác nhận</div>
           </div>
         </button>
         
+        {/* Đang giao hàng */}
         <button
           onClick={() => {
-            if (filterStatus === "shipping") {
-              setFilterStatus("all");
-            } else {
-              setFilterStatus("shipping");
-            }
+            if (filterStatus === "shipping") setFilterStatus("all");
+            else setFilterStatus("shipping");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterStatus === "shipping"
-              ? 'bg-gradient-to-r from-purple-500 to-purple-600 border-purple-700 shadow-purple-300 text-white'
-              : 'bg-white border-purple-200 hover:border-purple-400 hover:shadow-purple-200'
+              ? 'bg-purple-50/60 border-purple-500 ring-2 ring-purple-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterStatus === "shipping" ? 'text-white' : 'text-purple-600'}`}>
-            {orderStats.shipping}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">🚚</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterStatus === "shipping" ? 'text-purple-600' : 'text-slate-400'}`}>Vận chuyển</span>
           </div>
-          <div className={`text-sm ${filterStatus === "shipping" ? 'text-purple-100' : 'text-gray-600'}`}>
-            Đang giao hàng
+          <div>
+            <div className={`text-xl font-black ${filterStatus === "shipping" ? 'text-purple-600' : 'text-slate-900'}`}>
+              {orderStats.shipping}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Đang giao hàng</div>
           </div>
         </button>
         
+        {/* Đã giao thành công */}
         <button
           onClick={() => {
-            if (filterStatus === "received") {
-              // Nếu đã chọn received, bỏ chọn
-              setFilterStatus("all");
-            } else {
-              setFilterStatus("received");
-            }
+            if (filterStatus === "received") setFilterStatus("all");
+            else setFilterStatus("received");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterStatus === "received"
-              ? 'bg-gradient-to-r from-green-500 to-green-600 border-green-700 shadow-green-300 text-white'
-              : 'bg-white border-green-200 hover:border-green-400 hover:shadow-green-200'
+              ? 'bg-emerald-50/60 border-emerald-500 ring-2 ring-emerald-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterStatus === "received" ? 'text-white' : 'text-green-600'}`}>
-            {orderStats.received}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">✅</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterStatus === "received" ? 'text-emerald-600' : 'text-slate-400'}`}>Hoàn tất</span>
           </div>
-          <div className={`text-sm ${filterStatus === "received" ? 'text-green-100' : 'text-gray-600'}`}>
-            Đã giao thành công
+          <div>
+            <div className={`text-xl font-black ${filterStatus === "received" ? 'text-emerald-600' : 'text-slate-900'}`}>
+              {orderStats.received}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Đã giao hàng</div>
           </div>
         </button>
         
+        {/* Bank Transfer */}
         <button
           onClick={() => {
-            if (filterPayment === "bank") {
-              // Nếu đã chọn bank, bỏ chọn
-              setFilterPayment("all");
-            } else {
-              setFilterPayment("bank");
-            }
+            if (filterPayment === "bank") setFilterPayment("all");
+            else setFilterPayment("bank");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterPayment === "bank"
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-800 shadow-blue-400 text-white'
-              : 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 hover:border-blue-400 hover:shadow-blue-200'
+              ? 'bg-indigo-50/60 border-indigo-500 ring-2 ring-indigo-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterPayment === "bank" ? 'text-white' : 'text-blue-700'}`}>
-            {orderStats.bank}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">💳</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterPayment === "bank" ? 'text-indigo-600' : 'text-slate-400'}`}>Ngân hàng</span>
           </div>
-          <div className={`text-sm font-medium ${filterPayment === "bank" ? 'text-blue-100' : 'text-blue-600'}`}>
-            Bank Transfer
+          <div>
+            <div className={`text-xl font-black ${filterPayment === "bank" ? 'text-indigo-600' : 'text-slate-900'}`}>
+              {orderStats.bank}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">Bank Transfer</div>
           </div>
         </button>
         
+        {/* COD */}
         <button
           onClick={() => {
-            if (filterPayment === "cod") {
-              // Nếu đã chọn cod, bỏ chọn
-              setFilterPayment("all");
-            } else {
-              setFilterPayment("cod");
-            }
+            if (filterPayment === "cod") setFilterPayment("all");
+            else setFilterPayment("cod");
           }}
-          className={`p-4 rounded-lg shadow-lg border-2 transition-all duration-300 transform hover:scale-105 ${
+          className={`p-3.5 rounded-2xl border transition-all text-left flex flex-col justify-between ${
             filterPayment === "cod"
-              ? 'bg-gradient-to-r from-green-600 to-green-700 border-green-800 shadow-green-400 text-white'
-              : 'bg-gradient-to-r from-green-50 to-green-100 border-green-200 hover:border-green-400 hover:shadow-green-200'
+              ? 'bg-teal-50/60 border-teal-500 ring-2 ring-teal-500 shadow-sm'
+              : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
           }`}
         >
-          <div className={`text-2xl font-bold ${filterPayment === "cod" ? 'text-white' : 'text-green-700'}`}>
-            {orderStats.cod}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-base">💵</span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${filterPayment === "cod" ? 'text-teal-600' : 'text-slate-400'}`}>Tiền mặt</span>
           </div>
-          <div className={`text-sm font-medium ${filterPayment === "cod" ? 'text-green-100' : 'text-green-600'}`}>
-            COD
+          <div>
+            <div className={`text-xl font-black ${filterPayment === "cod" ? 'text-teal-600' : 'text-slate-900'}`}>
+              {orderStats.cod}
+            </div>
+            <div className="text-[11px] font-medium text-slate-500 truncate">COD</div>
           </div>
         </button>
       </div>
 
       {/* Bộ lọc và tìm kiếm */}
-      <div className="bg-white p-4 rounded-lg shadow border">
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80">
         {/* Hiển thị bộ lọc đang áp dụng */}
         {(filterStatus !== "all" || filterPayment !== "all" || searchTerm) && (
           <div className="mb-4 flex flex-wrap gap-2 items-center">
-            <span className="text-sm font-medium text-gray-600">Đang lọc:</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Đang lọc:</span>
             {filterStatus !== "all" && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              <span className="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/70">
                 Trạng thái: {getStatusText(filterStatus)}
                 <button
                   onClick={() => setFilterStatus("all")}
-                  className="ml-2 hover:text-yellow-900"
+                  className="ml-1.5 hover:text-amber-900 font-black text-sm"
                 >
                   ×
                 </button>
               </span>
             )}
             {filterPayment !== "all" && (
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                filterPayment === "bank" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+              <span className={`inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold border ${
+                filterPayment === "bank" ? "bg-blue-50 text-blue-800 border-blue-200/70" : "bg-emerald-50 text-emerald-800 border-emerald-200/70"
               }`}>
                 {filterPayment === "bank" ? "Bank Transfer" : "COD"}
                 <button
                   onClick={() => setFilterPayment("all")}
-                  className={filterPayment === "bank" ? "ml-2 hover:text-blue-900" : "ml-2 hover:text-green-900"}
+                  className="ml-1.5 font-black text-sm"
                 >
                   ×
                 </button>
               </span>
             )}
             {searchTerm && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                Tìm kiếm: "{searchTerm}"
+              <span className="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                Tìm: "{searchTerm}"
                 <button
                   onClick={() => setSearchTerm("")}
-                  className="ml-2 hover:text-gray-900"
+                  className="ml-1.5 font-black text-sm"
                 >
                   ×
                 </button>
@@ -463,27 +478,33 @@ export default function OrderManager() {
           </div>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               Tìm kiếm
             </label>
-            <input
-              type="text"
-              placeholder="Tìm theo ID, tên, SĐT, địa chỉ, username..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Mã đơn, tên, SĐT, địa chỉ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-10 pl-9 pr-3 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
+              />
+            </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lọc theo trạng thái
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Trạng thái đơn
             </label>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-10 px-3 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
             >
               <option value="all">Tất cả trạng thái</option>
               <option value="pending">Chờ xác nhận</option>
@@ -492,70 +513,81 @@ export default function OrderManager() {
               <option value="received">Đã giao thành công</option>
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Lọc theo thanh toán
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Phương thức thanh toán
             </label>
             <select
               value={filterPayment}
               onChange={(e) => setFilterPayment(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full h-10 px-3 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
             >
               <option value="all">Tất cả phương thức</option>
-              <option value="bank">Bank Transfer</option>
+              <option value="bank">Bank Transfer (Ngân hàng / VNPay)</option>
               <option value="cod">COD (Tiền mặt)</option>
             </select>
           </div>
-          <div className="flex items-end gap-2">
+
+          <div className="flex gap-2">
             <button
               onClick={() => {
                 setSearchTerm("");
                 setFilterStatus("all");
                 setFilterPayment("all");
               }}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex-1"
+              className="h-10 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex-1"
             >
-              Xóa bộ lọc
+              Đặt lại
             </button>
             <button
               onClick={fetchOrdersAndAccounts}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex-1"
+              className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-blue-500/20 flex-1 flex items-center justify-center gap-1.5"
             >
-              Làm mới
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Làm mới</span>
             </button>
           </div>
         </div>
       </div>
 
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-8 bg-white rounded-lg shadow border">
-          <p className="text-gray-500 text-lg">Không tìm thấy đơn hàng nào.</p>
+        <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200/80">
+          <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-slate-50 flex items-center justify-center text-3xl text-slate-400">
+            📦
+          </div>
+          <p className="text-base font-bold text-slate-800">Không tìm thấy đơn hàng nào</p>
+          <p className="text-xs text-slate-400 mt-1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Cột Bank Transfer */}
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg shadow border border-blue-200 sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-blue-700 flex items-center">
-                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  Bank Transfer
-                </h3>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-700">{bankOrders.length}</div>
-                  <div className="text-xs text-blue-600">đơn hàng</div>
+            <div className="bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-slate-200/80 sticky top-0 z-10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-lg text-blue-600">
+                  💳
                 </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">Bank Transfer & VNPay</h3>
+                  <p className="text-[11px] text-slate-400">Chuyển khoản trực tuyến</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100">
+                  {bankOrders.length} đơn
+                </span>
               </div>
             </div>
 
             {bankOrders.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow border">
-                <svg className="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                <p className="text-gray-400">Không có đơn hàng Bank</p>
+              <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-200/80">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-slate-50 flex items-center justify-center text-2xl text-slate-300">
+                  💳
+                </div>
+                <p className="text-xs font-semibold text-slate-400">Không có đơn hàng chuyển khoản</p>
               </div>
             ) : (
               <>
@@ -563,62 +595,60 @@ export default function OrderManager() {
                   {visibleBankOrders.map((order) => {
                     const paymentStatus = getPaymentStatus(order);
                     return (
-                      <div key={order.id} className="bg-white rounded-lg shadow border border-blue-100 hover:border-blue-300 transition-all overflow-hidden">
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-3">
+                      <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all p-4 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-2.5 pb-2.5 border-b border-slate-100">
                             <div>
-                              <div className="text-sm font-bold text-gray-900">#{order.id}</div>
-                              <div className="text-xs text-gray-500">{formatDateTime(order.created_at)}</div>
-                              <div className="text-xs text-blue-600 font-medium mt-1">
-                                {order.payment_method === 'vnpay' 
-                                  ? (getBankCode(order) ? `VNPay - ${getBankCode(order)}` : 'VNPay') 
-                                  : (getBankCode(order) ? `Bank - ${getBankCode(order)}` : 'Bank')}
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-slate-900">#{order.id}</span>
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                  {order.payment_method === 'vnpay' 
+                                    ? (getBankCode(order) ? `VNPay - ${getBankCode(order)}` : 'VNPay') 
+                                    : (getBankCode(order) ? `Bank - ${getBankCode(order)}` : 'Bank')}
+                                </span>
                               </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">{formatDateTime(order.created_at)}</div>
                             </div>
                             <div className="flex flex-col items-end gap-1">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold ${getStatusColor(order.status)}`}>
                                 {getStatusText(order.status)}
                               </span>
-                              <span className={`text-xs font-medium ${paymentStatus.color}`}>
+                              <span className={`text-[10px] font-bold ${paymentStatus.color}`}>
                                 {paymentStatus.text}
                               </span>
                             </div>
                           </div>
                           
-                          <div className="border-t border-gray-100 pt-3 mb-3">
-                            <div className="text-sm font-medium text-gray-900">{order.name}</div>
-                            <div className="text-xs text-gray-500">{order.phone}</div>
-                            <div className="text-xs text-gray-400 mt-1 line-clamp-2">{order.address}</div>
+                          <div className="mb-3 space-y-0.5">
+                            <div className="text-xs font-bold text-slate-800">{order.name}</div>
+                            <div className="text-xs text-slate-500 font-medium">{order.phone}</div>
+                            <div className="text-[11px] text-slate-400 line-clamp-1">{order.address}</div>
                           </div>
-                          
-                          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                            <div className="text-lg font-bold text-blue-600">
-                              {Number(order.total_amount).toLocaleString()} ₫
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => openDetailModal(order)}
-                                className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700 transition-colors"
-                              >
-                                Chi tiết
-                              </button>
-                              <button
-                                onClick={() => openUpdateModal(order)}
-                                className={`text-white px-3 py-1 rounded text-xs transition-colors ${
-                                  order.status === 'pending' 
-                                    ? 'bg-yellow-500 hover:bg-yellow-600' 
-                                    : 'bg-green-500 hover:bg-green-600'
-                                }`}
-                              >
-                                Cập nhật
-                              </button>
-                              <button
-                                onClick={() => handleDeleteOrder(order.id)}
-                                className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors"
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                          <div className="text-base font-black text-slate-900">
+                            {Number(order.total_amount).toLocaleString()} ₫
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openDetailModal(order)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95"
+                            >
+                              Chi tiết
+                            </button>
+                            <button
+                              onClick={() => openUpdateModal(order)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm shadow-blue-500/20 active:scale-95"
+                            >
+                              Cập nhật
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/70 px-2.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95"
+                            >
+                              Xóa
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -628,27 +658,27 @@ export default function OrderManager() {
 
                 {/* Nút xem thêm/thu gọn Bank */}
                 {bankOrders.length > 5 && (
-                  <div className="flex justify-center gap-3">
+                  <div className="flex justify-center gap-2 pt-2">
                     {visibleCountBank < bankOrders.length && (
                       <button
                         onClick={() => setVisibleCountBank(prev => prev + 5)}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl transition text-xs font-bold active:scale-95 shadow-sm"
                       >
-                        ↓ Xem thêm 5
+                        + Xem thêm 5 đơn
                       </button>
                     )}
                     {visibleCountBank > 5 && (
                       <button
                         onClick={() => setVisibleCountBank(5)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl transition text-xs font-bold active:scale-95"
                       >
-                        ↑ Thu gọn
+                        Thu gọn
                       </button>
                     )}
                   </div>
                 )}
-                <p className="text-center text-xs text-gray-500">
-                  Hiển thị {visibleBankOrders.length} / {bankOrders.length} đơn
+                <p className="text-center text-[11px] text-slate-400">
+                  Hiển thị {visibleBankOrders.length} / {bankOrders.length} đơn hàng Bank
                 </p>
               </>
             )}
@@ -656,27 +686,29 @@ export default function OrderManager() {
 
           {/* Cột COD */}
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg shadow border border-green-200 sticky top-0 z-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-green-700 flex items-center">
-                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  COD (Tiền mặt)
-                </h3>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-green-700">{codOrders.length}</div>
-                  <div className="text-xs text-green-600">đơn hàng</div>
+            <div className="bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-sm border border-slate-200/80 sticky top-0 z-10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-lg text-emerald-600">
+                  💵
                 </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">COD (Tiền mặt)</h3>
+                  <p className="text-[11px] text-slate-400">Thanh toán khi nhận hàng</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">
+                  {codOrders.length} đơn
+                </span>
               </div>
             </div>
 
             {codOrders.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow border">
-                <svg className="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <p className="text-gray-400">Không có đơn hàng COD</p>
+              <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-200/80">
+                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-slate-50 flex items-center justify-center text-2xl text-slate-300">
+                  💵
+                </div>
+                <p className="text-xs font-semibold text-slate-400">Không có đơn hàng COD</p>
               </div>
             ) : (
               <>
@@ -684,64 +716,58 @@ export default function OrderManager() {
                   {visibleCODOrders.map((order) => {
                     const paymentStatus = getPaymentStatus(order);
                     return (
-                      <div key={order.id} className="bg-white rounded-lg shadow border border-green-100 hover:border-green-300 transition-all overflow-hidden">
-                        <div className="p-4">
-                          <div className="flex justify-between items-start mb-3">
+                      <div key={order.id} className="bg-white rounded-2xl shadow-sm border border-slate-200/80 hover:border-slate-300 hover:shadow-md transition-all p-4 flex flex-col justify-between">
+                        <div>
+                          <div className="flex justify-between items-start mb-2.5 pb-2.5 border-b border-slate-100">
                             <div>
-                              <div className="text-sm font-bold text-gray-900">#{order.id}</div>
-                              <div className="text-xs text-gray-500">{formatDateTime(order.created_at)}</div>
-                              <div className="text-xs text-green-600 font-medium mt-1">
-                                COD - Thanh toán khi nhận hàng
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-black text-slate-900">#{order.id}</span>
+                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                  COD
+                                </span>
                               </div>
+                              <div className="text-[11px] text-slate-400 mt-0.5">{formatDateTime(order.created_at)}</div>
                             </div>
                             <div className="flex flex-col items-end gap-1">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold ${getStatusColor(order.status)}`}>
                                 {getStatusText(order.status)}
                               </span>
-                              <span className={`text-xs font-medium ${paymentStatus.color}`}>
+                              <span className={`text-[10px] font-bold ${paymentStatus.color}`}>
                                 {paymentStatus.text}
                               </span>
                             </div>
                           </div>
                           
-                          <div className="border-t border-gray-100 pt-3 mb-3">
-                            <div className="text-sm font-medium text-gray-900">{order.name}</div>
-                            <div className="text-xs text-gray-500">{order.phone}</div>
-                            <div className="text-xs text-gray-400 mt-1 line-clamp-2">{order.address}</div>
+                          <div className="mb-3 space-y-0.5">
+                            <div className="text-xs font-bold text-slate-800">{order.name}</div>
+                            <div className="text-xs text-slate-500 font-medium">{order.phone}</div>
+                            <div className="text-[11px] text-slate-400 line-clamp-1">{order.address}</div>
                           </div>
-                          
-                          <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                            <div className="text-lg font-bold text-green-600">
-                              {Number(order.total_amount).toLocaleString()} ₫
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => openDetailModal(order)}
-                                className="bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700 transition-colors"
-                              >
-                                Chi tiết
-                              </button>
-                              <button
-                                onClick={() => openUpdateModal(order)}
-                                className={`text-white px-3 py-1 rounded text-xs transition-colors ${
-                                  order.status === 'pending' 
-                                    ? 'bg-yellow-500 hover:bg-yellow-600'
-                                    : order.status === 'confirmed'
-                                    ? 'bg-blue-500 hover:bg-blue-600'
-                                    : order.status === 'shipping'
-                                    ? 'bg-purple-500 hover:bg-purple-600'
-                                    : 'bg-green-500 hover:bg-green-600'
-                                }`}
-                              >
-                                Cập nhật
-                              </button>
-                              <button
-                                onClick={() => handleDeleteOrder(order.id)}
-                                className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors"
-                              >
-                                Xóa
-                              </button>
-                            </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                          <div className="text-base font-black text-slate-900">
+                            {Number(order.total_amount).toLocaleString()} ₫
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => openDetailModal(order)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition active:scale-95"
+                            >
+                              Chi tiết
+                            </button>
+                            <button
+                              onClick={() => openUpdateModal(order)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm shadow-emerald-500/20 active:scale-95"
+                            >
+                              Cập nhật
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/70 px-2.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95"
+                            >
+                              Xóa
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -751,27 +777,27 @@ export default function OrderManager() {
 
                 {/* Nút xem thêm/thu gọn COD */}
                 {codOrders.length > 5 && (
-                  <div className="flex justify-center gap-3">
+                  <div className="flex justify-center gap-2 pt-2">
                     {visibleCountCOD < codOrders.length && (
                       <button
                         onClick={() => setVisibleCountCOD(prev => prev + 5)}
-                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm"
+                        className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl transition text-xs font-bold active:scale-95 shadow-sm"
                       >
-                        ↓ Xem thêm 5
+                        + Xem thêm 5 đơn
                       </button>
                     )}
                     {visibleCountCOD > 5 && (
                       <button
                         onClick={() => setVisibleCountCOD(5)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl transition text-xs font-bold active:scale-95"
                       >
-                        ↑ Thu gọn
+                        Thu gọn
                       </button>
                     )}
                   </div>
                 )}
-                <p className="text-center text-xs text-gray-500">
-                  Hiển thị {visibleCODOrders.length} / {codOrders.length} đơn
+                <p className="text-center text-[11px] text-slate-400">
+                  Hiển thị {visibleCODOrders.length} / {codOrders.length} đơn hàng COD
                 </p>
               </>
             )}
@@ -781,44 +807,66 @@ export default function OrderManager() {
 
       {/* Modal cập nhật trạng thái */}
       {updateModal.show && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Cập nhật trạng thái đơn hàng</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-black text-slate-900">Cập Nhật Trạng Thái</h3>
+              <button
+                onClick={closeUpdateModal}
+                className="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
             {updateModal.order && (
               <div className="space-y-4">
-                <div className="bg-gray-50 p-3 rounded">
-                  <p className="font-semibold">Đơn hàng #{updateModal.order.id}</p>
-                  <p className="text-sm text-gray-600">Khách hàng: {updateModal.order.name}</p>
-                  <p className="text-sm text-gray-600">Tổng tiền: {Number(updateModal.order.total_amount).toLocaleString()} ₫</p>
-                  <p className="text-sm text-gray-600">Phương thức: {
-                    updateModal.order.payment_method === 'cod' 
-                      ? 'COD' 
-                      : getBankCode(updateModal.order) 
-                        ? `Bank (${getBankCode(updateModal.order)})` 
-                        : 'Bank'
-                  }</p>
-                  <p className="text-sm text-gray-600">
-                    Trạng thái hiện tại: 
-                    <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${getStatusColor(updateModal.order.status)}`}>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-1.5 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-500">Mã đơn:</span>
+                    <span className="font-black text-slate-900">#{updateModal.order.id}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-500">Khách hàng:</span>
+                    <span className="font-bold text-slate-800">{updateModal.order.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-500">Tổng tiền:</span>
+                    <span className="font-black text-blue-600">{Number(updateModal.order.total_amount).toLocaleString()} ₫</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-500">Thanh toán:</span>
+                    <span className="font-bold text-slate-700">
+                      {updateModal.order.payment_method === 'cod' 
+                        ? 'COD' 
+                        : getBankCode(updateModal.order) 
+                          ? `Bank (${getBankCode(updateModal.order)})` 
+                          : 'Bank'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+                    <span className="font-bold text-slate-500">Hiện tại:</span>
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${getStatusColor(updateModal.order.status)}`}>
                       {getStatusText(updateModal.order.status)}
                     </span>
-                  </p>
+                  </div>
                   {updateModal.order.payment_method === 'cod' && updateModal.newStatus === 'received' && (
-                    <p className="text-sm text-green-600 font-medium mt-1">
-                      ⓘ Khi chuyển sang "Đã giao thành công", đơn hàng COD sẽ tự động được đánh dấu là "Đã thanh toán"
+                    <p className="text-[11px] text-emerald-600 font-bold mt-2 pt-1 border-t border-slate-200">
+                      ✓ Đơn COD sẽ tự động chuyển thành "Đã thanh toán" khi chọn "Đã giao thành công"
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Chọn trạng thái mới:
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Chọn trạng thái chuyển đổi:
                   </label>
                   <select
                     value={updateModal.newStatus}
                     onChange={(e) => setUpdateModal(prev => ({ ...prev, newStatus: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full h-11 px-3.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition"
                   >
                     <option value="pending">Chờ xác nhận</option>
                     <option value="confirmed">Đã xác nhận</option>
@@ -827,18 +875,18 @@ export default function OrderManager() {
                   </select>
                 </div>
 
-                <div className="flex gap-3 justify-end pt-4">
+                <div className="flex gap-2.5 justify-end pt-2">
                   <button
                     onClick={closeUpdateModal}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors border border-gray-300 rounded-lg"
+                    className="px-4 py-2 text-slate-600 hover:text-slate-800 font-bold text-xs transition border border-slate-200 rounded-xl"
                   >
                     Hủy
                   </button>
                   <button
                     onClick={handleUpdateStatus}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-blue-500/20 active:scale-95"
                   >
-                    Xác nhận cập nhật
+                    Xác nhận lưu
                   </button>
                 </div>
               </div>
@@ -849,48 +897,46 @@ export default function OrderManager() {
 
       {/* Modal chi tiết đơn hàng */}
       {detailModal.show && detailModal.order && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4 pb-16">
-          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto ml-40">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-gray-900">Chi tiết đơn hàng #{detailModal.order.id}</h3>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-5 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[88vh] overflow-hidden flex flex-col border border-slate-100">
+            {/* Header */}
+            <div className="px-6 py-4 bg-white border-b border-slate-100 flex justify-between items-center shrink-0">
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Chi tiết đơn hàng #{detailModal.order.id}</h3>
+                <p className="text-xs text-slate-400">Thời gian: {formatDateTime(detailModal.order.created_at)}</p>
+              </div>
               <button
                 onClick={closeDetailModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-slate-400 hover:text-slate-700 transition p-1 rounded-lg"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Thông tin đơn hàng */}
-              <div className="grid grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    Thông tin đơn hàng
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* Thông tin đơn hàng & Khách hàng */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <span>📋</span>
+                    <span>Thông tin giao dịch</span>
                   </h4>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Mã đơn hàng:</span>
-                      <span className="font-semibold">#{detailModal.order.id}</span>
+                      <span className="text-slate-500 font-medium">Mã đơn:</span>
+                      <span className="font-black text-slate-900">#{detailModal.order.id}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Ngày đặt:</span>
-                      <span className="font-medium">{formatDateTime(detailModal.order.created_at)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Trạng thái:</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(detailModal.order.status)}`}>
+                      <span className="text-slate-500 font-medium">Trạng thái đơn:</span>
+                      <span className={`px-2 py-0.5 rounded-lg font-bold text-[10px] ${getStatusColor(detailModal.order.status)}`}>
                         {getStatusText(detailModal.order.status)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Thanh toán:</span>
-                      <span className="font-medium">
+                      <span className="text-slate-500 font-medium">Phương thức:</span>
+                      <span className="font-bold text-slate-800">
                         {detailModal.order.payment_method === 'cod' 
                           ? 'COD (Tiền mặt)' 
                           : detailModal.order.payment_method === 'vnpay'
@@ -899,42 +945,40 @@ export default function OrderManager() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Trạng thái TT:</span>
-                      <span className={`font-semibold ${getPaymentStatus(detailModal.order).color}`}>
+                      <span className="text-slate-500 font-medium">Thanh toán:</span>
+                      <span className={`font-bold ${getPaymentStatus(detailModal.order).color}`}>
                         {getPaymentStatus(detailModal.order).text}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tài khoản:</span>
-                      <span className="font-medium">{getUsername(detailModal.order.account_id)}</span>
+                      <span className="text-slate-500 font-medium">Tài khoản:</span>
+                      <span className="font-bold text-slate-800">{getUsername(detailModal.order.account_id)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Thông tin người nhận
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                  <h4 className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <span>👤</span>
+                    <span>Thông tin người nhận</span>
                   </h4>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div>
-                      <span className="text-gray-600">Họ tên:</span>
-                      <p className="font-semibold text-gray-900">{detailModal.order.name}</p>
+                      <span className="text-slate-400 font-medium">Họ tên:</span>
+                      <p className="font-black text-slate-900 text-sm mt-0.5">{detailModal.order.name}</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Số điện thoại:</span>
-                      <p className="font-medium text-gray-900">{detailModal.order.phone}</p>
+                      <span className="text-slate-400 font-medium">Số điện thoại:</span>
+                      <p className="font-bold text-slate-800 mt-0.5">{detailModal.order.phone}</p>
                     </div>
                     <div>
-                      <span className="text-gray-600">Địa chỉ:</span>
-                      <p className="font-medium text-gray-900">{detailModal.order.address}</p>
+                      <span className="text-slate-400 font-medium">Địa chỉ giao:</span>
+                      <p className="font-semibold text-slate-700 mt-0.5">{detailModal.order.address}</p>
                     </div>
                     {detailModal.order.note && (
                       <div>
-                        <span className="text-gray-600">Ghi chú:</span>
-                        <p className="font-medium text-gray-900 italic">{detailModal.order.note}</p>
+                        <span className="text-slate-400 font-medium">Ghi chú:</span>
+                        <p className="font-medium text-slate-600 italic mt-0.5">{detailModal.order.note}</p>
                       </div>
                     )}
                   </div>
@@ -942,23 +986,20 @@ export default function OrderManager() {
               </div>
 
               {/* Danh sách sản phẩm */}
-              <div className="border-t border-gray-200 pt-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center text-lg">
-                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Sản phẩm đã đặt ({detailModal.order.order_details?.length || 0} sản phẩm)
+              <div>
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  Sản phẩm đã đặt ({detailModal.order.order_details?.length || 0})
                 </h4>
                 
                 {detailModal.order.order_details && detailModal.order.order_details.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     {detailModal.order.order_details.map((detail, index) => (
                       <div 
                         key={index} 
                         onClick={() => navigate(`/product/${detail.product_id}`)}
-                        className="bg-gray-50 rounded-lg p-4 flex items-center gap-4 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer border border-transparent"
+                        className="bg-slate-50 hover:bg-slate-100/80 rounded-2xl p-3.5 flex items-center gap-4 transition cursor-pointer border border-slate-100"
                       >
-                        <div className="flex-shrink-0 w-20 h-20 bg-white rounded border border-gray-200 overflow-hidden">
+                        <div className="w-16 h-16 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0">
                           <img 
                             src={resolveImage(detail.image)} 
                             alt={detail.product_name}
@@ -969,86 +1010,71 @@ export default function OrderManager() {
                             }}
                           />
                         </div>
-                        <div className="flex-grow">
-                          <h5 className="font-semibold text-gray-900 hover:text-blue-600 transition-colors">{detail.product_name}</h5>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                            <span className="flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                              </svg>
-                              Size: <span className="font-medium ml-1">{detail.size_name}</span>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{detail.product_name}</h5>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                            <span className="bg-white px-2 py-0.5 rounded-md border border-slate-200 font-bold text-[11px]">
+                              Size {detail.size_name}
                             </span>
-                            <span className="flex items-center">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-                              </svg>
-                              Số lượng: <span className="font-medium ml-1">{detail.quantity}</span>
+                            <span className="font-bold">
+                              SL: <span className="text-slate-900 font-black">{detail.quantity}</span>
                             </span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600">Đơn giá</div>
-                          <div className="font-semibold text-blue-600">
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-xs font-semibold text-slate-400">
                             {Number(detail.price).toLocaleString()} ₫
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Thành tiền: <span className="font-semibold text-gray-700">
-                              {(Number(detail.price) * detail.quantity).toLocaleString()} ₫
-                            </span>
+                          <div className="text-sm font-black text-slate-900 mt-0.5">
+                            {(Number(detail.price) * detail.quantity).toLocaleString()} ₫
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    Không có thông tin sản phẩm
+                  <div className="text-center py-6 text-xs text-slate-400 italic bg-slate-50 rounded-2xl">
+                    Không có thông tin chi tiết sản phẩm
                   </div>
                 )}
               </div>
 
               {/* Tổng tiền */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-6">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900">Tổng tiền đơn hàng</h4>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Tổng cộng {detailModal.order.order_details?.reduce((sum, item) => sum + item.quantity, 0) || 0} sản phẩm
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-blue-600">
-                        {Number(detailModal.order.total_amount).toLocaleString()} ₫
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        (Đã bao gồm giảm giá)
-                      </div>
-                    </div>
+              <div className="bg-slate-900 text-white p-5 rounded-2xl flex justify-between items-center shadow-lg">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tổng giá trị đơn hàng</h4>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Gồm {detailModal.order.order_details?.reduce((sum, item) => sum + item.quantity, 0) || 0} sản phẩm
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-black text-white">
+                    {Number(detailModal.order.total_amount).toLocaleString()} ₫
+                  </div>
+                  <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                    ✓ Đã áp dụng giảm giá & voucher
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={closeDetailModal}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Đóng
-                </button>
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    openUpdateModal(detailModal.order);
-                  }}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Cập nhật trạng thái
-                </button>
-              </div>
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2.5 shrink-0">
+              <button
+                onClick={closeDetailModal}
+                className="px-5 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 rounded-xl transition"
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  closeDetailModal();
+                  openUpdateModal(detailModal.order);
+                }}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-md shadow-blue-500/20 active:scale-95"
+              >
+                Cập nhật trạng thái
+              </button>
             </div>
           </div>
         </div>

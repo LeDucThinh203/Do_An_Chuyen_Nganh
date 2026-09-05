@@ -7,14 +7,15 @@ export default function Footer() {
   const [subscribed, setSubscribed] = useState(false);
   const location = useLocation();
 
-  const isAdminPath =
+  const isDashboardPath =
     location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/user") ||
     location.pathname.startsWith("/categories") ||
     location.pathname === "/add" ||
     location.pathname.startsWith("/add/") ||
     location.pathname.startsWith("/edit");
 
-  if (isAdminPath) {
+  if (isDashboardPath) {
     return null;
   }
 
@@ -193,17 +194,13 @@ export default function Footer() {
               <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">ZaloPay</span>
               <span className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/60 text-center">COD</span>
             </div>
-            <div className="mt-4 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-400 flex items-center gap-2">
-              <span>🔒</span>
-              <span>Bảo mật giao dịch SSL 256-bit</span>
-            </div>
           </div>
 
         </div>
 
         {/* Bottom copyright */}
         <div className="pt-8 border-t border-slate-800/80 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2025 COOLSHOP Vietnam. All rights reserved. Bản quyền thuộc về CoolShop Athletic.</p>
+          <p>© 2026 COOLSHOP Vietnam. All rights reserved. Bản quyền thuộc về CoolShop Athletic.</p>
           <div className="flex items-center gap-6">
             <Link to="/" className="hover:text-slate-300 transition">Điều khoản sử dụng</Link>
             <Link to="/" className="hover:text-slate-300 transition">Chính sách bảo mật</Link>

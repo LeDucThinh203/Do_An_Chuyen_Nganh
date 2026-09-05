@@ -183,14 +183,16 @@ export default function Header() {
                       </Link>
                     )}
 
-                    <Link
-                      to="/user"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <span className="text-base">👤</span>
-                      <span>Hồ sơ & Đơn mua</span>
-                    </Link>
+                    {user.role !== "admin" && (
+                      <Link
+                        to="/user"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        <span className="text-base">👤</span>
+                        <span>Hồ sơ & Đơn mua</span>
+                      </Link>
+                    )}
 
                     <div className="my-1 border-t border-slate-100"></div>
 

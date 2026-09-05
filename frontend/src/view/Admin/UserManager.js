@@ -37,10 +37,13 @@ export default function UserManager() {
     fetchAccounts();
   }, [user]);
 
-  // Tìm kiếm theo email
+  // Tìm kiếm theo email hoặc tên
   useEffect(() => {
-    const filtered = accounts.filter((acc) =>
-      acc.email?.toLowerCase().includes(searchEmail.toLowerCase())
+    const query = searchEmail.toLowerCase().trim();
+    const filtered = accounts.filter(
+      (acc) =>
+        acc.email?.toLowerCase().includes(query) ||
+        acc.username?.toLowerCase().includes(query)
     );
     setFilteredAccounts(filtered);
     setVisibleCount(6);
@@ -67,9 +70,11 @@ export default function UserManager() {
       setMessage(`✅ Đã cập nhật quyền của tài khoản #${id} thành "${newRole}".`);
       setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, role: newRole } : a)));
       setFilteredAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, role: newRole } : a)));
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setError("❌ Lỗi khi cập nhật quyền người dùng.");
       console.error(err);
+      setTimeout(() => setError(""), 4000);
     }
   };
 
@@ -80,9 +85,11 @@ export default function UserManager() {
       setMessage(`🗑️ Đã xóa tài khoản #${id}`);
       setAccounts(accounts.filter((a) => a.id !== id));
       setFilteredAccounts(filteredAccounts.filter((a) => a.id !== id));
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setError("❌ Không thể xóa tài khoản này.");
       console.error(err);
+      setTimeout(() => setError(""), 4000);
     }
   };
 
@@ -101,24 +108,25 @@ export default function UserManager() {
   };
 
   const handleUpdatePassword = async (id) => {
-    const state = passwordStates[id];
-    if (!state.newPassword || !state.confirmPassword) {
-      alert("⚠️ Vui lòng nhập đầy đủ mật khẩu mới và xác nhận mật khẩu.");
+    const { newPassword, confirmPassword } = passwordStates[id] || {};
+    if (!newPassword || newPassword.length < 6) {
+      alert("⚠️ Mật khẩu mới phải có ít nhất 6 ký tự!");
       return;
     }
-    if (state.newPassword !== state.confirmPassword) {
-      alert("⚠️ Mật khẩu và xác nhận mật khẩu không khớp.");
+    if (newPassword !== confirmPassword) {
+      alert("⚠️ Mật khẩu xác nhận không khớp!");
       return;
     }
-    if (!window.confirm(`Bạn có chắc muốn đổi mật khẩu của #${id}?`)) return;
 
     try {
-      await api.updateAccount(id, { password: state.newPassword });
-      setMessage(`✅ Đã đổi mật khẩu của tài khoản #${id} thành công.`);
+      await api.updateAccount(id, { password: newPassword });
+      setMessage(`🔑 Đã đổi mật khẩu thành công cho tài khoản #${id}`);
       setPasswordStates((prev) => ({ ...prev, [id]: { show: false, newPassword: "", confirmPassword: "" } }));
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
-      setError("❌ Lỗi khi đổi mật khẩu.");
+      setError("❌ Đổi mật khẩu thất bại.");
       console.error(err);
+      setTimeout(() => setError(""), 4000);
     }
   };
 
@@ -127,118 +135,181 @@ export default function UserManager() {
   };
 
   if (!user)
-    return <div className="text-red-500 font-bold text-center mt-10">⚠️ Vui lòng đăng nhập</div>;
+    return <div className="text-rose-500 font-bold text-center mt-10">⚠️ Vui lòng đăng nhập</div>;
   if (user.role !== "admin")
-    return <div className="text-red-500 font-bold text-center mt-10">🚫 Bạn không có quyền truy cập</div>;
+    return <div className="text-rose-500 font-bold text-center mt-10">🚫 Bạn không có quyền truy cập</div>;
 
   return (
-    <div className="max-w-7xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-xl space-y-6">
-      <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
-        👑 Quản lý tài khoản người dùng
-      </h2>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Top Search & Filter Bar */}
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative flex-1 w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Tìm theo email hoặc tên người dùng..."
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition"
+          />
+          <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
 
-      {/* Tìm kiếm theo email */}
-      <div className="mb-4 text-center">
-        <input
-          type="text"
-          placeholder="Tìm kiếm theo email..."
-          value={searchEmail}
-          onChange={(e) => setSearchEmail(e.target.value)}
-          className="border p-2 rounded w-full sm:w-1/2"
-        />
+        <div className="flex items-center gap-3">
+          <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
+            Tổng cộng: {accounts.length} tài khoản
+          </span>
+        </div>
       </div>
 
-      {loading && <AdminPanelSkeleton cardCount={6} />}
-      {message && <p className="text-center text-green-600">{message}</p>}
-      {error && <p className="text-center text-red-600">{error}</p>}
-      {!loading && filteredAccounts.length === 0 && (
-        <p className="text-gray-500 text-center">Không tìm thấy tài khoản.</p>
+      {/* Notifications */}
+      {message && (
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-2 animate-in fade-in">
+          <span>{message}</span>
+        </div>
       )}
-
-      {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAccounts.slice(0, visibleCount).map((acc) => (
-          <div key={acc.id} className="border p-4 rounded flex flex-col justify-between">
-            <div className="mb-4">
-              <p><b>ID:</b> {acc.id}</p>
-              <p><b>Username:</b> {acc.username}</p>
-              <p><b>Email:</b> {acc.email || "Chưa có email"}</p>
-              <p>
-                <b>Role hiện tại:</b>{" "}
-                <span className={`px-2 py-1 rounded ${acc.role === "admin" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-700"}`}>
-                  {acc.role}
-                </span>
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-              <select
-                value={selectedRoles[acc.id]}
-                onChange={(e) => handleRoleSelect(acc.id, e.target.value)}
-                className="border rounded p-2 text-sm w-full sm:w-auto"
-              >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-              </select>
-
-              <button
-                onClick={() => handleUpdateRole(acc.id)}
-                className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 text-sm w-full sm:w-auto"
-              >
-                Cập nhật
-              </button>
-
-              <button
-                onClick={() => handleDelete(acc.id)}
-                className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 text-sm w-full sm:w-auto"
-              >
-                Xóa
-              </button>
-            </div>
-
-            <button
-              onClick={() => togglePasswordForm(acc.id)}
-              className="bg-purple-500 text-white px-3 py-2 rounded hover:bg-purple-600 text-sm mb-2"
-            >
-              Đổi mật khẩu
-            </button>
-
-            {passwordStates[acc.id]?.show && (
-              <div className="flex flex-col gap-2">
-                <input
-                  type="password"
-                  placeholder="Mật khẩu mới"
-                  value={passwordStates[acc.id].newPassword}
-                  onChange={(e) => handlePasswordInputChange(acc.id, "newPassword", e.target.value)}
-                  className="border rounded p-2 text-sm w-full"
-                />
-                <input
-                  type="password"
-                  placeholder="Xác nhận mật khẩu"
-                  value={passwordStates[acc.id].confirmPassword}
-                  onChange={(e) => handlePasswordInputChange(acc.id, "confirmPassword", e.target.value)}
-                  className="border rounded p-2 text-sm w-full"
-                />
-                <button
-                  onClick={() => handleUpdatePassword(acc.id)}
-                  className="bg-purple-600 text-white px-3 py-2 rounded hover:bg-purple-700 text-sm w-full"
-                >
-                  Cập nhật mật khẩu
-                </button>
-              </div>
-            )}
-          </div>
-          ))}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-2 animate-in fade-in">
+          <span>{error}</span>
         </div>
       )}
 
+      {/* Loading Skeleton */}
+      {loading && <AdminPanelSkeleton cardCount={6} />}
+
+      {/* Empty State */}
+      {!loading && filteredAccounts.length === 0 && (
+        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 p-8">
+          <div className="text-4xl mb-2">👤</div>
+          <p className="text-slate-600 font-bold">Không tìm thấy tài khoản người dùng phù hợp.</p>
+        </div>
+      )}
+
+      {/* Accounts Grid */}
+      {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredAccounts.slice(0, visibleCount).map((acc) => {
+            const isAdmin = acc.role === "admin";
+            return (
+              <div
+                key={acc.id}
+                className="bg-white rounded-2xl p-5 border border-slate-200/80 hover:border-blue-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div>
+                  {/* Card Header: Avatar, Username, Role */}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm uppercase shadow-sm ${
+                          isAdmin
+                            ? "bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-blue-500/25"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {acc.username ? acc.username.charAt(0) : "U"}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-slate-900 text-sm truncate">{acc.username}</h4>
+                        <span className="text-[11px] text-slate-400 font-mono">ID: #{acc.id}</span>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide border ${
+                        isAdmin
+                          ? "bg-blue-50 text-blue-700 border-blue-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
+                      }`}
+                    >
+                      {acc.role}
+                    </span>
+                  </div>
+
+                  {/* Email row */}
+                  <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-100 mb-4 text-xs">
+                    <span className="text-slate-400 font-medium block text-[10px] uppercase">Email đăng nhập</span>
+                    <span className="font-semibold text-slate-700 truncate block mt-0.5">
+                      {acc.email || "Chưa có địa chỉ email"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Role and Action Controls */}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedRoles[acc.id]}
+                      onChange={(e) => handleRoleSelect(acc.id, e.target.value)}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    >
+                      <option value="user">Vai trò: User</option>
+                      <option value="admin">Vai trò: Admin</option>
+                    </select>
+
+                    <button
+                      onClick={() => handleUpdateRole(acc.id)}
+                      className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition"
+                    >
+                      Lưu
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(acc.id)}
+                      className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition"
+                      title="Xóa tài khoản"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+
+                  {/* Toggle Password Form */}
+                  <button
+                    onClick={() => togglePasswordForm(acc.id)}
+                    className="w-full text-center py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition rounded-lg hover:bg-indigo-50/50"
+                  >
+                    {passwordStates[acc.id]?.show ? "✕ Hủy đổi mật khẩu" : "🔑 Đổi mật khẩu tài khoản"}
+                  </button>
+
+                  {passwordStates[acc.id]?.show && (
+                    <div className="space-y-2 pt-2 border-t border-indigo-100/60 bg-indigo-50/30 p-3 rounded-xl animate-in fade-in">
+                      <input
+                        type="password"
+                        placeholder="Mật khẩu mới (tối thiểu 6 ký tự)"
+                        value={passwordStates[acc.id].newPassword}
+                        onChange={(e) => handlePasswordInputChange(acc.id, "newPassword", e.target.value)}
+                        className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                      <input
+                        type="password"
+                        placeholder="Xác nhận mật khẩu mới"
+                        value={passwordStates[acc.id].confirmPassword}
+                        onChange={(e) => handlePasswordInputChange(acc.id, "confirmPassword", e.target.value)}
+                        className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                      />
+                      <button
+                        onClick={() => handleUpdatePassword(acc.id)}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold text-xs py-2 rounded-lg shadow-sm transition"
+                      >
+                        Xác nhận đổi mật khẩu
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Load more button */}
       {filteredAccounts.length > 6 && (
-        <div className="text-center mt-4">
+        <div className="text-center pt-4">
           <button
             onClick={toggleVisible}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full sm:w-auto"
+            className="px-6 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm border border-slate-200 shadow-sm transition"
           >
-            {visibleCount === 6 ? "Xem thêm" : "Thu gọn"}
+            {visibleCount === 6 ? `Xem thêm ${filteredAccounts.length - 6} tài khoản` : "Thu gọn ▲"}
           </button>
         </div>
       )}

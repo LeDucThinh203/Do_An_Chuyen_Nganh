@@ -277,7 +277,7 @@ export default function ProductList() {
                 <div className="text-center max-w-3xl space-y-4 sm:space-y-6">
                   <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs sm:text-sm font-semibold tracking-wide">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>⚡ BỘ SƯU TẬP THỂ THAO 2025 • PRO PERFORMANCE</span>
+                    <span>⚡ BỘ SƯU TẬP THỂ THAO 2026 • PRO PERFORMANCE</span>
                   </div>
 
                   <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none drop-shadow-md">
@@ -905,14 +905,16 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
                       </Link>
                     )}
 
-                    <Link
-                      to="/user"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <span className="text-base">👤</span>
-                      <span>Hồ sơ & Đơn mua</span>
-                    </Link>
+                    {user.role !== "admin" && (
+                      <Link
+                        to="/user"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        <span className="text-base">👤</span>
+                        <span>Hồ sơ & Đơn mua</span>
+                      </Link>
+                    )}
 
                     <div className="my-1 border-t border-slate-100"></div>
 
