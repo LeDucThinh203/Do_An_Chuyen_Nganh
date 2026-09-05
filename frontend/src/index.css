@@ -156,56 +156,65 @@ body {
 }
 
 /* =========================================================
-   DARK THEME: Gentle Flowing Meteor Rain (Mưa sao băng nhẹ nhàng uyển chuyển)
+   DARK THEME: Tiny Delicate Star Rain (Ngôi sao như mưa rơi nhỏ nhẹ)
    ========================================================= */
-@keyframes gentle-meteor-fall {
+@keyframes tiny-star-fall {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(105deg);
+    transform: translate3d(0, 0, 0) rotate(88deg);
   }
   15% {
-    opacity: 0.85;
+    opacity: 0.65;
   }
   65% {
-    opacity: 0.75;
+    opacity: 0.55;
   }
   100% {
     opacity: 0;
-    transform: translate3d(-160px, 980px, 0) rotate(105deg);
+    transform: translate3d(-35px, 950px, 0) rotate(88deg);
   }
 }
 
-.meteor-rain-streak {
+.tiny-star-rain {
   position: absolute;
   top: 0;
-  height: 1.8px;
-  background: linear-gradient(90deg, #ffffff 0%, rgba(147, 197, 253, 0.85) 30%, rgba(59, 130, 246, 0.25) 65%, transparent 100%);
+  height: 1.2px;
+  background: linear-gradient(90deg, #ffffff 0%, rgba(147, 197, 253, 0.75) 40%, rgba(59, 130, 246, 0.15) 75%, transparent 100%);
   border-radius: 9999px;
-  box-shadow: 0 0 8px 1px rgba(147, 197, 253, 0.85);
-  animation-name: gentle-meteor-fall;
+  box-shadow: 0 0 5px rgba(147, 197, 253, 0.6);
+  animation-name: tiny-star-fall;
   animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
   animation-iteration-count: infinite;
   pointer-events: none;
 }
 
-.meteor-rain-head {
+.tiny-star-head {
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 4px;
+  width: 2.5px;
+  height: 2.5px;
   background-color: #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 8px 2px #ffffff, 0 0 14px 3px rgba(147, 197, 253, 0.8);
+  box-shadow: 0 0 5px 1px #ffffff, 0 0 9px 2px rgba(147, 197, 253, 0.7);
 }
 
 /* =========================================================
-   THEME ADAPTATION & HIGH-CONTRAST BUTTONS
+   LUXURY CURSOR STYLING
+   ========================================================= */
+.cursor-ring-active {
+  border-color: rgba(56, 189, 248, 0.85) !important;
+  background-color: rgba(56, 189, 248, 0.12) !important;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.45) !important;
+}
+
+/* =========================================================
+   THEME ADAPTATION: CRYSTAL CLEAR TEXT & HIGH-CONTRAST BUTTONS
    ========================================================= */
 body.theme-dark {
   background-color: #060913;
-  color: #f1f5f9;
+  color: #f8fafc;
 }
 
 /* Transparency on background wrappers so ThemeBackground shines through across all pages */
@@ -223,16 +232,16 @@ body.theme-light [class*="bg-gray-50"] {
 }
 
 body.theme-dark .glass-nav {
-  background: rgba(10, 15, 29, 0.85);
+  background: rgba(10, 15, 29, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
 }
 
 body.theme-dark .glass-card {
-  background: rgba(15, 23, 42, 0.78);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
 }
 
 body.theme-dark ::-webkit-scrollbar-track {
@@ -240,99 +249,181 @@ body.theme-dark ::-webkit-scrollbar-track {
 }
 
 body.theme-dark ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-}
-
-body.theme-dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
 
-/* Dark mode text readability */
+body.theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 1. ALL HEADINGS in Dark Mode: Bright White */
+body.theme-dark h1,
+body.theme-dark h2,
+body.theme-dark h3,
+body.theme-dark h4,
+body.theme-dark h5,
+body.theme-dark h6,
+body.theme-dark .font-black,
+body.theme-dark .font-extrabold {
+  color: #ffffff;
+}
+
+/* 2. TEXT CONTRAST OVERRIDES in Dark Mode */
 body.theme-dark .text-slate-900,
-body.theme-dark .text-slate-800 {
+body.theme-dark .text-slate-800,
+body.theme-dark .text-gray-900,
+body.theme-dark .text-gray-800,
+body.theme-dark .text-neutral-900,
+body.theme-dark .text-neutral-800,
+body.theme-dark .text-zinc-900,
+body.theme-dark .text-zinc-800,
+body.theme-dark .text-black {
   color: #f8fafc !important;
 }
 
 body.theme-dark .text-slate-700,
-body.theme-dark .text-slate-600 {
+body.theme-dark .text-slate-600,
+body.theme-dark .text-gray-700,
+body.theme-dark .text-gray-600,
+body.theme-dark .text-neutral-700,
+body.theme-dark .text-zinc-700 {
+  color: #e2e8f0 !important;
+}
+
+body.theme-dark .text-slate-500,
+body.theme-dark .text-slate-400,
+body.theme-dark .text-gray-500,
+body.theme-dark .text-gray-400,
+body.theme-dark .text-neutral-500 {
   color: #cbd5e1 !important;
 }
 
-body.theme-dark .text-slate-500 {
-  color: #94a3b8 !important;
-}
-
 body.theme-dark .border-slate-100,
-body.theme-dark .border-slate-200 {
-  border-color: rgba(255, 255, 255, 0.1) !important;
+body.theme-dark .border-slate-200,
+body.theme-dark .border-gray-100,
+body.theme-dark .border-gray-200 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* All Cards, Panels, Modals in Dark Mode */
-body.theme-dark .bg-white:not(button):not(a):not(input):not(select):not(textarea):not([class*="bg-gradient"]) {
-  background-color: rgba(15, 23, 42, 0.85) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+/* 3. CARDS, PANELS, MODALS, DROPDOWNS in Dark Mode */
+body.theme-dark .bg-white:not(button):not(a):not(input):not(select):not(textarea):not([class*="bg-gradient"]):not([class*="bg-blue"]):not([class*="bg-rose"]):not([class*="bg-amber"]):not([class*="bg-emerald"]) {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
   color: #f8fafc !important;
 }
 
-/* High-Contrast, Crystal Clear Buttons in Dark Mode */
+body.theme-dark [class*="bg-white/"] {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+}
+
+/* 4. HIGH-CONTRAST BUTTONS IN DARK MODE */
+/* A. Dark/black buttons in light mode turn into vibrant royal blue in dark mode */
 body.theme-dark button.bg-slate-900,
 body.theme-dark button.bg-slate-800,
+body.theme-dark button.bg-black,
+body.theme-dark button.bg-gray-900,
 body.theme-dark button[class*="bg-slate-900"],
 body.theme-dark button[class*="bg-slate-800"],
+body.theme-dark button[class*="bg-black"],
 body.theme-dark a.bg-slate-900,
 body.theme-dark a.bg-slate-800,
+body.theme-dark a.bg-black,
 body.theme-dark a[class*="bg-slate-900"],
 body.theme-dark a[class*="bg-slate-800"] {
   background-color: #2563eb !important;
   color: #ffffff !important;
-  border: 1px solid rgba(96, 165, 250, 0.5) !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+  font-weight: 700 !important;
+  border: 1px solid rgba(96, 165, 250, 0.6) !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5) !important;
 }
 
 body.theme-dark button.bg-slate-900:hover,
-body.theme-dark button.bg-slate-800:hover {
+body.theme-dark button.bg-slate-800:hover,
+body.theme-dark button[class*="bg-slate-900"]:hover {
   background-color: #1d4ed8 !important;
 }
 
-/* Secondary / White / Ghost Buttons in Dark Mode */
+/* B. White/Light buttons in light mode turn into dark slate with bright white text */
 body.theme-dark button.bg-white,
 body.theme-dark button[class*="bg-white"],
 body.theme-dark button[class*="bg-slate-100"],
 body.theme-dark button[class*="bg-gray-100"],
 body.theme-dark a.bg-white,
 body.theme-dark a[class*="bg-white"] {
-  background-color: rgba(30, 41, 59, 0.9) !important;
+  background-color: rgba(30, 41, 59, 0.95) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  font-weight: 700 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
 }
 
 body.theme-dark button.bg-white:hover,
 body.theme-dark button[class*="bg-white"]:hover {
-  background-color: rgba(51, 65, 85, 0.95) !important;
-  color: #93c5fd !important;
-  border-color: rgba(147, 197, 253, 0.6) !important;
+  background-color: rgba(51, 65, 85, 1) !important;
+  color: #60a5fa !important;
+  border-color: rgba(96, 165, 250, 0.7) !important;
 }
 
-/* Ensure text inside buttons is always crisp and visible */
-body.theme-dark button:not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-red"]) {
+/* C. All button text and spans must be crystal clear white */
+body.theme-dark button,
+body.theme-dark a[role="button"],
+body.theme-dark .btn {
   color: #ffffff;
 }
 
-body.theme-dark button span:not([class*="text-"]):not([class*="bg-"]) {
-  color: inherit;
+body.theme-dark button span:not([class*="text-amber"]):not([class*="text-rose"]):not([class*="text-emerald"]):not([class*="text-blue"]):not([class*="text-cyan"]):not([class*="text-red"]) {
+  color: #ffffff !important;
 }
 
-/* Form Inputs in Dark Mode */
+/* D. Size and filter pills */
+body.theme-dark [class*="rounded"][class*="border"] button,
+body.theme-dark button[class*="rounded"] {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* 5. DROPDOWN MENUS in Dark Mode */
+body.theme-dark .dropdown-menu,
+body.theme-dark [class*="absolute"][class*="shadow-2xl"],
+body.theme-dark [class*="absolute"][class*="shadow-xl"] {
+  background-color: #0d1527 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+body.theme-dark [class*="absolute"][class*="shadow-2xl"] a,
+body.theme-dark [class*="absolute"][class*="shadow-2xl"] button {
+  color: #f1f5f9 !important;
+}
+
+body.theme-dark [class*="absolute"][class*="shadow-2xl"] a:hover,
+body.theme-dark [class*="absolute"][class*="shadow-2xl"] button:hover {
+  background-color: rgba(37, 99, 235, 0.25) !important;
+  color: #60a5fa !important;
+}
+
+/* 6. TABLE ELEMENTS in Dark Mode */
+body.theme-dark table th {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body.theme-dark table td {
+  color: #e2e8f0 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 7. FORM INPUTS in Dark Mode */
 body.theme-dark input:not([type="checkbox"]):not([type="radio"]),
 body.theme-dark select,
 body.theme-dark textarea {
-  background-color: rgba(30, 41, 59, 0.85) !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
+  background-color: rgba(30, 41, 59, 0.9) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
 }
 
 body.theme-dark input::placeholder,
 body.theme-dark textarea::placeholder {
   color: #94a3b8 !important;
 }
+

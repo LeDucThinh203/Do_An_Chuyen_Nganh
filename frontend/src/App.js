@@ -41,6 +41,7 @@ import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 import { ThemeProvider } from "./context/ThemeContext";
 import ThemeBackground from "./view/common/ThemeBackground";
 import ThemeToggleBtn from "./view/common/ThemeToggleBtn";
+import LuxuryCursor from "./view/common/LuxuryCursor";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -117,6 +118,9 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans relative transition-colors duration-500">
+      {/* Interactive Luxury Cursor & Shimmering Bubble Sparks */}
+      <LuxuryCursor />
+
       {/* Background Star & Meteor Effects */}
       <ThemeBackground />
 

@@ -33,26 +33,28 @@ const GENTLE_LIGHT_STARS = [
   { id: 27, top: "94%", left: "81%", size: 7, type: "diamond", color: "#93c5fd", duration: "7.4s", delay: "3.4s" },
 ];
 
-// Gentle, graceful meteor shower for Dark Mode (như mưa rơi êm dịu, mượt mà, uyển chuyển)
-const GENTLE_METEORS = [
-  { id: 1, top: "-40px", left: "8%", length: 110, duration: "6.0s", delay: "0.2s" },
-  { id: 2, top: "-50px", left: "20%", length: 130, duration: "5.4s", delay: "2.1s" },
-  { id: 3, top: "-30px", left: "34%", length: 95, duration: "6.8s", delay: "4.5s" },
-  { id: 4, top: "-60px", left: "48%", length: 140, duration: "5.7s", delay: "1.0s" },
-  { id: 5, top: "-40px", left: "62%", length: 120, duration: "6.3s", delay: "3.3s" },
-  { id: 6, top: "-50px", left: "76%", length: 105, duration: "5.9s", delay: "5.6s" },
-  { id: 7, top: "-35px", left: "89%", length: 125, duration: "6.5s", delay: "2.7s" },
-  { id: 8, top: "80px", left: "4%", length: 100, duration: "5.5s", delay: "4.0s" },
-  { id: 9, top: "140px", left: "27%", length: 135, duration: "6.2s", delay: "1.5s" },
-  { id: 10, top: "100px", left: "55%", length: 115, duration: "5.8s", delay: "6.2s" },
-  { id: 11, top: "160px", left: "70%", length: 120, duration: "6.6s", delay: "3.8s" },
-  { id: 12, top: "60px", left: "84%", length: 110, duration: "5.3s", delay: "0.8s" },
-  { id: 13, top: "-45px", left: "14%", length: 125, duration: "6.4s", delay: "4.8s" },
-  { id: 14, top: "-55px", left: "41%", length: 105, duration: "5.6s", delay: "2.9s" },
-  { id: 15, top: "-35px", left: "68%", length: 130, duration: "6.1s", delay: "0.5s" },
-  { id: 16, top: "-60px", left: "94%", length: 95, duration: "6.7s", delay: "5.1s" },
-  { id: 17, top: "220px", left: "18%", length: 115, duration: "5.9s", delay: "3.4s" },
-  { id: 18, top: "260px", left: "60%", length: 120, duration: "6.3s", delay: "1.8s" },
+// Delicate Tiny Star Rain for Dark Mode (ngôi sao như mưa rơi nhỏ nhẹ, thanh tao, êm đềm)
+const TINY_STAR_RAIN = [
+  { id: 1, top: "-30px", left: "6%", length: 18, duration: "5.5s", delay: "0.2s" },
+  { id: 2, top: "-40px", left: "15%", length: 22, duration: "4.8s", delay: "1.9s" },
+  { id: 3, top: "-25px", left: "24%", length: 15, duration: "6.2s", delay: "4.1s" },
+  { id: 4, top: "-50px", left: "33%", length: 25, duration: "5.1s", delay: "0.8s" },
+  { id: 5, top: "-35px", left: "42%", length: 19, duration: "5.8s", delay: "3.2s" },
+  { id: 6, top: "-45px", left: "51%", length: 24, duration: "5.4s", delay: "5.4s" },
+  { id: 7, top: "-30px", left: "60%", length: 16, duration: "6.0s", delay: "2.4s" },
+  { id: 8, top: "-40px", left: "69%", length: 20, duration: "4.9s", delay: "3.8s" },
+  { id: 9, top: "-25px", left: "78%", length: 17, duration: "5.7s", delay: "1.2s" },
+  { id: 10, top: "-45px", left: "87%", length: 23, duration: "5.3s", delay: "5.9s" },
+  { id: 11, top: "-30px", left: "95%", length: 16, duration: "6.1s", delay: "2.8s" },
+  { id: 12, top: "80px", left: "10%", length: 18, duration: "5.2s", delay: "4.5s" },
+  { id: 13, top: "140px", left: "29%", length: 22, duration: "5.9s", delay: "1.6s" },
+  { id: 14, top: "100px", left: "48%", length: 17, duration: "5.5s", delay: "3.6s" },
+  { id: 15, top: "170px", left: "67%", length: 24, duration: "5.0s", delay: "0.6s" },
+  { id: 16, top: "120px", left: "83%", length: 19, duration: "6.3s", delay: "4.9s" },
+  { id: 17, top: "-35px", left: "19%", length: 21, duration: "5.6s", delay: "2.7s" },
+  { id: 18, top: "-40px", left: "57%", length: 16, duration: "5.8s", delay: "1.0s" },
+  { id: 19, top: "-25px", left: "74%", length: 23, duration: "5.2s", delay: "4.3s" },
+  { id: 20, top: "-50px", left: "92%", length: 18, duration: "6.0s", delay: "0.4s" },
 ];
 
 // Dark background subtle static stars
@@ -195,21 +197,21 @@ export default function ThemeBackground() {
             ))}
           </div>
 
-          {/* Gentle Meteor Rain (Mưa sao băng rơi êm dịu, nhẹ nhàng, uyển chuyển) */}
+          {/* Tiny Delicate Star Rain (Ngôi sao như mưa rơi nhỏ nhẹ, êm đềm) */}
           <div className="absolute inset-0 overflow-hidden">
-            {GENTLE_METEORS.map((m) => (
+            {TINY_STAR_RAIN.map((s) => (
               <div
-                key={m.id}
-                className="meteor-rain-streak"
+                key={s.id}
+                className="tiny-star-rain"
                 style={{
-                  top: m.top,
-                  left: m.left,
-                  width: `${m.length}px`,
-                  animationDuration: m.duration,
-                  animationDelay: m.delay,
+                  top: s.top,
+                  left: s.left,
+                  width: `${s.length}px`,
+                  animationDuration: s.duration,
+                  animationDelay: s.delay,
                 }}
               >
-                <div className="meteor-rain-head" />
+                <div className="tiny-star-head" />
               </div>
             ))}
           </div>
