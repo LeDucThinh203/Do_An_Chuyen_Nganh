@@ -250,8 +250,6 @@ function AppContent() {
 
       {isAdminUser && pathname !== "/" && !pathname.startsWith("/category/") && <AdminSupportChatWidget />}
 
-      {/* Floating Theme Quick Switcher for all pages */}
-      <ThemeToggleBtn variant="floating" />
     </div>
   );
 }
