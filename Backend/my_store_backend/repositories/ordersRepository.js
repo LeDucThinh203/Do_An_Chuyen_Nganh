@@ -61,19 +61,73 @@ export const getOrdersPage = async ({ limit = 25, cursor = null, accountId = nul
   values.push(limit + 1);
 
   const [rows] = await db.query(
-    `SELECT o.*, a.username AS account_username
-     FROM orders o
-     LEFT JOIN account a ON a.id = o.account_id
-     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-     ORDER BY o.created_at DESC, o.id DESC
-     LIMIT ?`,
+    `SELECT page_orders.*,
+            od.order_id AS "__detail_order_id",
+            od.id AS "__detail_id",
+            od.quantity AS "__detail_quantity",
+            od.price AS "__detail_price",
+            ps.id AS "__detail_product_size_id",
+            s.size AS "__detail_size_name",
+            p.id AS "__detail_product_id",
+            p.name AS "__detail_product_name",
+            p.price AS "__detail_product_price",
+            p.image AS "__detail_product_image"
+     FROM (
+       SELECT o.*, a.username AS account_username
+       FROM orders o
+       LEFT JOIN account a ON a.id = o.account_id
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       ORDER BY o.created_at DESC, o.id DESC
+       LIMIT ?
+     ) page_orders
+     LEFT JOIN order_details od ON od.order_id = page_orders.id
+     LEFT JOIN product_sizes ps ON ps.id = od.product_sizes_id
+     LEFT JOIN sizes s ON s.id = ps.size_id
+     LEFT JOIN product p ON p.id = ps.product_id
+     ORDER BY page_orders.created_at DESC, page_orders.id DESC, od.id ASC`,
     values
   );
 
-  const hasMore = rows.length > limit;
-  const pageRows = hasMore ? rows.slice(0, limit) : rows;
-  const data = await attachOrderDetails(pageRows);
-  const lastOrder = pageRows[pageRows.length - 1];
+  const ordersById = new Map();
+  for (const row of rows) {
+    const {
+      __detail_order_id: detailOrderId,
+      __detail_id: detailId,
+      __detail_quantity: detailQuantity,
+      __detail_price: detailPrice,
+      __detail_product_size_id: productSizeId,
+      __detail_size_name: sizeName,
+      __detail_product_id: productId,
+      __detail_product_name: productName,
+      __detail_product_price: productPrice,
+      __detail_product_image: productImage,
+      ...order
+    } = row;
+
+    if (!ordersById.has(String(order.id))) {
+      ordersById.set(String(order.id), { ...order, order_details: [] });
+    }
+
+    if (detailId != null) {
+      ordersById.get(String(order.id)).order_details.push({
+        order_id: detailOrderId,
+        order_detail_id: detailId,
+        quantity: detailQuantity,
+        price: detailPrice,
+        product_size_id: productSizeId,
+        size_name: sizeName,
+        product_id: productId,
+        product_name: productName,
+        product_price: productPrice,
+        image: productImage,
+      });
+    }
+  }
+
+  const allOrders = [...ordersById.values()];
+  const hasMore = allOrders.length > limit;
+  const data = hasMore ? allOrders.slice(0, limit) : allOrders;
+  const lastOrder = data[data.length - 1];
   const nextCursor = hasMore && lastOrder
     ? encodeCursor({ createdAt: lastOrder.created_at, id: lastOrder.id })
     : null;
