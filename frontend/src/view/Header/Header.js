@@ -5,6 +5,7 @@ import ThemeToggleBtn from "../common/ThemeToggleBtn";
 export default function Header() {
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -68,8 +69,8 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
       {/* Top Announcement Bar */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white text-[12px] sm:text-xs py-1.5 px-4 font-medium tracking-wide">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2 mx-auto sm:mx-0">
+        <div className="max-w-7xl mx-auto flex min-w-0 items-center justify-center gap-3 sm:justify-between">
+          <div className="mx-auto flex min-w-0 items-center gap-2 sm:mx-0">
             <span className="inline-flex items-center justify-center bg-blue-500/30 text-blue-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-blue-400/30">
               Ưu đãi
             </span>
@@ -84,17 +85,17 @@ export default function Header() {
       </div>
 
       {/* Main Glassmorphism Navbar */}
-      <nav className="glass-nav border-b border-slate-200/70 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.06)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      <nav className="glass-nav relative border-b border-slate-200/70 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.06)]">
+        <div className="max-w-7xl mx-auto flex h-16 items-center justify-between gap-2 px-3 sm:h-20 sm:gap-4 sm:px-6 lg:px-8">
           
           {/* Logo & Brand Identity */}
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
               <svg className="w-6 h-6 transform -rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <div className="flex flex-col">
+            <div className="hidden flex-col sm:flex">
               <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-blue-700 bg-clip-text text-transparent">
                 COOLSHOP
               </span>
@@ -105,7 +106,7 @@ export default function Header() {
           </Link>
 
           {/* Quick Nav links */}
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+          <div className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-semibold text-slate-600">
             <Link to="/" className="hover:text-blue-600 transition flex items-center gap-1.5 py-1">
               <span>Trang chủ</span>
             </Link>
@@ -119,7 +120,24 @@ export default function Header() {
           </div>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-4">
+            <button
+              type="button"
+              aria-label={mobileNavOpen ? "Đóng điều hướng" : "Mở điều hướng"}
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-site-navigation"
+              onClick={() => setMobileNavOpen((open) => !open)}
+              className="rounded-full p-2 text-slate-700 transition hover:bg-slate-100/70 hover:text-blue-600 lg:hidden"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {mobileNavOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+
             {/* Theme Toggle Button */}
             <ThemeToggleBtn variant="navbar" />
 
@@ -210,16 +228,16 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   to="/login"
-                  className="px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:text-blue-600 hover:bg-slate-100/70 rounded-full transition"
+                  className="rounded-full px-2 py-2 text-[11px] font-bold text-slate-700 transition hover:bg-slate-100/70 hover:text-blue-600 sm:px-4 sm:text-sm"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg transition duration-200"
+                  className="hidden rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg sm:inline-flex sm:px-4 sm:text-sm"
                 >
                   Đăng ký
                 </Link>
@@ -227,6 +245,25 @@ export default function Header() {
             )}
           </div>
         </div>
+
+        {mobileNavOpen && (
+          <div id="mobile-site-navigation" className="absolute inset-x-3 top-full z-50 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl lg:hidden">
+            <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+              Trang chủ
+            </Link>
+            <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+              Sản phẩm
+            </Link>
+            <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-rose-600 hover:bg-rose-50">
+              Khuyến mãi Hot
+            </Link>
+            {!user && (
+              <Link to="/register" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                Tạo tài khoản
+              </Link>
+            )}
+          </div>
+        )}
       </nav>
     </header>
   );

@@ -318,7 +318,7 @@ export default function Footer() {
         {/* 6. Legal links */}
         <div className="pt-4 border-t border-slate-800/60 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© 2026 COOLSHOP Vietnam. All rights reserved.</p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-end">
             <Link to="/" className="hover:text-slate-300 transition">Điều khoản sử dụng</Link>
             <Link to="/" className="hover:text-slate-300 transition">Chính sách bảo mật</Link>
             <Link to="/" className="hover:text-slate-300 transition">Quy chế hoạt động</Link>

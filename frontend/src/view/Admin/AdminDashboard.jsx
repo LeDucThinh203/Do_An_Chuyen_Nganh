@@ -17,7 +17,11 @@ import ThemeToggleBtn from "../common/ThemeToggleBtn";
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
   const [activeTab, setActiveTab] = useState("revenue");
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : true
+  );
   const [supportUnreadTotal, setSupportUnreadTotal] = useState(0);
   const location = useLocation();
 
@@ -125,15 +129,24 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className="flex h-screen overflow-hidden bg-transparent"
+      className="flex h-screen h-[100dvh] overflow-hidden bg-transparent"
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}
     >
+      {menuOpen && (
+        <button
+          type="button"
+          aria-label="Đóng menu quản trị"
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-[999] bg-slate-950/55 backdrop-blur-sm lg:hidden"
+        />
+      )}
+
       {/* Sidebar Menu - Slate Luxury Theme */}
       <aside
         className={`bg-slate-900 text-slate-300 transition-all duration-300 flex-shrink-0 ${
           menuOpen ? "w-64" : "w-0"
         } overflow-hidden flex flex-col border-r border-slate-800/80 shadow-2xl`}
-        style={{ position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 1000, margin: 0, padding: 0 }}
+        style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 1000, margin: 0, padding: 0 }}
       >
         <div className="h-full flex flex-col">
           {/* Brand Header */}
@@ -151,6 +164,8 @@ export default function AdminDashboard() {
             </Link>
 
             <button
+              type="button"
+              aria-label="Thu gọn menu quản trị"
               onClick={() => setMenuOpen(false)}
               className="text-slate-400 hover:text-white transition p-1 rounded-lg hover:bg-slate-800"
               title="Thu gọn menu"
@@ -225,15 +240,16 @@ export default function AdminDashboard() {
 
       {/* Main Content Area */}
       <div
-        className="flex-1 flex flex-col overflow-hidden bg-transparent"
-        style={{ marginLeft: menuOpen ? "256px" : "0", transition: "margin-left 0.3s" }}
+        className={`ml-0 flex flex-1 flex-col overflow-hidden bg-transparent transition-[margin] duration-300 ${menuOpen ? "lg:ml-64" : ""}`}
       >
         {/* Top Header */}
-        <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80 px-6 py-3.5 flex-shrink-0 z-10">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80 px-3 py-3.5 sm:px-6 flex-shrink-0 z-10">
+          <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               {!menuOpen && (
                 <button
+                  type="button"
+                  aria-label="Mở menu quản trị"
                   onClick={() => setMenuOpen(true)}
                   className="text-slate-600 hover:text-slate-900 transition p-2 rounded-xl hover:bg-slate-100 border border-slate-200 shadow-sm"
                   title="Mở menu"
@@ -243,15 +259,15 @@ export default function AdminDashboard() {
                   </svg>
                 </button>
               )}
-              <div>
-                <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              <div className="min-w-0">
+                <h1 className="truncate text-base sm:text-xl font-extrabold text-slate-900 tracking-tight">
                   {currentMeta.title}
                 </h1>
                 <p className="text-xs text-slate-500 hidden sm:block">{currentMeta.subtitle}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-4">
               <ThemeToggleBtn variant="navbar" />
               <Link
                 to="/"

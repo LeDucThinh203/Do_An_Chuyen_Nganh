@@ -206,8 +206,8 @@ export default function SupportChatManager({ compact = false }) {
   };
 
   return (
-    <div className={`${compact ? 'h-full min-h-0 rounded-none border-0 shadow-none' : 'h-full min-h-0 rounded-2xl border border-slate-200 shadow-sm'} bg-white overflow-hidden grid grid-cols-12`}>
-      <div className="col-span-4 min-h-0 border-r border-slate-200 flex flex-col">
+    <div className={`${compact ? 'h-full min-h-0 rounded-none border-0 shadow-none' : 'h-full min-h-0 rounded-2xl border border-slate-200 shadow-sm'} bg-white overflow-hidden grid grid-cols-1 grid-rows-[minmax(0,0.4fr)_minmax(0,0.6fr)] md:grid-cols-12 md:grid-rows-1`}>
+      <div className="col-span-1 min-h-0 border-b border-slate-200 flex flex-col md:col-span-4 md:border-b-0 md:border-r">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
           <h2 className="font-semibold text-slate-800">Hộp thư hỗ trợ</h2>
           <p className="text-xs text-slate-500">Cuộc trò chuyện giữa khách hàng và admin</p>
@@ -248,7 +248,7 @@ export default function SupportChatManager({ compact = false }) {
         </div>
       </div>
 
-      <div className="col-span-8 min-h-0 flex flex-col">
+      <div className="col-span-1 min-h-0 flex flex-col md:col-span-8">
         <div className="px-4 py-3 border-b border-slate-200 bg-white">
           <div className="flex items-center justify-between gap-3 min-w-0">
             <div className="min-w-0 flex-1">

@@ -12,7 +12,11 @@ import ThemeToggleBtn from "../common/ThemeToggleBtn";
 export default function UserDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
   const [activeTab, setActiveTab] = useState("info");
-  const [menuOpen, setMenuOpen] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : true
+  );
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -148,12 +152,14 @@ export default function UserDashboard() {
   const userInitial = (user.username || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
+    <div className="flex h-screen h-[100dvh] overflow-hidden bg-transparent font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
       {/* Backdrop for Mobile */}
       {menuOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Đóng menu tài khoản"
           onClick={() => setMenuOpen(false)}
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 z-30 border-0 bg-slate-950/40 p-0 backdrop-blur-sm lg:hidden"
         />
       )}
 
@@ -182,6 +188,8 @@ export default function UserDashboard() {
             )}
           </Link>
           <button
+            type="button"
+            aria-label={menuOpen ? "Thu gọn menu tài khoản" : "Mở rộng menu tài khoản"}
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
             title={menuOpen ? "Thu gọn menu" : "Mở rộng menu"}
@@ -279,16 +287,16 @@ export default function UserDashboard() {
 
       {/* Main Content Area */}
       <div
-        className="flex-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          marginLeft: menuOpen ? "288px" : "80px"
-        }}
+        className={`ml-0 flex flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out ${menuOpen ? "lg:ml-72" : "lg:ml-20"}`}
       >
         {/* Top Header */}
-        <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-6 py-4 flex-shrink-0 shadow-sm z-10">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+        <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-3 py-4 sm:px-6 flex-shrink-0 shadow-sm z-10">
+          <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-4">
               <button
+                type="button"
+                aria-label={menuOpen ? "Đóng menu tài khoản" : "Mở menu tài khoản"}
+                aria-expanded={menuOpen}
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition"
               >
@@ -297,10 +305,10 @@ export default function UserDashboard() {
                 </svg>
               </button>
 
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                   <span className="text-xl">{pageInfo.icon}</span>
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  <h1 className="truncate text-base sm:text-2xl font-black text-slate-900 tracking-tight">
                     {pageInfo.title}
                   </h1>
                 </div>
@@ -311,7 +319,7 @@ export default function UserDashboard() {
             </div>
 
             {/* Right Quick Info */}
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-3">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-xs font-semibold text-slate-500">Xin chào,</span>
                 <span className="text-sm font-black text-slate-900">{user.username}</span>

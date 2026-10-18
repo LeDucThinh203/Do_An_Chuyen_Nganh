@@ -267,7 +267,7 @@ export default function ProductList() {
       />
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 sm:pt-32 pb-16">
         
         {loading ? (
           <div className="space-y-8">
@@ -818,16 +818,16 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
 
       {/* Main Glassmorphism Navbar */}
       <nav className="glass-nav border-b border-slate-200/70 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.06)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3 sm:gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 px-3 py-2 sm:flex sm:h-20 sm:gap-6 sm:px-6 sm:py-0 lg:px-8">
           
           {/* Brand Logo */}
-          <div onClick={handleLogoClick} className="flex items-center gap-2.5 cursor-pointer group flex-shrink-0">
+          <button type="button" onClick={handleLogoClick} aria-label="Về trang chủ" className="flex flex-shrink-0 items-center gap-2.5 border-0 bg-transparent p-0 text-left group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
               <svg className="w-6 h-6 transform -rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <div className="flex flex-col">
+            <div className="hidden flex-col sm:flex">
               <span className="text-xl sm:text-2xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-blue-900 to-blue-700 bg-clip-text text-transparent">
                 COOLSHOP
               </span>
@@ -835,10 +835,10 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
                 Pro Athletic
               </span>
             </div>
-          </div>
+          </button>
 
           {/* Search Box with Suggestions */}
-          <div className="relative flex-1 max-w-md" ref={searchRef}>
+          <div className="relative col-span-2 min-w-0 max-w-md sm:col-span-1 sm:flex-1" ref={searchRef}>
             <div className="relative flex items-center">
               <input
                 type="text"
@@ -908,7 +908,7 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
           </div>
 
           {/* Right Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center justify-self-end gap-1 sm:col-start-auto sm:row-start-auto sm:gap-4">
             {/* Theme Toggle Button */}
             <ThemeToggleBtn variant="navbar" />
 
@@ -999,16 +999,16 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Link
                   to="/login"
-                  className="px-3.5 py-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:text-blue-600 hover:bg-slate-100/70 rounded-full transition"
+                  className="rounded-full px-2 py-1.5 text-[10px] font-bold text-slate-700 transition hover:bg-slate-100/70 hover:text-blue-600 sm:px-3.5 sm:text-sm"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-full shadow-md shadow-blue-500/20 hover:shadow-lg transition duration-200"
+                  className="hidden rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition duration-200 hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg sm:inline-flex sm:text-sm"
                 >
                   Đăng ký
                 </Link>
