@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { resolveProductSizeStockColumn } from '../services/productSizeStock.js';
 import { encodeCursor } from '../utils/pagination.js';
 
 let ensureDeletedAtColumnPromise = null;
@@ -65,7 +66,10 @@ export const getAllProducts = async ({ includeDeleted = false } = {}) => {
 };
 
 export const getProductsPage = async ({ includeDeleted = false, limit = 25, cursor = null, categoryId = null } = {}) => {
-  await ensureDeletedAtColumn();
+  const [, stockColumn] = await Promise.all([
+    ensureDeletedAtColumn(),
+    resolveProductSizeStockColumn(),
+  ]);
   const conditions = [];
   const values = [];
 
@@ -81,23 +85,53 @@ export const getProductsPage = async ({ includeDeleted = false, limit = 25, curs
 
   values.push(limit + 1);
   const sql = `
-    SELECT p.*,
-           EXISTS (
-             SELECT 1
-             FROM order_details od
-             INNER JOIN product_sizes ps ON ps.id = od.product_sizes_id
-             WHERE ps.product_id = p.id
-           ) AS "hasPurchases"
-    FROM product p
-    ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-    ORDER BY p.id DESC
-    LIMIT ?
+    SELECT page_rows.*,
+           ps.id AS "__product_size_id",
+           ps.product_id AS "__product_size_product_id",
+           ps.size_id AS "__product_size_size_id",
+           ps.${stockColumn} AS "__product_size_stock"
+    FROM (
+      SELECT p.*,
+             EXISTS (
+               SELECT 1
+               FROM order_details od
+               INNER JOIN product_sizes purchased_sizes ON purchased_sizes.id = od.product_sizes_id
+               WHERE purchased_sizes.product_id = p.id
+             ) AS "hasPurchases"
+      FROM product p
+      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+      ORDER BY p.id DESC
+      LIMIT ?
+    ) page_rows
+    LEFT JOIN product_sizes ps ON ps.product_id = page_rows.id
+    ORDER BY page_rows.id DESC, ps.id ASC
   `;
   const [rows] = await db.query(sql, values);
-  const hasMore = rows.length > limit;
-  const data = hasMore ? rows.slice(0, limit) : rows;
+  const productsById = new Map();
+  const productSizes = [];
+
+  for (const row of rows) {
+    const {
+      __product_size_id: productSizeId,
+      __product_size_product_id: productId,
+      __product_size_size_id: sizeId,
+      __product_size_stock: stock,
+      ...product
+    } = row;
+    productsById.set(String(product.id), product);
+
+    if (productSizeId != null) {
+      productSizes.push({ id: productSizeId, product_id: productId, size_id: sizeId, stock });
+    }
+  }
+
+  const allProducts = [...productsById.values()];
+  const hasMore = allProducts.length > limit;
+  const data = hasMore ? allProducts.slice(0, limit) : allProducts;
+  const pageProductIds = new Set(data.map((product) => String(product.id)));
+  const pageProductSizes = productSizes.filter((productSize) => pageProductIds.has(String(productSize.product_id)));
   const nextCursor = hasMore && data.length ? encodeCursor({ id: data[data.length - 1].id }) : null;
-  return { data, pagination: { limit, hasMore, nextCursor } };
+  return { data, productSizes: pageProductSizes, pagination: { limit, hasMore, nextCursor } };
 };
 
 export const getProductById = async (id, { includeDeleted = false } = {}) => {

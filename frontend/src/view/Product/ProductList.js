@@ -1,6 +1,6 @@
 // src/view/Product/ProductList.js
 import React, { useEffect, useState, useRef } from "react";
-import { getProductsPage, deleteProduct, getAllCategories, getAllSizes, getAllProductSizes } from "../../api";
+import { getProductsPage, deleteProduct, getAllCategories, getAllSizes } from "../../api";
 import { Link, useNavigate } from "react-router-dom";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
@@ -49,14 +49,12 @@ export default function ProductList() {
         getAllCategories(),
         getAllSizes()
       ]);
-      const productSizesData = await getAllProductSizes((productPage.data || []).map((product) => product.id));
-      
       setProducts(productPage.data || []);
       setNextCursor(productPage.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
       setCategories(catData);
       setSizes(sizesData);
-      setProductSizes(productSizesData);
+      setProductSizes(productPage.productSizes || []);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
     } finally {
@@ -69,9 +67,8 @@ export default function ProductList() {
     try {
       setLoadingMoreProducts(true);
       const page = await getProductsPage({ limit: 50, cursor: nextCursor });
-      const pageSizes = await getAllProductSizes((page.data || []).map((product) => product.id));
       setProducts((current) => [...current, ...(page.data || [])]);
-      setProductSizes((current) => [...current, ...pageSizes]);
+      setProductSizes((current) => [...current, ...(page.productSizes || [])]);
       setNextCursor(page.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(page.pagination?.hasMore));
     } catch (err) {

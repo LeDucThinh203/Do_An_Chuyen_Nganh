@@ -1,7 +1,7 @@
 // src/view/Product/ProductLoadMore.js
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getProductsPage, getAllCategories, getAllSizes, getAllProductSizes, deleteProduct } from "../../api";
+import { getProductsPage, getAllCategories, getAllSizes, deleteProduct } from "../../api";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
@@ -37,13 +37,11 @@ export default function ProductLoadMore() {
         getAllCategories(),
         getAllSizes()
       ]);
-      const productSizesData = await getAllProductSizes((productPage.data || []).map((product) => product.id));
-      
       setProducts(productPage.data || []);
       setNextCursor(productPage.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
       setSizes(sizesData);
-      setProductSizes(productSizesData);
+      setProductSizes(productPage.productSizes || []);
       
       const currentCategory = catData.find(c => String(c.id) === normalizedCategoryId);
       setCategory(currentCategory);
@@ -183,9 +181,8 @@ export default function ProductLoadMore() {
     try {
       setLoadingMoreProducts(true);
       const page = await getProductsPage({ limit: 24, categoryId: normalizedCategoryId, cursor: nextCursor });
-      const pageProductSizes = await getAllProductSizes((page.data || []).map((product) => product.id));
       setProducts(current => [...current, ...(page.data || [])]);
-      setProductSizes(current => [...current, ...pageProductSizes]);
+      setProductSizes(current => [...current, ...(page.productSizes || [])]);
       setNextCursor(page.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(page.pagination?.hasMore));
       setVisibleCount(prev => prev + 8);
