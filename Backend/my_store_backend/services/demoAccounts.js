@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import * as accountRepo from '../repositories/accountRepository.js';
 
-const demoAccounts = [
+const getDemoAccounts = () => [
   {
     email: process.env.DEMO_ADMIN_EMAIL || 'admin@admin.com',
     username: 'Demo Admin',
@@ -17,9 +17,12 @@ const demoAccounts = [
 ];
 
 export const ensureDemoAccounts = async () => {
-  if (process.env.ENABLE_DEMO_ACCOUNTS !== 'true') return;
+  const explicitlyDisabled = process.env.ENABLE_DEMO_ACCOUNTS === 'false';
+  const enabled = process.env.ENABLE_DEMO_ACCOUNTS === 'true'
+    || (process.env.NODE_ENV === 'production' && !explicitlyDisabled);
+  if (!enabled) return;
 
-  for (const demoAccount of demoAccounts) {
+  for (const demoAccount of getDemoAccounts()) {
     if (await accountRepo.getAccountByEmail(demoAccount.email)) continue;
 
     try {
