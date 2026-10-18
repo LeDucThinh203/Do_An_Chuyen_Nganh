@@ -39,7 +39,7 @@ export const getAllOrders = async () => {
   return attachOrderDetails(orders);
 };
 
-export const getOrdersPage = ({ limit = 25, cursor = null, accountId = null, from = null, to = null } = {}) => {
+export const getOrdersPage = async ({ limit = 25, cursor = null, accountId = null, from = null, to = null } = {}) => {
   const conditions = [];
   const values = [];
   if (accountId != null) {
