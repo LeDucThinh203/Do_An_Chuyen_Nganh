@@ -11,6 +11,7 @@ import db from './db.js';
 import uiRoutes from './routes/ui.js'; // gom tất cả route
 import { ensureAiSchema } from './services/ai/schema.js';
 import { ensureSupportChatSchema } from './services/supportChat/schema.js';
+import { ensureDemoAccounts } from './services/demoAccounts.js';
 import { initSupportSocket } from './services/supportChat/socketHub.js';
 
 dotenv.config();
@@ -127,7 +128,14 @@ const shutdown = (signal) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-httpServer.listen(PORT, '0.0.0.0', () => {
+const startServer = async () => {
+  try {
+    await ensureDemoAccounts();
+  } catch (error) {
+    console.error('[demo] Could not initialize demo accounts:', error.message);
+  }
+
+  httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
 
@@ -160,7 +168,10 @@ httpServer.listen(PORT, '0.0.0.0', () => {
       console.warn('⚠️  Background initialization warning:', e.message);
     }
   })();
-});
+  });
+};
+
+startServer();
 
 
 

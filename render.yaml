@@ -21,6 +21,16 @@ services:
         value: 30000
       - key: DB_CONN_TIMEOUT_MS
         value: 15000
+      - key: ENABLE_DEMO_ACCOUNTS
+        value: "true"
+      - key: DEMO_ADMIN_EMAIL
+        value: admin@admin.com
+      - key: DEMO_ADMIN_PASSWORD
+        value: "123456"
+      - key: DEMO_USER_EMAIL
+        value: user@user.com
+      - key: DEMO_USER_PASSWORD
+        value: "123456"
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
@@ -51,3 +61,11 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: https://my-store-backend.onrender.com
+      - key: REACT_APP_DEMO_ADMIN_EMAIL
+        value: admin@admin.com
+      - key: REACT_APP_DEMO_ADMIN_PASSWORD
+        value: "123456"
+      - key: REACT_APP_DEMO_USER_EMAIL
+        value: user@user.com
+      - key: REACT_APP_DEMO_USER_PASSWORD
+        value: "123456"
