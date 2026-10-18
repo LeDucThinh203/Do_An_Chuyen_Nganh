@@ -17,7 +17,7 @@
 - ✅ Web Services (Backend Node.js)
 - ✅ Static Sites (Frontend React)
 - ✅ PostgreSQL Database (FREE 90 ngày, sau đó $7/tháng)
-- ❌ MySQL không có free tier → Dùng PostgreSQL hoặc database external
+- Backend hiện dùng PostgreSQL; cấu hình Neon pooled URL trong `DATABASE_URL`.
 
 **Lưu ý Free Tier:**
 - Services sẽ sleep sau 15 phút không hoạt động
@@ -56,67 +56,14 @@ git push origin main
 
 ## 🗄️ Deploy Database (PostgreSQL)
 
-### Option 1: Sử dụng PostgreSQL của Render (FREE 90 ngày)
+### Neon PostgreSQL với connection pooling
 
-1. **Tạo PostgreSQL Database:**
-   - Dashboard → New → PostgreSQL
-   - Name: `my-store-db`
-   - Database: `my_store_db`
-   - User: `my_store_user`
-   - Region: Singapore (gần VN nhất)
-   - Click **Create Database**
+1. Tạo project PostgreSQL trong Neon.
+2. Trong **Connect**, bật **Pooled connection** và sao chép URL. Hostname phải có hậu tố `-pooler`; giữ tham số TLS như `sslmode=require`.
+3. Chạy `Database/POSTGRES_RENDER_INIT.sql` trong Neon SQL Editor để tạo schema ban đầu.
+4. Trong Render, đặt `DATABASE_URL` bằng URL pooled. Backend hiện đã tạo pool trong `db.js`; không cần thêm file `db_postgres.js`.
 
-2. **Lấy Connection String:**
-   ```
-   Internal Database URL: postgres://user:pass@hostname/dbname
-   External Database URL: postgres://user:pass@hostname/dbname
-   ```
-
-3. **Chuyển Database MySQL → PostgreSQL:**
-   
-   Tạo file `Backend/my_store_backend/db_postgres.js`:
-   ```javascript
-   import pkg from 'pg';
-   const { Pool } = pkg;
-   import dotenv from 'dotenv';
-   dotenv.config();
-
-   const pool = new Pool({
-     connectionString: process.env.DATABASE_URL,
-     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-   });
-
-   export default pool;
-   ```
-
-### Option 2: Sử dụng MySQL External (FREE - Khuyến nghị)
-
-**Sử dụng các dịch vụ MySQL miễn phí:**
-
-#### A. FreeSQLDatabase.com (FREE vĩnh viễn)
-1. Truy cập: https://www.freesqldatabase.com
-2. Sign up → Create Database
-3. Nhận thông tin:
-   ```
-   Host: sql12.freesqldatabase.com
-   Database: sql12xxxxx
-   Username: sql12xxxxx
-   Password: xxxxxxxxx
-   Port: 3306
-   ```
-
-#### B. db4free.net (FREE vĩnh viễn)
-1. Truy cập: https://www.db4free.net
-2. Sign up → Create Database
-3. Max 200MB, phù hợp cho development
-
-#### C. Aiven MySQL (FREE $300 credit)
-1. Truy cập: https://aiven.io
-2. Sign up → Create MySQL Service
-3. Chọn plan Free tier
-
----
-
+Neon dùng PgBouncer ở pooled endpoint. Backend giữ một pool `pg.Pool` dùng chung trong mỗi tiến trình; mặc định tối đa 10 kết nối, idle 30 giây và timeout kết nối 15 giây. Xem [hướng dẫn Neon chi tiết](Backend/my_store_backend/NEON_POSTGRES_GUIDE.md).
 ## 🔧 Deploy Backend với Docker
 
 ### 1. Chuẩn Bị Backend Files
@@ -137,16 +84,14 @@ services:
         value: production
       - key: PORT
         value: 3006
-      - key: DB_HOST
+      - key: DATABASE_URL
         sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_PORT
-        value: 3306
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_IDLE_TIMEOUT_MS
+        value: 30000
+      - key: DB_CONN_TIMEOUT_MS
+        value: 15000
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
@@ -214,11 +159,8 @@ app.get('/health', (req, res) => {
    ```
    NODE_ENV=production
    PORT=3006
-   DB_HOST=<your-mysql-host>
-   DB_USER=<your-mysql-user>
-   DB_PASSWORD=<your-mysql-password>
-   DB_NAME=<your-mysql-database>
-   DB_PORT=3306
+   DATABASE_URL=postgresql://USER:PASSWORD@ep-example-pooler.REGION.aws.neon.tech/DB?sslmode=require
+   DB_POOL_MAX=10
    JWT_SECRET=<random-string-32-chars>
    GEMINI_API_KEY=<your-gemini-key>
    ```
@@ -245,14 +187,14 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DB_HOST
+      - key: DATABASE_URL
         sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        sync: false
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_IDLE_TIMEOUT_MS
+        value: 30000
+      - key: DB_CONN_TIMEOUT_MS
+        value: 15000
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
@@ -383,16 +325,14 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: DB_HOST
+      - key: DATABASE_URL
         sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_PORT
-        value: 3306
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_IDLE_TIMEOUT_MS
+        value: 30000
+      - key: DB_CONN_TIMEOUT_MS
+        value: 15000
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY
@@ -417,14 +357,13 @@ services:
 
 ### Bước 1: Chuẩn Bị Database
 ```powershell
-# Đăng ký MySQL free tại FreeSQLDatabase.com hoặc db4free.net
+# Tạo project PostgreSQL trên Neon và lấy pooled connection string
 # Lưu lại thông tin: host, user, password, database
 ```
 
 ### Bước 2: Import Database Schema
 ```powershell
-# Kết nối MySQL Workbench hoặc phpMyAdmin
-# Import file Database/DBWebBanDoBongDa.sql
+# Chạy Database/POSTGRES_RENDER_INIT.sql trong Neon SQL Editor
 ```
 
 ### Bước 3: Push Code Lên GitHub
@@ -536,7 +475,7 @@ RUN npm install --production --max-old-space-size=2048
 ### Hoàn Toàn FREE:
 - ✅ Backend Web Service (Free tier)
 - ✅ Frontend Static Site (Free tier)
-- ✅ MySQL external (FreeSQLDatabase/db4free)
+- ✅ Neon PostgreSQL pooled endpoint
 - **Total: $0/tháng**
 
 ### Optional Paid:
@@ -591,7 +530,7 @@ app.use(compression());
 Bạn đã có:
 - ✅ Backend Node.js với Docker
 - ✅ Frontend React optimized
-- ✅ Database MySQL external
+- ✅ Neon PostgreSQL qua DATABASE_URL
 - ✅ Tất cả chạy MIỄN PHÍ trên Render
 - ✅ Auto deploy khi push Git
 - ✅ HTTPS miễn phí

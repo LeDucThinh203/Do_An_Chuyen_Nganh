@@ -13,16 +13,14 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: DB_HOST
+      - key: DATABASE_URL
         sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        sync: false
-      - key: DB_PORT
-        value: 3306
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_IDLE_TIMEOUT_MS
+        value: 30000
+      - key: DB_CONN_TIMEOUT_MS
+        value: 15000
       - key: JWT_SECRET
         generateValue: true
       - key: GEMINI_API_KEY

@@ -1,6 +1,6 @@
 # AI Backend (Gemini Level 5: Hybrid RAG + Memory + Tools)
 
-This adds AI endpoints to your existing Express + MySQL backend using Google Gemini.
+This adds AI endpoints to the Express + PostgreSQL backend using Google Gemini.
 
 ## ✨ Performance Optimizations (v2.0)
 
@@ -27,7 +27,7 @@ This adds AI endpoints to your existing Express + MySQL backend using Google Gem
 Visit Swagger at /swagger to explore.
 
 ## Features
-- RAG over product catalog using semantic embeddings (text-embedding-004) stored in MySQL
+- RAG over product catalog using semantic embeddings (text-embedding-004) stored in PostgreSQL
 - Memory: short-term conversation history + long-term user summary memory
 - Tools: product search, order status, list orders by user; executed via Gemini function calling.
 
@@ -37,7 +37,7 @@ Visit Swagger at /swagger to explore.
      - `GEMINI_CHAT_MODEL=gemini-2.5-pro` or `gemini-2.5-flash`
      - `GEMINI_FAST_MODEL=gemini-2.5-flash`
      - `GEMINI_EMBED_MODEL=text-embedding-004` (or other embedding model)
-2. Start MySQL and ensure credentials in `.env` are correct.
+2. Configure `DATABASE_URL` with the Neon pooled connection string. See [NEON_POSTGRES_GUIDE.md](./NEON_POSTGRES_GUIDE.md).
 3. Install dependencies in backend folder:
    - @google/generative-ai
 4. Start server and call `/ai/chat`.

@@ -17,6 +17,24 @@ const router = express.Router();
  *   get:
  *     summary: Lấy tất cả sản phẩm
  *     tags: [Product]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Kích thước trang; bật phản hồi phân trang dạng data/pagination
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Cursor opaque nhận từ trang trước
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: integer
+ *         description: Lọc theo danh mục khi phân trang
  *     responses:
  *       200:
  *         description: Danh sách sản phẩm
@@ -40,6 +58,9 @@ router.get('/', productController.getAllProducts);
  *         description: Không có quyền admin
  */
 router.get('/admin/all', authenticate, requireAdmin, productController.getAllProductsAdmin);
+
+router.get('/:id/ratings', productController.getProductRatings);
+router.get('/:id/rating-eligibility', authenticate, productController.getProductRatingEligibility);
 
 /**
  * @swagger

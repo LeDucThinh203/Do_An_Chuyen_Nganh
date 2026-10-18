@@ -1,44 +1,98 @@
 import db from '../db.js';
 import { resolveProductSizeStockColumn } from '../services/productSizeStock.js';
+import { encodeCursor } from '../utils/pagination.js';
+
+const attachOrderDetails = async (orders) => {
+  if (!orders.length) return orders;
+  const orderIds = orders.map((order) => order.id);
+  const [details] = await db.query(`
+    SELECT od.order_id, od.id AS order_detail_id, od.quantity, od.price,
+           ps.id AS product_size_id, s.size AS size_name,
+           p.id AS product_id, p.name AS product_name, p.price AS product_price, p.image
+    FROM order_details od
+    INNER JOIN product_sizes ps ON ps.id = od.product_sizes_id
+    INNER JOIN sizes s ON s.id = ps.size_id
+    INNER JOIN product p ON p.id = ps.product_id
+    WHERE od.order_id = ANY(?)
+    ORDER BY od.order_id, od.id
+  `, [orderIds]);
+
+  const detailsByOrderId = new Map();
+  for (const detail of details) {
+    const key = String(detail.order_id);
+    if (!detailsByOrderId.has(key)) detailsByOrderId.set(key, []);
+    detailsByOrderId.get(key).push(detail);
+  }
+  return orders.map((order) => ({
+    ...order,
+    order_details: detailsByOrderId.get(String(order.id)) || [],
+  }));
+};
 
 export const getAllOrders = async () => {
-  const [orders] = await db.query('SELECT * FROM orders');
-  
-  // Lấy order_details cho từng order
-  for (let order of orders) {
-    const [details] = await db.query(`
-      SELECT od.id as order_detail_id, od.quantity, od.price,
-             ps.id as product_size_id, s.size as size_name,
-             p.id as product_id, p.name as product_name, p.price as product_price, p.image
-      FROM order_details od
-      LEFT JOIN product_sizes ps ON od.product_sizes_id = ps.id
-      LEFT JOIN sizes s ON ps.size_id = s.id
-      LEFT JOIN product p ON ps.product_id = p.id
-      WHERE od.order_id = ?
-    `, [order.id]);
-    
-    order.order_details = details;
+  const [orders] = await db.query(
+    `SELECT o.*, a.username AS account_username
+     FROM orders o
+     LEFT JOIN account a ON a.id = o.account_id
+     ORDER BY o.created_at DESC, o.id DESC`
+  );
+  return attachOrderDetails(orders);
+};
+
+export const getOrdersPage = ({ limit = 25, cursor = null, accountId = null, from = null, to = null } = {}) => {
+  const conditions = [];
+  const values = [];
+  if (accountId != null) {
+    conditions.push('o.account_id = ?');
+    values.push(accountId);
   }
-  
-  return orders;
+  if (cursor?.createdAt && cursor?.id != null) {
+    conditions.push('(o.created_at, o.id) < (?, ?)');
+    values.push(cursor.createdAt, cursor.id);
+  }
+  if (from != null) {
+    conditions.push('o.created_at >= ?');
+    values.push(from);
+  }
+  if (to != null) {
+    conditions.push('o.created_at < ?');
+    values.push(to);
+  }
+  values.push(limit + 1);
+
+  const [rows] = await db.query(
+    `SELECT o.*, a.username AS account_username
+     FROM orders o
+     LEFT JOIN account a ON a.id = o.account_id
+     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+     ORDER BY o.created_at DESC, o.id DESC
+     LIMIT ?`,
+    values
+  );
+
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const data = await attachOrderDetails(pageRows);
+  const lastOrder = pageRows[pageRows.length - 1];
+  const nextCursor = hasMore && lastOrder
+    ? encodeCursor({ createdAt: lastOrder.created_at, id: lastOrder.id })
+    : null;
+
+  return { data, pagination: { limit, hasMore, nextCursor } };
 };
 
 export const getOrderById = async (id) => {
-  const [orders] = await db.query('SELECT * FROM orders WHERE id=?', [id]);
+  const [orders] = await db.query(
+    `SELECT o.*, a.username AS account_username
+     FROM orders o
+     LEFT JOIN account a ON a.id = o.account_id
+     WHERE o.id = ?`,
+    [id]
+  );
   if (!orders[0]) return null;
 
-  const [details] = await db.query(`
-    SELECT od.id as order_detail_id, od.quantity, od.price,
-           ps.id as product_size_id, s.size as size_name,
-           p.id as product_id, p.name as product_name, p.price as product_price, p.image
-    FROM order_details od
-    LEFT JOIN product_sizes ps ON od.product_sizes_id = ps.id
-    LEFT JOIN sizes s ON ps.size_id = s.id
-    LEFT JOIN product p ON ps.product_id = p.id
-    WHERE od.order_id = ?
-  `, [id]);
-
-  return { ...orders[0], order_details: details };
+  const [order] = await attachOrderDetails([orders[0]]);
+  return order;
 };
 
 export const createOrder = async (orderData) => {

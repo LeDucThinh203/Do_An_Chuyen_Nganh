@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import db from './db.js';
 
 import uiRoutes from './routes/ui.js'; // gom tất cả route
 import { ensureAiSchema } from './services/ai/schema.js';
@@ -98,6 +99,33 @@ app.get('/health', (req, res) => {
 
 // --- Start server ---
 initSupportSocket(httpServer);
+
+let shuttingDown = false;
+const shutdown = (signal) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[server] ${signal} received; closing HTTP server and PostgreSQL pool.`);
+
+  const forceExitTimer = setTimeout(() => {
+    console.error('[server] Graceful shutdown timed out.');
+    process.exit(1);
+  }, 10000);
+  forceExitTimer.unref();
+
+  httpServer.close(async (error) => {
+    clearTimeout(forceExitTimer);
+    if (error) console.error('[server] HTTP shutdown error:', error);
+    try {
+      await db.end();
+    } catch (poolError) {
+      console.error('[server] PostgreSQL pool shutdown error:', poolError);
+    }
+    process.exitCode = error ? 1 : 0;
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);

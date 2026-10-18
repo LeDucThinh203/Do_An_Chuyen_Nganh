@@ -216,13 +216,12 @@ export const toolsImpl = {
       console.log(`[Tool search_products] Filtering by size: ${size}`);
       const productIds = results.map(p => p.id);
       if (productIds.length > 0) {
-        const placeholders = productIds.map(() => '?').join(',');
         const [withSize] = await db.query(
           `SELECT DISTINCT p.id FROM product p
            JOIN product_sizes ps ON ps.product_id = p.id
            JOIN sizes s ON s.id = ps.size_id
-           WHERE p.id IN (${placeholders}) AND s.size = ?`,
-          [...productIds, String(size)]
+           WHERE p.id = ANY(?) AND s.size = ?`,
+          [productIds, String(size)]
         );
         const sizeFilteredIds = new Set(withSize.map(r => r.id));
         results = results.filter(p => sizeFilteredIds.has(p.id));
@@ -508,20 +507,22 @@ export const toolsImpl = {
       console.log(`[Tool get_orders_by_date] Date range: ${startDate.toISOString()} -> ${endDate.toISOString()}`);
 
       // Build query - lấy TẤT CẢ đơn hàng trong khoảng thời gian (không filter theo status)
-      const query = `SELECT o.*, 
-                    (SELECT COUNT(*) FROM order_details WHERE order_id = o.id) as item_count,
-                    (SELECT STRING_AGG(
-                        (COALESCE(p.name, 'Sản phẩm') || ' (' || COALESCE(s.size::text, '?') || ') x' || od.quantity::text),
-                        ', '
-                      )
+      const query = `SELECT o.*, order_summary.item_count, order_summary.items_summary
+                   FROM orders o
+                   LEFT JOIN LATERAL (
+                     SELECT COUNT(*) AS item_count,
+                            STRING_AGG(
+                              (COALESCE(p.name, 'Sản phẩm') || ' (' || COALESCE(s.size::text, '?') || ') x' || od.quantity::text),
+                              ', '
+                            ) AS items_summary
                      FROM order_details od
                      LEFT JOIN product_sizes ps ON od.product_sizes_id = ps.id
                      LEFT JOIN product p ON ps.product_id = p.id
                      LEFT JOIN sizes s ON ps.size_id = s.id
-                     WHERE od.order_id = o.id) as items_summary
-                   FROM orders o
+                     WHERE od.order_id = o.id
+                   ) order_summary ON TRUE
                    WHERE o.account_id = ?
-                   AND o.created_at >= ? AND o.created_at <= ?
+                     AND o.created_at >= ? AND o.created_at <= ?
                    ORDER BY o.created_at DESC`;
       
       const params = [user_id, startDate, endDate];

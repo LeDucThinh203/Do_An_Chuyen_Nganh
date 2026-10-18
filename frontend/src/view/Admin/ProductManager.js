@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  getAllProductsAdmin,
+  getProductsPage,
   deleteProduct,
   hardDeleteProduct,
   restoreProduct,
@@ -40,6 +40,9 @@ export default function ProductManager() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -50,13 +53,15 @@ export default function ProductManager() {
   const fetchProductData = async () => {
     try {
       setLoading(true);
-      const [prodData, catData, sizeData, prodSizeData] = await Promise.all([
-        getAllProductsAdmin(),
+      const [productPage, catData, sizeData] = await Promise.all([
+        getProductsPage({ limit: 50, admin: true }),
         getAllCategories(),
-        getAllSizes(),
-        getAllProductSizes()
+        getAllSizes()
       ]);
-      setProducts(prodData);
+      const prodSizeData = await getAllProductSizes((productPage.data || []).map((product) => product.id));
+      setProducts(productPage.data || []);
+      setNextCursor(productPage.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
       setCategories(catData);
       setSizes(sizeData);
       setProductSizes(prodSizeData);
@@ -120,7 +125,7 @@ export default function ProductManager() {
     }
     try {
       await createProductSize({ product_id: productId, size_id: Number(sizeId) });
-      const updatedProductSizes = await getAllProductSizes();
+      const updatedProductSizes = await getAllProductSizes(products.map((product) => product.id));
       setProductSizes(updatedProductSizes);
       setSelectedSize((prev) => ({ ...prev, [productId]: "" }));
     } catch (err) {
@@ -143,7 +148,7 @@ export default function ProductManager() {
   const handleUpdateStock = async (productSizeId, stock) => {
     try {
       await updateProductSize(productSizeId, { stock: Number(stock) });
-      const updatedProductSizes = await getAllProductSizes();
+      const updatedProductSizes = await getAllProductSizes(products.map((product) => product.id));
       setProductSizes(updatedProductSizes);
       setEditingStock((prev) => ({ ...prev, [productSizeId]: undefined }));
       alert("✅ Cập nhật số lượng kho thành công!");
@@ -156,8 +161,10 @@ export default function ProductManager() {
   const handleUpdateDiscount = async (productId, discountPercent) => {
     try {
       await updateProduct(productId, { discount_percent: Number(discountPercent) });
-      const updatedProducts = await getAllProductsAdmin();
-      setProducts(updatedProducts);
+      const updatedPage = await getProductsPage({ limit: 50, admin: true });
+      setProducts(updatedPage.data || []);
+      setNextCursor(updatedPage.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(updatedPage.pagination?.hasMore));
       setEditingDiscount((prev) => ({ ...prev, [productId]: undefined }));
       alert("✅ Cập nhật khuyến mãi thành công!");
     } catch (err) {
@@ -168,6 +175,23 @@ export default function ProductManager() {
 
   const calculateDiscountedPrice = (price, discount) => {
     return price - (price * discount / 100);
+  };
+
+  const loadMoreProducts = async () => {
+    if (!nextCursor || loadingMoreProducts) return;
+    try {
+      setLoadingMoreProducts(true);
+      const page = await getProductsPage({ limit: 50, admin: true, cursor: nextCursor });
+      const pageSizes = await getAllProductSizes((page.data || []).map((product) => product.id));
+      setProducts((current) => [...current, ...(page.data || [])]);
+      setProductSizes((current) => [...current, ...pageSizes]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      console.error("Không thể tải thêm sản phẩm:", err);
+    } finally {
+      setLoadingMoreProducts(false);
+    }
   };
 
   const filteredProducts = products.filter((p) => {
@@ -330,7 +354,7 @@ export default function ProductManager() {
       <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-md py-3.5 mb-5 rounded-2xl border border-slate-200/80 px-4 shadow-sm">
         <div className="flex items-center justify-between mb-2.5">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Danh mục sản phẩm</h3>
-          <span className="text-xs text-slate-500">{filteredProducts.length} kết quả</span>
+          <span className="text-xs text-slate-500">{filteredProducts.length}{hasMoreProducts ? "+" : ""} kết quả đã tải</span>
         </div>
         <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 scrollbar-hide">
           <button
@@ -572,6 +596,17 @@ export default function ProductManager() {
               Thu gọn
             </button>
           )}
+        </div>
+      )}
+      {hasMoreProducts && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={loadMoreProducts}
+            disabled={loadingMoreProducts}
+            className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {loadingMoreProducts ? "Đang tải..." : "Tải thêm sản phẩm"}
+          </button>
         </div>
       )}
     </div>

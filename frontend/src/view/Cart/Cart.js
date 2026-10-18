@@ -17,7 +17,7 @@ export default function Cart() {
       try {
         const [sizesData, psData] = await Promise.all([
           getAllSizes(),
-          getAllProductSizes()
+          getAllProductSizes([...new Set(storedCart.map((item) => item.id))])
         ]);
         setSizes(sizesData);
         setProductSizes(psData);

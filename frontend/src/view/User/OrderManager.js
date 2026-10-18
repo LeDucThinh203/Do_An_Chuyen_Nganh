@@ -1,7 +1,7 @@
 // src/view/User/OrderManager.js
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllOrders, deleteOrder } from "../../api";
+import { getMyOrdersPage, deleteOrder } from "../../api";
 import Session from "../../Session/session";
 
 export default function OrderManager({ onNavigate }) {
@@ -12,6 +12,9 @@ export default function OrderManager({ onNavigate }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [visibleCount, setVisibleCount] = useState(8);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [loadingMoreOrders, setLoadingMoreOrders] = useState(false);
 
   const user = Session.getUser();
   const navigate = useNavigate();
@@ -19,18 +22,35 @@ export default function OrderManager({ onNavigate }) {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getAllOrders();
-      const userOrders = data.filter((order) => order.account_id === user.id);
-      const sortedOrders = userOrders.sort(
+      const page = await getMyOrdersPage({ limit: 25 });
+      const sortedOrders = (page.data || []).sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
       setOrders(sortedOrders);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreOrders(Boolean(page.pagination?.hasMore));
+      setVisibleCount(8);
       setLoading(false);
     } catch (err) {
       setError(err.message || "Lỗi khi tải danh sách đơn hàng");
       setLoading(false);
     }
   }, [user.id]);
+
+  const loadMoreOrders = async () => {
+    if (!nextCursor || loadingMoreOrders) return;
+    try {
+      setLoadingMoreOrders(true);
+      const page = await getMyOrdersPage({ limit: 25, cursor: nextCursor });
+      setOrders((current) => [...current, ...(page.data || [])]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreOrders(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      setError(err.message || "Không thể tải thêm đơn hàng");
+    } finally {
+      setLoadingMoreOrders(false);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -368,6 +388,18 @@ export default function OrderManager({ onNavigate }) {
             )}
           </div>
         </>
+      )}
+
+      {hasMoreOrders && (
+        <div className="flex justify-center py-4">
+          <button
+            onClick={loadMoreOrders}
+            disabled={loadingMoreOrders}
+            className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 disabled:opacity-50"
+          >
+            {loadingMoreOrders ? "Đang tải..." : "Tải thêm đơn hàng"}
+          </button>
+        </div>
       )}
 
       {/* Modal Chi Tiết Đơn Hàng Sang Trọng (Canh giữa chuẩn mực) */}

@@ -16,9 +16,8 @@ export default function Address({ onNavigate }) {
       setLoading(true);
       setError("");
       try {
-        const data = await addressAPI.getAllAddresses();
-        const userAddresses = data.filter((addr) => addr.account_id === user.id);
-        setAddresses(userAddresses);
+        const data = await addressAPI.getMyAddresses();
+        setAddresses(data);
       } catch (err) {
         console.error("Lỗi khi lấy địa chỉ:", err);
         setError("Không tải được danh sách địa chỉ nhận hàng.");

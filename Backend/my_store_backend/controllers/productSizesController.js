@@ -2,7 +2,16 @@ import * as productSizesRepo from '../repositories/productSizesRepository.js';
 
 export const getAllProductSizes = async (req, res) => {
   try {
-    const productSizes = await productSizesRepo.getAllProductSizes();
+    let productIds = req.query.product_ids
+      ? String(req.query.product_ids).split(',').map((id) => id.trim())
+      : req.query.product_id ?? null;
+    if (Array.isArray(productIds) && (productIds.length > 100 || productIds.some((id) => !/^\d+$/.test(id)))) {
+      return res.status(400).json({ error: 'Danh sách product_id không hợp lệ' });
+    }
+    if (typeof productIds === 'string' && !/^\d+$/.test(productIds)) {
+      return res.status(400).json({ error: 'product_id không hợp lệ' });
+    }
+    const productSizes = await productSizesRepo.getAllProductSizes(productIds);
     res.json(productSizes);
   } catch (err) {
     res.status(500).json({ error: err.message });

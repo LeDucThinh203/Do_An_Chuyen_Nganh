@@ -1,7 +1,7 @@
 // src/view/Admin/Revenue.js
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { getAllOrders, getAllProducts } from "../../api";
+import { getOrdersPage } from "../../api";
 import { RevenueTabContentSkeleton } from "../common/Skeletons";
 import { Bar } from 'react-chartjs-2';
 import {
@@ -46,11 +46,25 @@ function getDatesOfWeek(weekNumber, year = new Date().getFullYear()) {
   return dates;
 }
 
+function getWeekRangeIso(weekNumber) {
+  const dates = getDatesOfWeek(weekNumber);
+  const from = new Date(dates[0]);
+  from.setHours(0, 0, 0, 0);
+  const to = new Date(dates[6]);
+  to.setDate(to.getDate() + 1);
+  to.setHours(0, 0, 0, 0);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
 export default function Revenue() {
   const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [loadingMoreOrders, setLoadingMoreOrders] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(getCurrentWeek());
+  const selectedWeekRef = useRef(selectedWeek);
+  selectedWeekRef.current = selectedWeek;
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState("revenue");
@@ -200,33 +214,56 @@ export default function Revenue() {
     };
   }, []);
 
-  // Fetch orders và products
+  // Load only the selected week's orders, using keyset pagination.
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [ordersData, productsData] = await Promise.all([
-          getAllOrders(),
-          getAllProducts()
-        ]);
-        setOrders(ordersData);
-        setProducts(productsData);
+        setOrders([]);
+        setNextCursor(null);
+        setHasMoreOrders(false);
+        const page = await getOrdersPage({ limit: 100, ...getWeekRangeIso(selectedWeek) });
+        if (cancelled) return;
+        setOrders(page.data || []);
+        setNextCursor(page.pagination?.nextCursor || null);
+        setHasMoreOrders(Boolean(page.pagination?.hasMore));
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+    return () => { cancelled = true; };
+  }, [selectedWeek]);
+
+  const loadMoreWeekOrders = async () => {
+    if (!nextCursor || loadingMoreOrders) return;
+    const requestedWeek = selectedWeek;
+    try {
+      setLoadingMoreOrders(true);
+      const page = await getOrdersPage({
+        limit: 100,
+        cursor: nextCursor,
+        ...getWeekRangeIso(requestedWeek),
+      });
+      if (selectedWeekRef.current !== requestedWeek) return;
+      setOrders((current) => [...current, ...(page.data || [])]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreOrders(Boolean(page.pagination?.hasMore));
+    } catch (error) {
+      console.error("Không thể tải thêm đơn của tuần:", error);
+    } finally {
+      setLoadingMoreOrders(false);
+    }
+  };
 
   // Tính toán doanh thu và thống kê
   useEffect(() => {
-    if (orders.length > 0) {
-      const data = calculateRevenueAndStats(orders, selectedWeek);
-      setRevenueData(data);
-    }
+    const data = calculateRevenueAndStats(orders, selectedWeek);
+    setRevenueData(data);
   }, [orders, selectedWeek, calculateRevenueAndStats]);
 
   // Reset lazy loading khi chuyển tab hoặc tuần
@@ -376,10 +413,7 @@ export default function Revenue() {
       return [];
     }
     
-    return order.order_details.map(detail => {
-      const product = products.find(p => p.id === detail.product_id);
-      return product ? product.name : `Sản phẩm #${detail.product_id}`;
-    });
+    return order.order_details.map(detail => detail.product_name || `Sản phẩm #${detail.product_id}`);
   };
 
   // Lấy chi tiết sản phẩm (tên, size, số lượng)
@@ -389,9 +423,8 @@ export default function Revenue() {
     }
     
     return order.order_details.map(detail => {
-      const product = products.find(p => p.id === detail.product_id);
       return {
-        name: product ? product.name : `Sản phẩm #${detail.product_id}`,
+        name: detail.product_name || `Sản phẩm #${detail.product_id}`,
         size: detail.size_name || 'N/A',
         quantity: detail.quantity || 1,
         price: detail.price || 0
@@ -975,6 +1008,19 @@ export default function Revenue() {
           </div>
         )}
       </div>
+
+      {hasMoreOrders && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-900">
+          <span>Đang hiển thị dữ liệu đã tải của tuần này; còn đơn hàng phía sau.</span>
+          <button
+            onClick={loadMoreWeekOrders}
+            disabled={loadingMoreOrders}
+            className="rounded-lg bg-blue-700 px-4 py-2 font-bold text-white hover:bg-blue-800 disabled:opacity-50"
+          >
+            {loadingMoreOrders ? "Đang tải..." : "Tải thêm đơn hàng"}
+          </button>
+        </div>
+      )}
 
       {/* Tabs Navigation */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-3">

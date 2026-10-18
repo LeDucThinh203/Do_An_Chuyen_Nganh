@@ -108,11 +108,10 @@ Write-Host "====================================" -ForegroundColor Cyan
 Write-Host "Backend Service:" -ForegroundColor White
 Write-Host "  - NODE_ENV=production" -ForegroundColor Gray
 Write-Host "  - PORT=10000" -ForegroundColor Gray
-Write-Host "  - DB_HOST=<your-mysql-host>" -ForegroundColor Gray
-Write-Host "  - DB_USER=<your-mysql-user>" -ForegroundColor Gray
-Write-Host "  - DB_PASSWORD=<your-mysql-password>" -ForegroundColor Gray
-Write-Host "  - DB_NAME=<your-mysql-database>" -ForegroundColor Gray
-Write-Host "  - DB_PORT=3306" -ForegroundColor Gray
+Write-Host "  - DATABASE_URL=<Neon pooled URL; hostname includes -pooler>" -ForegroundColor Gray
+Write-Host "  - DB_POOL_MAX=10" -ForegroundColor Gray
+Write-Host "  - DB_IDLE_TIMEOUT_MS=30000" -ForegroundColor Gray
+Write-Host "  - DB_CONN_TIMEOUT_MS=15000" -ForegroundColor Gray
 Write-Host "  - JWT_SECRET=<random-32-chars>" -ForegroundColor Gray
 Write-Host "  - GEMINI_API_KEY=<your-gemini-key>" -ForegroundColor Gray
 Write-Host ""

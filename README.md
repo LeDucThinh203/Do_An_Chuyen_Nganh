@@ -1,6 +1,6 @@
 # 🏪 My Store - Website Bán Đồ Bóng Đá
 
-> **E-commerce platform với AI Chatbot** - Node.js + React + MySQL + Docker
+> **E-commerce platform với AI Chatbot** - Node.js + React + PostgreSQL (Neon) + Docker
 
 [![Deploy on Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -56,8 +56,8 @@ Website thương mại điện tử bán đồ bóng đá với tích hợp AI c
 ### Backend
 - **Runtime**: Node.js 18+
 - **Framework**: Express 5
-- **Database**: MySQL 8.0
-- **ORM**: mysql2 (raw queries + prepared statements)
+- **Database**: PostgreSQL on Neon
+- **Database client**: `pg` with a shared `Pool`; use Neon’s pooled (`-pooler`) connection URL
 - **Auth**: JWT + bcryptjs
 - **AI**: Google Gemini API
 - **API Docs**: Swagger/OpenAPI
@@ -115,7 +115,7 @@ Do_An_Chuyen_Nganh/
 
 ### Yêu Cầu
 - Node.js 18+
-- MySQL 8.0+ (hoặc database free online)
+- PostgreSQL (Neon pooled connection URL or the local Docker Compose database)
 - Docker (optional, cho local dev)
 - Git
 
@@ -131,17 +131,15 @@ cd Do_An_Chuyen_Nganh
 ```powershell
 cd Backend/my_store_backend
 
-# Copy environment template
-Copy-Item .env.example .env
-
-# Edit .env with your database credentials
+# Add your Neon pooled DATABASE_URL to this .env file.
+# Use the Neon connection string whose hostname includes -pooler.
 notepad .env
 
 # Install dependencies
 npm install
 
 # Test database connection
-node scripts/test_db_connection.js
+npm run db:check
 
 # Start server
 npm start
@@ -161,9 +159,10 @@ npm start
 ```
 
 #### 4. Setup Database
-- Đăng ký database miễn phí tại [FreeSQLDatabase.com](https://www.freesqldatabase.com)
-- Import file `Database/DBWebBanDoBongDa.sql`
-- Xem chi tiết: [DATABASE_OPTIONS.md](./DATABASE_OPTIONS.md)
+- Tạo project PostgreSQL tại Neon và lấy pooled connection string (hostname có `-pooler`).
+- Đặt URL đó trong `Backend/my_store_backend/.env` dưới tên `DATABASE_URL`.
+- Chạy `Database/POSTGRES_RENDER_INIT.sql` trong Neon SQL Editor để tạo schema ban đầu.
+- Xem hướng dẫn: [Neon PostgreSQL và connection pool](./Backend/my_store_backend/NEON_POSTGRES_GUIDE.md).
 
 ---
 
@@ -185,7 +184,7 @@ docker-compose down
 **Services:**
 - Frontend: http://localhost
 - Backend: http://localhost:3006
-- Database: localhost:3307
+- Database: localhost:5432 (PostgreSQL)
 - Swagger: http://localhost:3006/swagger
 
 Xem chi tiết: [DOCKER_DEPLOYMENT_GUIDE.md](./DOCKER_DEPLOYMENT_GUIDE.md)
@@ -209,7 +208,7 @@ Xem hướng dẫn chi tiết: [QUICK_START_RENDER.md](./QUICK_START_RENDER.md)
 ### 💰 Chi Phí: $0/tháng
 - ✅ Backend Web Service (Free tier)
 - ✅ Frontend Static Site (Free tier)  
-- ✅ MySQL Database (FreeSQLDatabase.com)
+- ✅ PostgreSQL database (Neon pooled endpoint)
 - ✅ HTTPS auto SSL
 - ✅ Auto deploy from Git
 
@@ -252,11 +251,13 @@ GET    /health                # Server status
 ### Backend (.env)
 ```env
 # Database
-DB_HOST=your-database-host
-DB_USER=your-username
-DB_PASSWORD=your-password
-DB_NAME=your-database
-DB_PORT=3306
+# Neon pooled connection string. Keep the -pooler hostname and sslmode=require.
+DATABASE_URL=postgresql://USER:PASSWORD@ep-example-pooler.REGION.aws.neon.tech/DB?sslmode=require
+
+# Per Node.js process. Total app connections are approximately replicas x this value.
+DB_POOL_MAX=10
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONN_TIMEOUT_MS=15000
 
 # Authentication
 JWT_SECRET=your-random-secret-32-chars-minimum
@@ -274,7 +275,7 @@ NODE_ENV=development
 REACT_APP_API_URL=http://localhost:3006
 ```
 
-Xem template: `Backend/my_store_backend/.env.example`
+Xem hướng dẫn chi tiết: [NEON_POSTGRES_GUIDE.md](./Backend/my_store_backend/NEON_POSTGRES_GUIDE.md).
 
 ---
 
@@ -283,7 +284,7 @@ Xem template: `Backend/my_store_backend/.env.example`
 ### Test Database Connection
 ```powershell
 cd Backend/my_store_backend
-node scripts/test_db_connection.js
+npm run db:check
 ```
 
 ### Test API Endpoints
@@ -383,7 +384,7 @@ MIT License - Free to use for personal and commercial projects.
 
 - Google Gemini API for AI capabilities
 - Render.com for free hosting
-- FreeSQLDatabase.com for free MySQL
+- Neon PostgreSQL for managed PostgreSQL
 - Open source community
 
 ---

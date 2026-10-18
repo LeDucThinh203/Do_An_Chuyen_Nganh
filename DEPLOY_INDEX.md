@@ -43,9 +43,9 @@
 
 ### 🆓 Chọn Database Miễn Phí
 **[DATABASE_OPTIONS.md](./DATABASE_OPTIONS.md)**
-- So sánh 6 options MySQL free
+- Hướng dẫn Neon PostgreSQL và connection pool
 - Hướng dẫn đăng ký từng service
-- Recommendations theo use case
+- Cấu hình DATABASE_URL pooled có hậu tố -pooler
 - Import/Export database
 
 ---

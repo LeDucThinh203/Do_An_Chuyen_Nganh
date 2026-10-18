@@ -2,19 +2,13 @@
 
 ## Bắt đầu ngay trong 5 phút!
 
-### Bước 1: Apply Database Indexes (QUAN TRỌNG!)
-```bash
-# Vào thư mục gốc của project
-cd D:\DACN\DAcn\Do_An_Chuyen_Nganh
+### Step 1: Configure Neon PostgreSQL
 
-# Apply indexes (tăng tốc SQL 50-70%)
-mysql -u root -p my_store < Database/AI_Performance_Indexes.sql
-```
-
-**Nhập password MySQL khi được hỏi.**
+1. Run `Database/POSTGRES_RENDER_INIT.sql` in Neon SQL Editor.
+2. Set `DATABASE_URL` in `Backend/my_store_backend/.env` to Neon’s pooled URL (hostname includes `-pooler`).
+3. The MySQL-only `Database/AI_Performance_Indexes.sql` script is legacy and must not be run on Neon.
 
 ---
-
 ### Bước 2: Khởi động Server
 ```bash
 cd Backend\my_store_backend
@@ -176,22 +170,15 @@ echo GEMINI_API_KEY=your-api-key-here > .env
 
 ### Lỗi: "Cannot connect to database"
 **Fix:**
-```bash
-# Kiểm tra MySQL đang chạy
-# Windows: services.msc → tìm MySQL → Start
-
-# Kiểm tra credentials trong .env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your-password
-DB_NAME=my_store
+```powershell
+npm run db:check
 ```
 
 ### Response chậm (>5s)
 **Check:**
 1. Database indexes đã apply chưa?
    ```sql
-   SHOW INDEX FROM product;
+   SELECT indexname FROM pg_indexes WHERE tablename='product';
    ```
 2. Thử fast mode: `"fast": true`
 3. Giảm topK: `"topK": 3`

@@ -7,17 +7,11 @@ Sử dụng checklist này để đảm bảo không bỏ sót bước nào tron
 ## 📋 Phase 1: Chuẩn Bị (30 phút)
 
 ### 🗄️ Database Setup
-- [ ] Chọn database provider (FreeSQLDatabase/db4free/Aiven)
-- [ ] Đăng ký account database
-- [ ] Tạo database mới
-- [ ] Lưu lại credentials:
-  - [ ] Host
-  - [ ] Username
-  - [ ] Password
-  - [ ] Database name
-  - [ ] Port (3306)
-- [ ] Import schema SQL (`DBWebBanDoBongDa.sql`)
-- [ ] Verify import thành công (check tables)
+- [ ] Create a PostgreSQL project in Neon
+- [ ] Copy the pooled connection string (hostname includes `-pooler` and URL includes `sslmode=require`)
+- [ ] Run `Database/POSTGRES_RENDER_INIT.sql` in Neon SQL Editor
+- [ ] Set `DATABASE_URL` in the backend environment
+- [ ] Keep pool limits appropriate for backend instance count
 
 ### 🔑 Environment Variables
 - [ ] Copy `.env.example` thành `.env`
@@ -31,7 +25,7 @@ Sử dụng checklist này để đảm bảo không bỏ sót bước nào tron
   ```powershell
   node Backend\my_store_backend\scripts\test_db_connection.js
   ```
-- [ ] Result: ✅ "Database connection test PASSED!"
+- [ ] Result: ✅ "PostgreSQL connection is healthy."
 - [ ] (Optional) Test local với Docker:
   ```powershell
   docker-compose up -d
@@ -86,11 +80,10 @@ Nhập vào Render Dashboard (Environment tab):
 
 - [ ] `NODE_ENV` = `production`
 - [ ] `PORT` = `10000`
-- [ ] `DB_HOST` = `<your-mysql-host>`
-- [ ] `DB_USER` = `<your-mysql-user>`
-- [ ] `DB_PASSWORD` = `<your-mysql-password>`
-- [ ] `DB_NAME` = `<your-mysql-database>`
-- [ ] `DB_PORT` = `3306`
+- [ ] `DATABASE_URL` = Neon pooled connection string (hostname includes `-pooler`)
+- [ ] `DB_POOL_MAX` = `10` (per backend process)
+- [ ] `DB_IDLE_TIMEOUT_MS` = `30000`
+- [ ] `DB_CONN_TIMEOUT_MS` = `15000`
 - [ ] `JWT_SECRET` = `<random-32-chars>`
 - [ ] `GEMINI_API_KEY` = `<your-gemini-key>`
 
@@ -209,7 +202,7 @@ Nhập vào Render Dashboard (Environment tab):
 ### 💾 Backup
 - [ ] Backup database:
   ```bash
-  mysqldump -h host -u user -p database > backup.sql
+  pg_dump "$env:DATABASE_URL_UNPOOLED" --format=custom --file=backup.dump
   ```
 - [ ] Store backup securely (Google Drive, GitHub private repo)
 - [ ] Setup automated backup script
@@ -268,9 +261,9 @@ Nhập vào Render Dashboard (Environment tab):
 - Support: support@render.com
 
 ### Database
-- FreeSQLDatabase: support@freesqldatabase.com
-- db4free: db4free@db4free.net
-- Aiven: support@aiven.io
+- Neon PostgreSQL: https://neon.com/docs/connect/connection-pooling
+
+
 
 ---
 
@@ -288,9 +281,7 @@ https://_____________________________________.onrender.com
 
 **Database Host:**
 ```
-Host: _________________________________
-User: _________________________________
-Database: _____________________________
+Neon pooled DATABASE_URL: __________________________________________
 ```
 
 **Deployment Date:**

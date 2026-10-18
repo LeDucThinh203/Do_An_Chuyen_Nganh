@@ -1,12 +1,11 @@
 // src/view/Admin/OrderManager.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllOrders, updateOrderStatus, getAllAccounts, deleteOrder } from "../../api";
+import { getOrdersPage, updateOrderStatus, deleteOrder } from "../../api";
 import { OrderManagerSkeleton } from "../common/Skeletons";
 
 export default function OrderManager() {
   const [orders, setOrders] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -17,6 +16,9 @@ export default function OrderManager() {
   const [detailModal, setDetailModal] = useState({ show: false, order: null });
   const [visibleCountBank, setVisibleCountBank] = useState(5);
   const [visibleCountCOD, setVisibleCountCOD] = useState(5);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [loadingMoreOrders, setLoadingMoreOrders] = useState(false);
 
   useEffect(() => {
     fetchOrdersAndAccounts();
@@ -25,18 +27,16 @@ export default function OrderManager() {
   const fetchOrdersAndAccounts = async () => {
     try {
       setLoading(true);
-      const [allOrders, allAccounts] = await Promise.all([
-        getAllOrders(),
-        getAllAccounts()
-      ]);
+      const ordersPage = await getOrdersPage({ limit: 50 });
 
       // Sắp xếp đơn hàng mới nhất lên đầu
-      const sortedOrders = allOrders.sort((a, b) => 
+      const sortedOrders = (ordersPage.data || []).sort((a, b) =>
         new Date(b.created_at) - new Date(a.created_at)
       );
 
       setOrders(sortedOrders);
-      setAccounts(allAccounts);
+      setNextCursor(ordersPage.pagination?.nextCursor || null);
+      setHasMoreOrders(Boolean(ordersPage.pagination?.hasMore));
       
       // Reset bộ lọc về mặc định
       setFilterStatus("all");
@@ -46,6 +46,21 @@ export default function OrderManager() {
       console.error("Lỗi:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreOrders = async () => {
+    if (!nextCursor || loadingMoreOrders) return;
+    try {
+      setLoadingMoreOrders(true);
+      const page = await getOrdersPage({ limit: 50, cursor: nextCursor });
+      setOrders((current) => [...current, ...(page.data || [])]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreOrders(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      setError(err.message || "Không thể tải thêm đơn hàng");
+    } finally {
+      setLoadingMoreOrders(false);
     }
   };
 
@@ -169,7 +184,7 @@ export default function OrderManager() {
       order.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.phone?.includes(searchTerm) ||
       order.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      accounts.find(acc => acc.id === order.account_id)?.username?.toLowerCase().includes(searchTerm.toLowerCase());
+      order.account_username?.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesStatus && matchesPayment && matchesSearch;
   });
@@ -206,9 +221,8 @@ export default function OrderManager() {
     return new Date(dateString).toLocaleString('vi-VN');
   };
 
-  const getUsername = (accountId) => {
-    const account = accounts.find(acc => acc.id === accountId);
-    return account ? account.username : 'Không xác định';
+  const getUsername = (order) => {
+    return order?.account_username || 'Không xác định';
   };
 
   // Hàm xử lý đường dẫn hình ảnh
@@ -257,7 +271,7 @@ export default function OrderManager() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-            Tổng cộng: <strong className="text-slate-900 font-black">{filteredOrders.length}</strong> đơn hàng
+            Đã tải: <strong className="text-slate-900 font-black">{filteredOrders.length}</strong> đơn hàng phù hợp
           </span>
         </div>
       </div>
@@ -805,6 +819,18 @@ export default function OrderManager() {
         </div>
       )}
 
+      {hasMoreOrders && (
+        <div className="flex justify-center py-5">
+          <button
+            onClick={loadMoreOrders}
+            disabled={loadingMoreOrders}
+            className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {loadingMoreOrders ? "Đang tải..." : "Tải thêm đơn hàng"}
+          </button>
+        </div>
+      )}
+
       {/* Modal cập nhật trạng thái */}
       {updateModal.show && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
@@ -952,7 +978,7 @@ export default function OrderManager() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Tài khoản:</span>
-                      <span className="font-bold text-slate-800">{getUsername(detailModal.order.account_id)}</span>
+                      <span className="font-bold text-slate-800">{getUsername(detailModal.order)}</span>
                     </div>
                   </div>
                 </div>

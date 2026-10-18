@@ -1,7 +1,7 @@
 // src/view/Product/ProductLoadMore.js
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getAllProducts, getAllCategories, getAllSizes, getAllProductSizes, deleteProduct } from "../../api";
+import { getProductsPage, getAllCategories, getAllSizes, getAllProductSizes, deleteProduct } from "../../api";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
@@ -18,6 +18,9 @@ export default function ProductLoadMore() {
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartCount, setCartCount] = useState(0);
   const [visibleCount, setVisibleCount] = useState(8);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [sortOrder, setSortOrder] = useState("default");
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,14 +32,16 @@ export default function ProductLoadMore() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [prodData, catData, sizesData, productSizesData] = await Promise.all([
-        getAllProducts(),
+      const [productPage, catData, sizesData] = await Promise.all([
+        getProductsPage({ limit: 24, categoryId: normalizedCategoryId }),
         getAllCategories(),
-        getAllSizes(),
-        getAllProductSizes()
+        getAllSizes()
       ]);
+      const productSizesData = await getAllProductSizes((productPage.data || []).map((product) => product.id));
       
-      setProducts(prodData);
+      setProducts(productPage.data || []);
+      setNextCursor(productPage.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
       setSizes(sizesData);
       setProductSizes(productSizesData);
       
@@ -167,10 +172,28 @@ export default function ProductLoadMore() {
   });
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredProducts.length;
+  const hasMore = visibleCount < filteredProducts.length || hasMoreProducts;
 
-  const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 8);
+  const handleLoadMore = async () => {
+    if (visibleCount < filteredProducts.length) {
+      setVisibleCount(prev => prev + 8);
+      return;
+    }
+    if (!nextCursor || loadingMoreProducts) return;
+    try {
+      setLoadingMoreProducts(true);
+      const page = await getProductsPage({ limit: 24, categoryId: normalizedCategoryId, cursor: nextCursor });
+      const pageProductSizes = await getAllProductSizes((page.data || []).map((product) => product.id));
+      setProducts(current => [...current, ...(page.data || [])]);
+      setProductSizes(current => [...current, ...pageProductSizes]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(page.pagination?.hasMore));
+      setVisibleCount(prev => prev + 8);
+    } catch (err) {
+      console.error("Không thể tải thêm sản phẩm:", err);
+    } finally {
+      setLoadingMoreProducts(false);
+    }
   };
 
   const handleCollapse = () => {
@@ -220,7 +243,7 @@ export default function ProductLoadMore() {
 
                   <div className="self-start sm:self-auto px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-white flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    <span>{filteredProducts.length} Sản phẩm</span>
+                    <span>{filteredProducts.length}{hasMoreProducts ? "+" : ""} sản phẩm{hasMoreProducts ? " đã tải" : ""}</span>
                   </div>
                 </div>
               </div>
@@ -279,7 +302,11 @@ export default function ProductLoadMore() {
                       onClick={handleLoadMore}
                       className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full font-bold text-sm shadow-xl shadow-blue-500/25 hover:scale-105 transition duration-200"
                     >
-                      Xem thêm sản phẩm ({filteredProducts.length - visibleProducts.length} còn lại) ▼
+                      {loadingMoreProducts
+                        ? "Đang tải..."
+                        : visibleCount < filteredProducts.length
+                          ? `Xem thêm sản phẩm (${filteredProducts.length - visibleProducts.length} còn lại) ▼`
+                          : "Tải thêm sản phẩm ▼"}
                     </button>
                   </div>
                 )}
@@ -309,6 +336,15 @@ export default function ProductLoadMore() {
                 >
                   Về trang chủ
                 </Link>
+                {hasMoreProducts && (
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={loadingMoreProducts}
+                    className="ml-3 rounded-full bg-slate-900 px-6 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                  >
+                    {loadingMoreProducts ? "Đang tải..." : "Tải thêm kết quả"}
+                  </button>
+                )}
               </div>
             )}
           </>

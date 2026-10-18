@@ -49,6 +49,30 @@ export const getAllProducts = async () => {
   return await safeJson(res);
 };
 
+export const getProductsPage = async ({ limit = 25, cursor = null, categoryId = null, admin = false } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  if (categoryId != null) params.set("category_id", String(categoryId));
+  const endpoint = admin ? `${PRODUCT_API_URL}/admin/all` : PRODUCT_API_URL;
+  const res = await fetch(`${endpoint}?${params.toString()}`, admin ? { headers: getAuthHeaders() } : undefined);
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load products"));
+  return await safeJson(res);
+};
+
+export const getProductRatingsPage = async (productId, { limit = 20, cursor = null } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  const res = await fetch(`${PRODUCT_API_URL}/${productId}/ratings?${params.toString()}`);
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load product reviews"));
+  return await safeJson(res);
+};
+
+export const getProductRatingEligibility = async (productId) => {
+  const res = await fetch(`${PRODUCT_API_URL}/${productId}/rating-eligibility`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to check review eligibility"));
+  return await safeJson(res);
+};
+
 export const getAllProductsAdmin = async () => {
   try {
     const res = await fetch(`${PRODUCT_API_URL}/admin/all`, {
@@ -318,6 +342,12 @@ export const getAllAddresses = async () => {
   return await safeJson(res);
 };
 
+export const getMyAddresses = async () => {
+  const res = await fetch(`${ADDRESS_API_URL}/mine`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load your addresses"));
+  return await safeJson(res);
+};
+
 export const getAddressById = async (id) => {
   const res = await fetch(`${ADDRESS_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy địa chỉ thất bại");
@@ -391,8 +421,15 @@ export const clearMyAiHistory = async () => {
 // ================= ProductSize API =================
 const PRODUCT_SIZE_API_URL = `${API_BASE_URL}/product_sizes`;
 
-export const getAllProductSizes = async () => {
-  const res = await fetch(PRODUCT_SIZE_API_URL);
+export const getAllProductSizes = async (productIds = null) => {
+  if (Array.isArray(productIds) && productIds.length === 0) return [];
+  let endpoint = PRODUCT_SIZE_API_URL;
+  if (Array.isArray(productIds)) {
+    endpoint = `${PRODUCT_SIZE_API_URL}?product_ids=${encodeURIComponent(productIds.join(","))}`;
+  } else if (productIds != null) {
+    endpoint = `${PRODUCT_SIZE_API_URL}?product_id=${encodeURIComponent(productIds)}`;
+  }
+  const res = await fetch(endpoint);
   if (!res.ok) throw new Error("Lấy product sizes thất bại");
   return await safeJson(res);
 };
@@ -461,6 +498,24 @@ export const createOrder = async (data) => {
 export const getAllOrders = async () => {
   const res = await fetch(ORDER_API_URL);
   if (!res.ok) throw new Error("Lấy danh sách đơn hàng thất bại");
+  return await safeJson(res);
+};
+
+export const getOrdersPage = async ({ limit = 25, cursor = null, from = null, to = null } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const res = await fetch(`${ORDER_API_URL}?${params.toString()}`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load orders"));
+  return await safeJson(res);
+};
+
+export const getMyOrdersPage = async ({ limit = 25, cursor = null } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  const res = await fetch(`${ORDER_API_URL}/mine?${params.toString()}`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load your orders"));
   return await safeJson(res);
 };
 

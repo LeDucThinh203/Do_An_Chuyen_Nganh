@@ -70,15 +70,29 @@ const mapResult = (result) => {
   return [rows, meta];
 };
 
+const positiveInteger = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+
+const poolOptions = {
+  max: positiveInteger(process.env.DB_POOL_MAX, 10),
+  idleTimeoutMillis: positiveInteger(process.env.DB_IDLE_TIMEOUT_MS, 30000),
+  connectionTimeoutMillis: positiveInteger(process.env.DB_CONN_TIMEOUT_MS, 15000),
+};
+
 const buildPoolConfig = () => {
   if (process.env.DATABASE_URL) {
-    return {
+    const config = {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
-      max: Number(process.env.DB_POOL_MAX || 10),
-      idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
-      connectionTimeoutMillis: Number(process.env.DB_CONN_TIMEOUT_MS || 15000),
+      ...poolOptions,
     };
+
+    // Let sslmode=require in a Neon connection string configure TLS by default.
+    // DB_SSL can explicitly override TLS when a provider requires it.
+    if (process.env.DB_SSL === 'false') config.ssl = false;
+    if (process.env.DB_SSL === 'true') config.ssl = { rejectUnauthorized: false };
+    return config;
   }
 
   return {
@@ -86,15 +100,17 @@ const buildPoolConfig = () => {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: Number(process.env.DB_PORT || 5432),
+    port: positiveInteger(process.env.DB_PORT, 5432),
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    max: Number(process.env.DB_POOL_MAX || 10),
-    idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30000),
-    connectionTimeoutMillis: Number(process.env.DB_CONN_TIMEOUT_MS || 15000),
+    ...poolOptions,
   };
 };
 
-const pool = new Pool(buildPoolConfig());
+export const pool = new Pool(buildPoolConfig());
+
+pool.on('error', (error) => {
+  console.error('[db] Unexpected error from an idle PostgreSQL pool client:', error);
+});
 
 const runQuery = async (client, sql, params = []) => {
   const normalized = normalizeSql(sql, params);
@@ -116,6 +132,7 @@ const runQuery = async (client, sql, params = []) => {
 
 const db = {
   query: async (sql, params = []) => runQuery(pool, sql, params),
+  end: () => pool.end(),
 
   getConnection: async () => {
     const client = await pool.connect();

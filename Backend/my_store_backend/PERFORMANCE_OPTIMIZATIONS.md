@@ -138,8 +138,10 @@ GEMINI_CHAT_MODEL=gemini-2.0-flash-exp
 GEMINI_FAST_MODEL=gemini-1.5-flash
 GEMINI_EMBED_MODEL=text-embedding-004
 
-# Database connection pool (tùy chọn)
-DB_CONNECTION_LIMIT=20
+# PostgreSQL pool settings (read by db.js)
+DB_POOL_MAX=10
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONN_TIMEOUT_MS=15000
 ```
 
 ### Code Constants (có thể điều chỉnh)
@@ -293,3 +295,12 @@ Nếu gặp vấn đề performance:
 4. Consider upgrading to Gemini 2.5 Flash (if available)
 
 **Happy optimizing! 🎉**
+# PostgreSQL query paths
+
+- Product, order, and product-review list endpoints accept `limit` and opaque `cursor` parameters and return `{ data, pagination: { limit, hasMore, nextCursor } }`. Cursors use keyset pagination so later pages do not scan and discard every preceding row.
+- Revenue reports filter orders by the selected week before paging, and reuse joined product names from order details rather than downloading the full product table.
+- Product category pages use a partial index for active products. Order pages use `(created_at, id)` cursors and load their detail rows in one batched query instead of one query per order.
+- Existence checks use `EXISTS`/`NOT EXISTS`, including product purchase checks and rating eligibility. Numeric counts remain where the response needs an actual count, such as AI order summaries; `ANY($n)` is used for bound ID arrays.
+- Optional joins stay `LEFT JOIN` where related account information may be absent. Required product, size, order, and product-size relationships use `INNER JOIN` in the corresponding detail queries.
+- Customer address screens and checkout now query addresses by the authenticated account, backed by `(account_id, id)` indexing, instead of downloading every customer's addresses.
+- For an existing PostgreSQL database, run `Database/POSTGRES_QUERY_PERFORMANCE_INDEXES.sql` once. New databases receive the indexes from `Database/POSTGRES_RENDER_INIT.sql`.

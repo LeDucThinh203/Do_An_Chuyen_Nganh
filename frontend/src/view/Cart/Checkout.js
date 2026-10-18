@@ -102,11 +102,8 @@ export default function Checkout() {
     if (useSavedAddress && user) {
       setLoadingAddresses(true);
       addressAPI
-        .getAllAddresses()
-        .then((data) => {
-          const userAddresses = data.filter((addr) => addr.account_id === user.id);
-          setSavedAddresses(userAddresses);
-        })
+        .getMyAddresses()
+        .then(setSavedAddresses)
         .catch((err) => console.error("Lỗi tải địa chỉ:", err))
         .finally(() => setLoadingAddresses(false));
     }

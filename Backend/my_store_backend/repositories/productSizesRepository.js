@@ -9,11 +9,12 @@ const getStockInput = (data = {}) => {
   return undefined;
 };
 
-export const getAllProductSizes = async () => {
+export const getAllProductSizes = async (productIds = null) => {
   const stockColumn = await resolveProductSizeStockColumn();
-  const [rows] = await db.query(
-    `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes`
-  );
+  const ids = Array.isArray(productIds) ? productIds : productIds == null ? null : [productIds];
+  if (ids && ids.length === 0) return [];
+  const sql = `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes${ids == null ? '' : ' WHERE product_id = ANY(?)'}`;
+  const [rows] = await db.query(sql, ids == null ? [] : [ids]);
   return rows;
 };
 

@@ -500,7 +500,7 @@ graph TB
         EmbedAPI[Embedding API<br/>text-embedding-004]
     end
     
-    subgraph Database [💾 Database - MySQL]
+    subgraph Database [💾 Database - PostgreSQL (Neon pool)]
         Messages[conversation_history<br/>User/AI messages]
         Products[product<br/>Product catalog]
         Orders[orders + order_details<br/>Order data]

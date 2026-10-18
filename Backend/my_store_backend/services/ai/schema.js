@@ -14,8 +14,10 @@ export const ensureAiSchema = async () => {
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
   `);
-  await db.query('CREATE INDEX IF NOT EXISTS idx_ai_conv_session_id ON ai_conversations (session_id)');
-  await db.query('CREATE INDEX IF NOT EXISTS idx_ai_conv_user_role ON ai_conversations (user_id, role)');
+  await db.query('CREATE INDEX IF NOT EXISTS idx_ai_conv_session_id_id ON ai_conversations (session_id, id DESC)');
+  await db.query('CREATE INDEX IF NOT EXISTS idx_ai_conv_user_id_id ON ai_conversations (user_id, id DESC) WHERE user_id IS NOT NULL');
+  await db.query('DROP INDEX IF EXISTS idx_ai_conv_session_id');
+  await db.query('DROP INDEX IF EXISTS idx_ai_conv_user_role');
 
   // ai_memory: long term user memory summaries with vector stored as JSON string
   await db.query(`
@@ -28,7 +30,8 @@ export const ensureAiSchema = async () => {
       UNIQUE (user_id)
     );
   `);
-  await db.query('CREATE INDEX IF NOT EXISTS idx_ai_mem_user ON ai_memory (user_id)');
+  // UNIQUE(user_id) already creates the lookup index used by reads and deletes.
+  await db.query('DROP INDEX IF EXISTS idx_ai_mem_user');
 
   // product_embeddings: cache semantic vectors for products
   await db.query(`

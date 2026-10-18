@@ -1,11 +1,12 @@
 // src/view/Product/ProductList.js
 import React, { useEffect, useState, useRef } from "react";
-import { getAllProducts, deleteProduct, getAllCategories, getAllSizes, getAllProductSizes } from "../../api";
+import { getProductsPage, deleteProduct, getAllCategories, getAllSizes, getAllProductSizes } from "../../api";
 import { Link, useNavigate } from "react-router-dom";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
+import { demoLoginAccounts } from "../../config/demoLogin";
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -21,6 +22,9 @@ export default function ProductList() {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState({});
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
 
   const navigate = useNavigate();
   const user = Session.getUser();
@@ -40,14 +44,16 @@ export default function ProductList() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [prodData, catData, sizesData, productSizesData] = await Promise.all([
-        getAllProducts(),
+      const [productPage, catData, sizesData] = await Promise.all([
+        getProductsPage({ limit: 50 }),
         getAllCategories(),
-        getAllSizes(),
-        getAllProductSizes()
+        getAllSizes()
       ]);
+      const productSizesData = await getAllProductSizes((productPage.data || []).map((product) => product.id));
       
-      setProducts(prodData);
+      setProducts(productPage.data || []);
+      setNextCursor(productPage.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
       setCategories(catData);
       setSizes(sizesData);
       setProductSizes(productSizesData);
@@ -55,6 +61,23 @@ export default function ProductList() {
       console.error("Lấy dữ liệu thất bại:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreProducts = async () => {
+    if (!nextCursor || loadingMoreProducts) return;
+    try {
+      setLoadingMoreProducts(true);
+      const page = await getProductsPage({ limit: 50, cursor: nextCursor });
+      const pageSizes = await getAllProductSizes((page.data || []).map((product) => product.id));
+      setProducts((current) => [...current, ...(page.data || [])]);
+      setProductSizes((current) => [...current, ...pageSizes]);
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      console.error("Không thể tải thêm sản phẩm:", err);
+    } finally {
+      setLoadingMoreProducts(false);
     }
   };
 
@@ -315,6 +338,27 @@ export default function ProductList() {
               </div>
             </section>
 
+            {demoLoginAccounts.length > 0 && (
+              <section className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-white/90 px-5 py-4 shadow-sm">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-800">Trải nghiệm cửa hàng</h2>
+                  <p className="text-xs text-slate-500">Chọn tài khoản để điền thông tin đăng nhập.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {demoLoginAccounts.map((account) => (
+                    <button
+                      key={account.label}
+                      type="button"
+                      onClick={() => navigate("/login", { state: { demoCredentials: account } })}
+                      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-600"
+                    >
+                      {account.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* INTERACTIVE BUBBLE METRICS STRIP */}
             <section className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-12">
               <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 p-4 sm:p-5 rounded-3xl border border-blue-200/80 shadow-sm hover:shadow-md hover:scale-[1.02] transition flex items-center gap-3.5 group">
@@ -502,7 +546,7 @@ export default function ProductList() {
               {/* Status info bar */}
               <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                 <span>
-                  Đang hiển thị: <b className="text-slate-800 font-bold">{filteredProducts.length}</b> sản phẩm
+                  {hasMoreProducts ? "Đã tải" : "Đang hiển thị"}: <b className="text-slate-800 font-bold">{filteredProducts.length}{hasMoreProducts ? "+" : ""}</b> sản phẩm
                   {isSearching && ` cho từ khóa "${searchName}"`}
                 </span>
                 
@@ -662,6 +706,18 @@ export default function ProductList() {
 
             </div>
           </>
+        )}
+
+        {hasMoreProducts && (
+          <div className="flex justify-center px-4 pb-10">
+            <button
+              onClick={loadMoreProducts}
+              disabled={loadingMoreProducts}
+              className="rounded-full bg-slate-900 px-7 py-3 text-sm font-bold text-white shadow-lg hover:bg-slate-800 disabled:opacity-50"
+            >
+              {loadingMoreProducts ? "Đang tải..." : "Tải thêm sản phẩm"}
+            </button>
+          </div>
         )}
 
       </main>

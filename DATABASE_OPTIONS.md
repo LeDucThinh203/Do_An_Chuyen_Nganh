@@ -1,4 +1,6 @@
-# 🗄️ MySQL Database FREE Options
+# 🗄️ Database Options
+
+> Backend hiện chạy PostgreSQL qua `pg.Pool`. Neon PostgreSQL là cấu hình được hỗ trợ; các lựa chọn MySQL bên dưới là tài liệu cũ và không tương thích trực tiếp với backend hiện tại. Xem [hướng dẫn Neon và connection pool](./Backend/my_store_backend/NEON_POSTGRES_GUIDE.md).
 
 ## Tổng Quan
 
@@ -186,9 +188,7 @@ mysql -h mysql-xxxxx.aivencloud.com -P 12345 -u avnadmin -p defaultdb < Database
 
 ---
 
-## 🌟 Option 6: Neon PostgreSQL (Alternative)
-
-Nếu không bắt buộc dùng MySQL, có thể chuyển sang PostgreSQL:
+## 🌟 Neon PostgreSQL (Backend hiện tại)
 
 ### ✅ Ưu Điểm
 - Hoàn toàn miễn phí
@@ -198,9 +198,7 @@ Nếu không bắt buộc dùng MySQL, có thể chuyển sang PostgreSQL:
 
 ### 📝 Chuyển Đổi
 
-1. Convert MySQL schema → PostgreSQL
-2. Update `db.js` dùng `pg` thay vì `mysql2`
-3. Deploy bình thường
+Backend đã dùng `pg.Pool` và hỗ trợ URL Neon trong `DATABASE_URL`. Chọn **Pooled connection** trong Neon Console để lấy URL có hostname `-pooler`, sau đó cấu hình URL đó trong môi trường backend.
 
 ---
 
@@ -219,16 +217,16 @@ Nếu không bắt buộc dùng MySQL, có thể chuyển sang PostgreSQL:
 ## 🎯 Khuyến Nghị
 
 ### 🧪 Cho Testing/Demo:
-→ **FreeSQLDatabase.com** (100% free, setup nhanh)
+→ **Neon PostgreSQL** (được hỗ trợ bởi backend hiện tại)
 
 ### 💻 Cho Development:
-→ **db4free.net** (200MB, đủ cho dev)
+→ **Neon PostgreSQL** (dùng pooled URL cho ứng dụng)
 
 ### 🚀 Cho Production:
-→ **Aiven** ($300 credit) hoặc **PlanetScale** (5GB free)
+→ **Neon PostgreSQL pooled endpoint** (`-pooler`)
 
 ### 💰 Budget Limited:
-→ **FreeSQLDatabase** + upgrade sau khi có user
+→ **Neon PostgreSQL** + điều chỉnh DB_POOL_MAX theo số backend instance
 
 ---
 
@@ -237,11 +235,10 @@ Nếu không bắt buộc dùng MySQL, có thể chuyển sang PostgreSQL:
 Sau khi có database, thêm vào Render Environment Variables:
 
 ```env
-DB_HOST=sql12.freesqldatabase.com
-DB_USER=sql12xxxxx
-DB_PASSWORD=xxxxxxxxx
-DB_NAME=sql12xxxxx_mystore
-DB_PORT=3306
+DATABASE_URL=postgresql://USER:PASSWORD@ep-example-pooler.REGION.aws.neon.tech/DB?sslmode=require
+DB_POOL_MAX=10
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONN_TIMEOUT_MS=15000
 ```
 
 ---
@@ -275,7 +272,7 @@ DB_PORT=3306
 2. **Test local:** Dùng `test_db_connection.js` script
 3. **Monitor usage:** Check storage/connection limits
 4. **Optimize queries:** Index các columns hay query
-5. **Connection pooling:** Dùng mysql2 pool
+5. **Connection pooling:** Dùng `pg.Pool` dùng chung trong backend và pooled endpoint của Neon (`-pooler`).
 
 ---
 

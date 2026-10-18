@@ -5,6 +5,14 @@ export const getAllAddresses = async () => {
   return rows;
 };
 
+export const getAddressesByAccountId = async (accountId) => {
+  const [rows] = await db.query(
+    'SELECT * FROM address WHERE account_id = ? ORDER BY id DESC',
+    [accountId]
+  );
+  return rows;
+};
+
 export const getAddressById = async (id) => {
   const [rows] = await db.query('SELECT * FROM address WHERE id=?', [id]);
   return rows[0] || null;

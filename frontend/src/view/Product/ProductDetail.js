@@ -7,11 +7,9 @@ import {
   createProductSize, 
   deleteProductSize, 
   getAllProductSizes,
-  getAllRatings,
+  getProductRatingsPage,
+  getProductRatingEligibility,
   createRating,
-  getAllAccounts,
-  getAllOrderDetails,
-  getAllOrders
 } from "../../api";
 import { ProductDetailSkeleton } from "../common/Skeletons";
 
@@ -42,6 +40,10 @@ export default function ProductDetail() {
 
   // Rating state
   const [ratings, setRatings] = useState([]);
+  const [ratingSummary, setRatingSummary] = useState({ total: 0, average: 0 });
+  const [ratingsCursor, setRatingsCursor] = useState(null);
+  const [ratingsHasMore, setRatingsHasMore] = useState(false);
+  const [loadingMoreRatings, setLoadingMoreRatings] = useState(false);
   const [userRating, setUserRating] = useState({ rating_value: 5, comment: "" });
   const [eligibleOrderDetailId, setEligibleOrderDetailId] = useState(null);
   const [currentUser] = useState(() => JSON.parse(localStorage.getItem("user")));
@@ -52,26 +54,20 @@ export default function ProductDetail() {
     try {
       setLoading(true);
       setError("");
-      const [productData, sizesData, productSizesData, ratingsData, orderDetailsData, ordersData] = await Promise.all([
+      const [productData, sizesData, productSizesData, ratingsPage, eligibility] = await Promise.all([
         getProductById(id),
         getAllSizes(),
-        getAllProductSizes(),
-        getAllRatings(),
-        getAllOrderDetails(),
-        getAllOrders()
+        getAllProductSizes(id),
+        getProductRatingsPage(id, { limit: 20 }),
+        currentUser?.role === "user"
+          ? getProductRatingEligibility(id).catch(() => ({ order_detail_id: null }))
+          : Promise.resolve({ order_detail_id: null }),
       ]);
       
       if (!productData) {
         setError("Sản phẩm không tồn tại hoặc đã bị gỡ.");
         setLoading(false);
         return;
-      }
-      
-      let accountsData = [];
-      try {
-        accountsData = await getAllAccounts();
-      } catch (err) {
-        console.log("Không thể lấy danh sách tài khoản");
       }
       
       setProduct(productData);
@@ -87,47 +83,11 @@ export default function ProductDetail() {
         }
       }
       
-      const detailById = new Map(orderDetailsData.map(d => [String(d.id), d]));
-      const productSizeById = new Map(productSizesData.map(ps => [String(ps.id), ps]));
-      const ordersById = new Map(ordersData.map(o => [String(o.id), o]));
-      const accountsById = new Map(accountsData.map(a => [String(a.id), a]));
-
-      const productRatings = ratingsData
-        .map(r => {
-          const detail = detailById.get(String(r.order_detail_id));
-          if (!detail) return null;
-          const ps = productSizeById.get(String(detail.product_sizes_id));
-          return { r, detail, ps };
-        })
-        .filter(x => x && x.ps && Number(x.ps.product_id) === Number(id))
-        .map(({ r, detail }) => {
-          const order = ordersById.get(String(detail.order_id));
-          const account = order ? accountsById.get(String(order.account_id)) : null;
-          return {
-            id: r.id,
-            rating_value: r.rating_value,
-            comment: r.comment,
-            created_at: r.created_at,
-            username: account?.username || "Khách hàng CoolShop",
-          };
-        });
-
-      setRatings(productRatings);
-
-      // Check eligibility to rate
-      if (currentUser) {
-        const userOrders = ordersData.filter(o => Number(o.account_id) === Number(currentUser.id));
-        const userOrderIds = new Set(userOrders.map(o => String(o.id)));
-        const userDetails = orderDetailsData.filter(d => userOrderIds.has(String(d.order_id)));
-        
-        const eligible = userDetails.find(d => {
-          const ps = productSizeById.get(String(d.product_sizes_id));
-          if (!ps || Number(ps.product_id) !== Number(id)) return false;
-          return !ratingsData.some(r => String(r.order_detail_id) === String(d.id));
-        });
-        
-        setEligibleOrderDetailId(eligible?.id || null);
-      }
+      setRatings(ratingsPage.data || []);
+      setRatingSummary(ratingsPage.summary || { total: 0, average: 0 });
+      setRatingsCursor(ratingsPage.pagination?.nextCursor || null);
+      setRatingsHasMore(Boolean(ratingsPage.pagination?.hasMore));
+      setEligibleOrderDetailId(eligibility.order_detail_id || null);
     } catch (err) {
       console.error(err);
       setError("Không thể tải thông tin sản phẩm");
@@ -135,6 +95,21 @@ export default function ProductDetail() {
       setLoading(false);
     }
   }, [id, currentUser]);
+
+  const loadMoreRatings = async () => {
+    if (!ratingsCursor || loadingMoreRatings) return;
+    try {
+      setLoadingMoreRatings(true);
+      const page = await getProductRatingsPage(id, { limit: 20, cursor: ratingsCursor });
+      setRatings((current) => [...current, ...(page.data || [])]);
+      setRatingsCursor(page.pagination?.nextCursor || null);
+      setRatingsHasMore(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      console.error("Không thể tải thêm đánh giá:", err);
+    } finally {
+      setLoadingMoreRatings(false);
+    }
+  };
 
   useEffect(() => {
     fetchProductDetail();
@@ -263,8 +238,8 @@ export default function ProductDetail() {
     ? product.price * (1 - product.discount_percent / 100)
     : product.price;
 
-  const averageRating = ratings.length > 0
-    ? (ratings.reduce((s, r) => s + (r.rating_value || 0), 0) / ratings.length).toFixed(1)
+  const averageRating = ratingSummary.total > 0
+    ? ratingSummary.average.toFixed(1)
     : "5.0";
 
   return (
@@ -371,7 +346,7 @@ export default function ProductDetail() {
                 <div className="flex items-center gap-1 text-amber-500 text-xs font-extrabold">
                   <span>★</span>
                   <span>{averageRating}</span>
-                  <span className="text-slate-400 font-normal">({ratings.length} đánh giá)</span>
+                  <span className="text-slate-400 font-normal">({ratingSummary.total} đánh giá)</span>
                 </div>
               </div>
 
@@ -543,7 +518,7 @@ export default function ProductDetail() {
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
-              ⭐ Đánh Giá & Nhận Xét ({ratings.length})
+              ⭐ Đánh Giá & Nhận Xét ({ratingSummary.total})
             </button>
           </div>
 
@@ -597,7 +572,7 @@ export default function ProductDetail() {
                   <div className="text-amber-400 text-lg">
                     {"★".repeat(Math.round(averageRating))}{"☆".repeat(5 - Math.round(averageRating))}
                   </div>
-                  <p className="text-xs text-slate-500">{ratings.length} lượt đánh giá từ người mua</p>
+                  <p className="text-xs text-slate-500">{ratingSummary.total} lượt đánh giá từ người mua</p>
                 </div>
 
                 <div className="flex-1 text-xs text-slate-600 border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-6 pt-4 sm:pt-0 space-y-1">
@@ -682,6 +657,15 @@ export default function ProductDetail() {
                       <p className="text-xs text-slate-700 leading-relaxed pl-10">{r.comment}</p>
                     </div>
                   ))
+                )}
+                {ratingsHasMore && (
+                  <button
+                    onClick={loadMoreRatings}
+                    disabled={loadingMoreRatings}
+                    className="mx-auto block rounded-xl border border-slate-200 bg-white px-5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {loadingMoreRatings ? "Đang tải..." : "Xem thêm đánh giá"}
+                  </button>
                 )}
               </div>
             </div>

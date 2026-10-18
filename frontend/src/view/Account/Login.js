@@ -1,8 +1,9 @@
 // src/view/Account/Login.js
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import * as api from "../../api";
 import Session from "../../Session/session";
+import { demoLoginAccounts } from "../../config/demoLogin";
 
 export default function Login({ setUser }) {
   const [email, setEmail] = useState("");
@@ -10,7 +11,23 @@ export default function Login({ setUser }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const demoCredentials = location.state?.demoCredentials;
+    if (!demoCredentials) return;
+
+    setEmail(demoCredentials.email);
+    setPassword(demoCredentials.password);
+    setError("");
+  }, [location.state]);
+
+  const fillDemoAccount = (account) => {
+    setEmail(account.email);
+    setPassword(account.password);
+    setError("");
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -102,6 +119,26 @@ export default function Login({ setUser }) {
               <div className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5">
                 <span>⚠️</span>
                 <span>{error}</span>
+              </div>
+            )}
+
+            {demoLoginAccounts.length > 0 && (
+              <div className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-blue-900">
+                  Tài khoản trải nghiệm
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {demoLoginAccounts.map((account) => (
+                    <button
+                      key={account.label}
+                      type="button"
+                      onClick={() => fillDemoAccount(account)}
+                      className="rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-bold text-blue-700 transition hover:border-blue-400 hover:bg-blue-100"
+                    >
+                      {account.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

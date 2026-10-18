@@ -1,5 +1,6 @@
 import express from 'express';
 import * as addressController from '../controllers/addressController.js';
+import { authenticate } from '../middleware/auth.js';
 const router = express.Router();
 
 /**
@@ -20,6 +21,8 @@ const router = express.Router();
  *         description: Danh sách địa chỉ
  */
 router.get('/', addressController.getAllAddresses);
+
+router.get('/mine', authenticate, addressController.getMyAddresses);
 
 /**
  * @swagger

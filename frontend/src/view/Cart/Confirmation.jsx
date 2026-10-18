@@ -23,13 +23,13 @@ export default function Confirmation() {
 
     setOrderData(storedOrder);
     setUser(storedUser);
-    loadProductSizesData();
+    loadProductSizesData((storedOrder.items || []).map((item) => item.id));
   }, [navigate]);
 
-  const loadProductSizesData = async () => {
+  const loadProductSizesData = async (productIds) => {
     try {
       const [productSizesData, sizesData] = await Promise.all([
-        getAllProductSizes(),
+        getAllProductSizes([...new Set(productIds || [])]),
         getAllSizes(),
       ]);
       setProductSizes(productSizesData);

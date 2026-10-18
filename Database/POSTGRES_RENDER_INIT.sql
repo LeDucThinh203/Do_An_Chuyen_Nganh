@@ -3,6 +3,8 @@
 
 BEGIN;
 
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE IF NOT EXISTS account (
   id BIGSERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -91,9 +93,16 @@ CREATE TABLE IF NOT EXISTS rating (
 
 -- Helpful indexes
 CREATE INDEX IF NOT EXISTS idx_product_category ON product(category_id);
-CREATE INDEX IF NOT EXISTS idx_product_sizes_product ON product_sizes(product_id);
-CREATE INDEX IF NOT EXISTS idx_orders_account ON orders(account_id);
-CREATE INDEX IF NOT EXISTS idx_order_details_order ON order_details(order_id);
+CREATE INDEX IF NOT EXISTS idx_product_active_id ON product(id DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_product_active_category_id ON product(category_id, id DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_product_name_trgm_active ON product USING GIN (name gin_trgm_ops) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_product_description_trgm_active ON product USING GIN (description gin_trgm_ops) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_address_account_id ON address(account_id, id DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_created_id ON orders(created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_account_created_id ON orders(account_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_order_details_order_id ON order_details(order_id, id);
+CREATE INDEX IF NOT EXISTS idx_order_details_product_size ON order_details(product_sizes_id);
 CREATE INDEX IF NOT EXISTS idx_rating_order_detail ON rating(order_detail_id);
+CREATE INDEX IF NOT EXISTS idx_account_reset_token ON account(reset_token) WHERE reset_token IS NOT NULL;
 
 COMMIT;

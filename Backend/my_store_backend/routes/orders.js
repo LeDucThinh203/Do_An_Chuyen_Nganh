@@ -17,11 +17,62 @@ const router = express.Router();
  *   get:
  *     summary: Lấy tất cả đơn hàng
  *     tags: [Orders]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Cursor opaque nhận từ trang trước
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Bắt đầu phạm vi created_at (bao gồm)
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Kết thúc phạm vi created_at (không bao gồm)
  *     responses:
  *       200:
  *         description: Danh sách đơn hàng
  */
 router.get('/', ordersController.getAllOrders);
+
+/**
+ * @swagger
+ * /orders/mine:
+ *   get:
+ *     summary: Lấy đơn hàng của tài khoản đang đăng nhập theo trang
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trang đơn hàng và cursor tiếp theo
+ *       401:
+ *         description: Chưa xác thực
+ */
+router.get('/mine', authenticate, ordersController.getMyOrdersPage);
 
 /**
  * @swagger

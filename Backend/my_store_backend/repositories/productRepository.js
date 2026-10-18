@@ -1,4 +1,5 @@
 import db from '../db.js';
+import { encodeCursor } from '../utils/pagination.js';
 
 let ensureDeletedAtColumnPromise = null;
 
@@ -26,14 +27,15 @@ const ensureDeletedAtColumn = async () => {
 // Kiểm tra xem sản phẩm đã được mua hay chưa
 const checkProductHasPurchases = async (productId) => {
   const sql = `
-    SELECT COUNT(*) as purchase_count
-    FROM order_details od
-    WHERE od.product_sizes_id IN (
-      SELECT id FROM product_sizes WHERE product_id = ?
-    )
+    SELECT EXISTS (
+      SELECT 1
+      FROM order_details od
+      INNER JOIN product_sizes ps ON ps.id = od.product_sizes_id
+      WHERE ps.product_id = ?
+    ) AS has_purchases
   `;
   const [result] = await db.query(sql, [productId]);
-  return result[0]?.purchase_count > 0;
+  return result[0]?.has_purchases === true;
 };
 
 export const getAllProducts = async ({ includeDeleted = false } = {}) => {
@@ -45,7 +47,7 @@ export const getAllProducts = async ({ includeDeleted = false } = {}) => {
                 FROM order_details od
                 JOIN product_sizes ps ON ps.id = od.product_sizes_id
                 WHERE ps.product_id = p.id
-              ) AS hasPurchases
+              ) AS "hasPurchases"
        FROM product p
        ORDER BY p.id DESC`
     : `SELECT p.*,
@@ -54,12 +56,48 @@ export const getAllProducts = async ({ includeDeleted = false } = {}) => {
                 FROM order_details od
                 JOIN product_sizes ps ON ps.id = od.product_sizes_id
                 WHERE ps.product_id = p.id
-              ) AS hasPurchases
+              ) AS "hasPurchases"
        FROM product p
        WHERE p.deleted_at IS NULL
        ORDER BY p.id DESC`;
   const [rows] = await db.query(sql);
   return rows;
+};
+
+export const getProductsPage = async ({ includeDeleted = false, limit = 25, cursor = null, categoryId = null } = {}) => {
+  await ensureDeletedAtColumn();
+  const conditions = [];
+  const values = [];
+
+  if (!includeDeleted) conditions.push('p.deleted_at IS NULL');
+  if (categoryId != null) {
+    conditions.push('p.category_id = ?');
+    values.push(categoryId);
+  }
+  if (cursor?.id != null && Number.isInteger(Number(cursor.id))) {
+    conditions.push('p.id < ?');
+    values.push(cursor.id);
+  }
+
+  values.push(limit + 1);
+  const sql = `
+    SELECT p.*,
+           EXISTS (
+             SELECT 1
+             FROM order_details od
+             INNER JOIN product_sizes ps ON ps.id = od.product_sizes_id
+             WHERE ps.product_id = p.id
+           ) AS "hasPurchases"
+    FROM product p
+    ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+    ORDER BY p.id DESC
+    LIMIT ?
+  `;
+  const [rows] = await db.query(sql, values);
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore && data.length ? encodeCursor({ id: data[data.length - 1].id }) : null;
+  return { data, pagination: { limit, hasMore, nextCursor } };
 };
 
 export const getProductById = async (id, { includeDeleted = false } = {}) => {

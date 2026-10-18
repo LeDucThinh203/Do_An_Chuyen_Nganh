@@ -2,11 +2,10 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import pg from "pg";
+import { pool } from "../db.js";
 
 dotenv.config();
 
-const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..");
@@ -448,10 +447,10 @@ async function main() {
     ? [...BUSINESS_IMPORT_ORDER, ...AI_IMPORT_ORDER]
     : BUSINESS_IMPORT_ORDER;
 
-  const pool = new Pool({ connectionString: databaseUrl, ssl: { rejectUnauthorized: false } });
-  const client = await pool.connect();
+  let client;
 
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
 
     await clearTables(client, importOrder);
@@ -470,12 +469,12 @@ async function main() {
     await client.query("COMMIT");
     console.log("Import completed successfully.");
   } catch (error) {
-    await client.query("ROLLBACK");
+    if (client) await client.query("ROLLBACK").catch(() => {});
     console.error("Import failed. Transaction rolled back.");
     console.error(error.message);
     process.exitCode = 1;
   } finally {
-    client.release();
+    client?.release();
     await pool.end();
   }
 }

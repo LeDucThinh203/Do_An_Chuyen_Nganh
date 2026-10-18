@@ -7,6 +7,15 @@ export const getAllAccounts = async () => {
   return rows;
 };
 
+export const getAdminEmails = async () => {
+  const [rows] = await db.query(
+    `SELECT DISTINCT email
+     FROM account
+     WHERE LOWER(role) = 'admin' AND email IS NOT NULL AND email <> ''`
+  );
+  return rows.map((row) => row.email);
+};
+
 export const getAccountById = async (id) => {
   const [rows] = await db.query('SELECT * FROM account WHERE id=?', [id]);
   return rows[0] || null;

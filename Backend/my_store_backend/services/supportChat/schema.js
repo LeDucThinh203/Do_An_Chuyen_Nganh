@@ -20,7 +20,8 @@ export const ensureSupportChatSchema = async () => {
 
   await db.query('CREATE INDEX IF NOT EXISTS idx_support_rooms_user_id ON support_chat_rooms (user_id)');
   await db.query('CREATE INDEX IF NOT EXISTS idx_support_rooms_guest_id ON support_chat_rooms (guest_id)');
-  await db.query('CREATE INDEX IF NOT EXISTS idx_support_rooms_last_message_at ON support_chat_rooms (last_message_at DESC)');
+  await db.query('CREATE INDEX IF NOT EXISTS idx_support_rooms_activity ON support_chat_rooms ((COALESCE(last_message_at, updated_at)) DESC)');
+  await db.query('DROP INDEX IF EXISTS idx_support_rooms_last_message_at');
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS support_chat_messages (

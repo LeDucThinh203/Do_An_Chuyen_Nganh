@@ -9,6 +9,15 @@ export const getAllAddresses = async (req, res) => {
   }
 };
 
+export const getMyAddresses = async (req, res) => {
+  try {
+    const addresses = await addressRepo.getAddressesByAccountId(req.user.id);
+    res.json(addresses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const getAddressById = async (req, res) => {
   try {
     const address = await addressRepo.getAddressById(req.params.id);

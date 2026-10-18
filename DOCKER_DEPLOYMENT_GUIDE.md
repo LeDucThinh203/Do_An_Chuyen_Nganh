@@ -58,10 +58,15 @@ Copy-Item .env.example .env
 Mở file `.env` và cập nhật các giá trị:
 ```env
 # Database Configuration
-DB_ROOT_PASSWORD=your_strong_password_here
-DB_NAME=DBWebBanDoBongDa
-DB_USER=admin
-DB_PASSWORD=your_db_password_here
+# Leave DATABASE_URL blank to use the local PostgreSQL container.
+# To use Neon, set its pooled connection URL (hostname contains -pooler).
+DATABASE_URL=
+POSTGRES_DB=DBWebBanDoBongDa
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=change-me-locally
+DB_POOL_MAX=10
+DB_IDLE_TIMEOUT_MS=30000
+DB_CONN_TIMEOUT_MS=15000
 
 # Backend Configuration
 JWT_SECRET=your-secret-key-change-this-in-production
@@ -86,7 +91,7 @@ docker-compose up -d --build
 ```
 
 **Các services sẽ được khởi động:**
-- ✅ **MySQL Database** - Port 3307 (mapped từ 3306)
+- ✅ **PostgreSQL Database** - Port 5432
 - ✅ **Backend API** - Port 3006
 - ✅ **Frontend React** - Port 80
 
@@ -109,7 +114,7 @@ docker-compose ps
 
 - **Frontend**: http://localhost
 - **Backend API**: http://localhost:3006
-- **Database**: localhost:3307
+- **Database**: localhost:5432
 
 ---
 
@@ -160,7 +165,7 @@ docker-compose logs --tail=100 backend
 docker-compose exec backend sh
 
 # Truy cập database container
-docker-compose exec database mysql -u admin -p
+docker-compose exec database psql -U admin -d DBWebBanDoBongDa
 
 # Truy cập frontend container
 docker-compose exec frontend sh
@@ -171,26 +176,27 @@ docker-compose exec frontend sh
 ## 🗄️ Quản Lý Database
 
 ### Import Database Ban Đầu
-Database sẽ tự động import từ folder `Database/` khi khởi động lần đầu.
+A fresh local PostgreSQL volume runs `Database/POSTGRES_RENDER_INIT.sql` once during initialization.
 
 ### Backup Database
 ```powershell
 # Backup database
-docker-compose exec database mysqldump -u admin -p DBWebBanDoBongDa > backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').sql
+# Use Neon’s direct/unpooled connection URL for pg_dump.
+pg_dump "$env:DATABASE_URL_UNPOOLED" --format=custom --file="backup.dump"
 ```
 
 ### Restore Database
 ```powershell
 # Restore từ backup
-Get-Content backup_file.sql | docker-compose exec -T database mysql -u admin -p DBWebBanDoBongDa
+pg_restore --clean --if-exists --dbname="$env:DATABASE_URL_UNPOOLED" backup.dump
 ```
 
 ### Kết Nối Database Từ Máy Local
 ```
 Host: localhost
-Port: 3307
+Port: 5432
 User: admin
-Password: (value trong .env)
+Password: `POSTGRES_PASSWORD` trong `.env`
 Database: DBWebBanDoBongDa
 ```
 
@@ -208,7 +214,7 @@ docker-compose ps
 ```
 
 ### Port Đã Được Sử Dụng
-Nếu port 80, 3006, hoặc 3307 đã được sử dụng, chỉnh sửa trong `docker-compose.yml`:
+Nếu port 80, 3006, hoặc 5432 đã được sử dụng, chỉnh sửa trong `docker-compose.yml`:
 ```yaml
 ports:
   - "8080:80"  # Đổi port frontend thành 8080
@@ -337,7 +343,7 @@ docker-compose restart [service_name]
 docker-compose exec [service_name] sh
 
 # Database backup
-docker-compose exec database mysqldump -u admin -p DBWebBanDoBongDa > backup.sql
+docker-compose exec database pg_dump -U admin -Fc DBWebBanDoBongDa > backup.dump
 
 # View running containers
 docker-compose ps

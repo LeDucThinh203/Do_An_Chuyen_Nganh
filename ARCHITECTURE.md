@@ -24,20 +24,20 @@
 └──────────────────────────────────────────────┬──────────────────┘
                                                │
                                                │ DB Connection
-                                               │ (MySQL Port 3306)
+                                               │ (PostgreSQL pooled URL)
                                                │
                                                ▼
                     ┌──────────────────────────────────────┐
-                    │   MySQL Database (External)          │
+                    │   Neon PostgreSQL (Pooled)          │
                     │                                       │
                     │   Options:                            │
-                    │   1. FreeSQLDatabase.com (5MB)        │
-                    │   2. db4free.net (200MB)              │
-                    │   3. Aiven ($300 credit)              │
+                    │   1. Neon pooled endpoint        │
+                    │   2. pg.Pool in backend              │
+                    │   3. TLS via DATABASE_URL              │
                     │                                       │
-                    │   - Tables: SanPham, TaiKhoan, etc    │
+                    │   - Tables: product, account, orders, etc    │
                     │   - AI: embeddings, conversations     │
-                    │   - Port: 3306                        │
+                    │   - Pooler: PgBouncer                        │
                     └──────────────────────────────────────┘
 ```
 
@@ -153,13 +153,13 @@
      │
      ▼
 ┌────────────────────────────────────┐
-│   MySQL Database                   │
-│   (External - FreeSQLDatabase)     │
+│   Neon PostgreSQL                   │
+│   (Neon pooled connection)     │
 │                                    │
 │   Tables:                          │
-│   - SanPham (Products)             │
-│   - TaiKhoan (Accounts)            │
-│   - DonHang (Orders)               │
+│   - product (Products)             │
+│   - account (Accounts)            │
+│   - orders (Orders)               │
 │   - embeddings (AI)                │
 │   - conversations (AI)             │
 └────────────────────────────────────┘

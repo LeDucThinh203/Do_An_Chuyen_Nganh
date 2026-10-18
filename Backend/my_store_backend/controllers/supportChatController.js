@@ -260,13 +260,7 @@ const getRoomNotificationState = async (roomId) => {
 };
 
 const getSupportNotificationRecipients = async () => {
-  const accounts = await accountRepo.getAllAccounts();
-  const adminEmails = [...new Set(
-    (accounts || [])
-      .filter((account) => String(account?.role || '').toLowerCase() === 'admin')
-      .map((account) => String(account?.email || '').trim())
-      .filter(Boolean)
-  )];
+  const adminEmails = await accountRepo.getAdminEmails();
 
   if (adminEmails.length > 0) {
     return adminEmails;

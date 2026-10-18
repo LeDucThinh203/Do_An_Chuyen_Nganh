@@ -169,7 +169,7 @@ export const semanticSearchProducts = async (query, topK = 5) => {
      LEFT JOIN product_embeddings pe ON pe.product_id = p.id
      LEFT JOIN product_sizes ps ON ps.product_id = p.id
      LEFT JOIN sizes s ON s.id = ps.size_id
-     ${likeConditions ? `WHERE ${likeConditions}` : ''}
+     WHERE p.deleted_at IS NULL${likeConditions ? ` AND ${likeConditions}` : ''}
      GROUP BY p.id, p.name, p.description, p.price, p.discount_percent, p.image, p.category_id, pe.embedding
      LIMIT 100`,
     likeParams
