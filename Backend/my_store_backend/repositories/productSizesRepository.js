@@ -13,7 +13,9 @@ export const getAllProductSizes = async (productIds = null) => {
   const stockColumn = await resolveProductSizeStockColumn();
   const ids = Array.isArray(productIds) ? productIds : productIds == null ? null : [productIds];
   if (ids && ids.length === 0) return [];
-  const sql = `SELECT id, product_id, size_id, ${stockColumn} AS stock FROM product_sizes${ids == null ? '' : ' WHERE product_id = ANY(?)'}`;
+  const sql = `SELECT ps.id, ps.product_id, ps.size_id, ${stockColumn} AS stock, s.size
+               FROM product_sizes ps
+               LEFT JOIN sizes s ON s.id = ps.size_id${ids == null ? '' : ' WHERE ps.product_id = ANY(?)'}`;
   const [rows] = await db.query(sql, ids == null ? [] : [ids]);
   return rows;
 };

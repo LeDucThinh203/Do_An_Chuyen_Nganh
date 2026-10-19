@@ -1,12 +1,11 @@
 // src/view/Cart/Cart.js
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getAllProductSizes, getAllSizes } from "../../api";
+import { getAllProductSizes } from "../../api";
 
 export default function Cart() {
   const [cart, setCart] = useState([]);
   const [visibleCount, setVisibleCount] = useState(10);
-  const [sizes, setSizes] = useState([]);
   const [productSizes, setProductSizes] = useState([]);
   const navigate = useNavigate();
 
@@ -15,11 +14,7 @@ export default function Cart() {
     setCart(storedCart);
     (async () => {
       try {
-        const [sizesData, psData] = await Promise.all([
-          getAllSizes(),
-          getAllProductSizes([...new Set(storedCart.map((item) => item.id))])
-        ]);
-        setSizes(sizesData);
+        const psData = await getAllProductSizes([...new Set(storedCart.map((item) => item.id))]);
         setProductSizes(psData);
       } catch (e) {
         console.error("Không thể tải tồn kho:", e);
@@ -51,7 +46,7 @@ export default function Cart() {
 
   const getStockForItem = (item) => {
     const matched = productSizes.find(
-      (ps) => ps.product_id === item.id && (sizes.find((s) => s.id === ps.size_id)?.size === (item.size || ""))
+      (ps) => String(ps.product_id) === String(item.id) && ps.size === (item.size || "")
     );
     return Number(matched?.stock ?? 0);
   };

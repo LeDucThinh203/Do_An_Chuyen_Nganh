@@ -40,6 +40,7 @@ const router = express.Router();
  *         description: Danh sách sản phẩm
  */
 router.get('/', productController.getAllProducts);
+router.get('/storefront', productController.getStorefrontPage);
 
 /**
  * @swagger
@@ -61,6 +62,7 @@ router.get('/admin/all', authenticate, requireAdmin, productController.getAllPro
 
 router.get('/:id/ratings', productController.getProductRatings);
 router.get('/:id/rating-eligibility', authenticate, productController.getProductRatingEligibility);
+router.get('/:id/details', productController.getProductDetails);
 
 /**
  * @swagger

@@ -3,44 +3,34 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import Session from "./Session/session";
 
 // Components
-import Footer from "./view/Footer/Footer";
 import Header from "./view/Header/Header";
-import ChatWidget from "./view/Chat/ChatWidget";
-import SupportChatWidget from "./view/Chat/SupportChatWidget";
-import AdminSupportChatWidget from "./view/Admin/AdminSupportChatWidget";
-
-// Product
-import ProductList from "./view/Product/ProductList";
-import AddProduct from "./view/Product/AddProduct";
-import EditProduct from "./view/Product/EditProduct";
-import ProductDetail from "./view/Product/ProductDetail";
-import ProductLoadMore from "./view/Product/ProductLoadMore";
-
-// Category
-import CategoryManager from "./view/Admin/categories/CategoryManager";
-import CategoryForm from "./view/Admin/categories/CategoryForm";
-
-// Auth
-import Login from "./view/Account/Login";
-import Register from "./view/Account/Register";
-import ForgotPassword from "./view/Account/ForgotPassword";
-import ResetPassword from "./view/Account/ResetPassword";
-
-// Admin
-import ProductManager from "./view/Admin/ProductManager";
-import AdminDashboard from "./view/Admin/AdminDashboard";
-
-// User
-import UserDashboard from "./view/User/UserDashboard";
-
-// Order Success
-import OrderSuccess from "./view/Cart/OrderSuccess";
-import VNPayReturn from "./view/Cart/VNPayReturn";
-import VNPayDebug from "./view/Cart/VNPayDebug";
 import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 import { ThemeProvider } from "./context/ThemeContext";
 import ThemeBackground from "./view/common/ThemeBackground";
-import ThemeToggleBtn from "./view/common/ThemeToggleBtn";
+
+// Split route screens so the initial storefront bundle does not include admin,
+// checkout, account, and product-management code.
+const ProductList = lazy(() => import("./view/Product/ProductList"));
+const AddProduct = lazy(() => import("./view/Product/AddProduct"));
+const EditProduct = lazy(() => import("./view/Product/EditProduct"));
+const ProductDetail = lazy(() => import("./view/Product/ProductDetail"));
+const ProductLoadMore = lazy(() => import("./view/Product/ProductLoadMore"));
+const CategoryManager = lazy(() => import("./view/Admin/categories/CategoryManager"));
+const CategoryForm = lazy(() => import("./view/Admin/categories/CategoryForm"));
+const Login = lazy(() => import("./view/Account/Login"));
+const Register = lazy(() => import("./view/Account/Register"));
+const ForgotPassword = lazy(() => import("./view/Account/ForgotPassword"));
+const ResetPassword = lazy(() => import("./view/Account/ResetPassword"));
+const ProductManager = lazy(() => import("./view/Admin/ProductManager"));
+const AdminDashboard = lazy(() => import("./view/Admin/AdminDashboard"));
+const UserDashboard = lazy(() => import("./view/User/UserDashboard"));
+const OrderSuccess = lazy(() => import("./view/Cart/OrderSuccess"));
+const VNPayReturn = lazy(() => import("./view/Cart/VNPayReturn"));
+const VNPayDebug = lazy(() => import("./view/Cart/VNPayDebug"));
+const Footer = lazy(() => import("./view/Footer/Footer"));
+const ChatWidget = lazy(() => import("./view/Chat/ChatWidget"));
+const SupportChatWidget = lazy(() => import("./view/Chat/SupportChatWidget"));
+const AdminSupportChatWidget = lazy(() => import("./view/Admin/AdminSupportChatWidget"));
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -247,16 +237,23 @@ function AppContent() {
       </div>
 
       {/* Footer */}
-      {!isAdminPage && !pathname.startsWith("/user") && <Footer />}
-
-      {!isAdminPage && (
-        <>
-          {/* Keep both widgets available; user selects mode via toggle */}
-          {chatMode === "ai" ? <ChatWidget onModeChange={setChatMode} /> : <SupportChatWidget onModeChange={setChatMode} />}
-        </>
+      {!isAdminPage && !pathname.startsWith("/user") && (
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       )}
 
-      {isAdminUser && pathname !== "/" && !pathname.startsWith("/category/") && <AdminSupportChatWidget />}
+      {!isAdminPage && (
+        <Suspense fallback={null}>
+          {chatMode === "ai" ? <ChatWidget onModeChange={setChatMode} /> : <SupportChatWidget onModeChange={setChatMode} />}
+        </Suspense>
+      )}
+
+      {isAdminUser && pathname !== "/admin" && pathname !== "/" && !pathname.startsWith("/category/") && (
+        <Suspense fallback={null}>
+          <AdminSupportChatWidget />
+        </Suspense>
+      )}
 
     </div>
   );

@@ -1,7 +1,7 @@
 // src/view/Cart/Confirmation.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { createOrder, getAllProductSizes, getAllSizes, createVNPayPaymentUrl } from "../../api";
+import { createOrder, getAllProductSizes, createVNPayPaymentUrl } from "../../api";
 
 export default function Confirmation() {
   const navigate = useNavigate();
@@ -10,7 +10,6 @@ export default function Confirmation() {
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
   const [productSizes, setProductSizes] = useState([]);
-  const [sizes, setSizes] = useState([]);
 
   useEffect(() => {
     const storedOrder = JSON.parse(localStorage.getItem("last_order"));
@@ -28,12 +27,8 @@ export default function Confirmation() {
 
   const loadProductSizesData = async (productIds) => {
     try {
-      const [productSizesData, sizesData] = await Promise.all([
-        getAllProductSizes([...new Set(productIds || [])]),
-        getAllSizes(),
-      ]);
+      const productSizesData = await getAllProductSizes([...new Set(productIds || [])]);
       setProductSizes(productSizesData);
-      setSizes(sizesData);
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu sizes:", err);
     }
@@ -42,11 +37,8 @@ export default function Confirmation() {
   const findProductSizeId = (productId, sizeName) => {
     if (!productId || !sizeName) return null;
 
-    const size = sizes.find((s) => s.size === sizeName);
-    if (!size) return null;
-
     const productSize = productSizes.find(
-      (ps) => ps.product_id === productId && ps.size_id === size.id
+      (ps) => String(ps.product_id) === String(productId) && ps.size === sizeName
     );
 
     return productSize ? productSize.id : null;

@@ -2,11 +2,10 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
-  getProductById, 
+  getProductDetails,
   getAllSizes, 
   createProductSize, 
   deleteProductSize, 
-  getAllProductSizes,
   getProductRatingsPage,
   getProductRatingEligibility,
   createRating,
@@ -64,15 +63,16 @@ export default function ProductDetail() {
     try {
       setLoading(true);
       setError("");
-      const [productData, sizesData, productSizesData, ratingsPage, eligibility] = await Promise.all([
-        getProductById(id),
-        getAllSizes(),
-        getAllProductSizes(id),
+      const [details, sizesData, ratingsPage, eligibility] = await Promise.all([
+        getProductDetails(id),
+        isAdmin ? getAllSizes() : Promise.resolve([]),
         getProductRatingsPage(id, { limit: 20 }),
         currentUser?.role === "user"
           ? getProductRatingEligibility(id).catch(() => ({ order_detail_id: null }))
           : Promise.resolve({ order_detail_id: null }),
       ]);
+      const productData = details.product;
+      const productSizesData = details.productSizes || [];
       
       if (!productData) {
         setError("Sản phẩm không tồn tại hoặc đã bị gỡ.");
@@ -83,14 +83,10 @@ export default function ProductDetail() {
       setProduct(productData);
       setSizes(sizesData);
 
-      const availableSizes = productSizesData.filter(ps => Number(ps.product_id) === Number(id));
-      setProductSizes(availableSizes);
-      if (availableSizes.length > 0) {
-        const firstAvailable = availableSizes.find(ps => Number(ps.stock) > 0);
-        if (firstAvailable) {
-          const matchedSize = sizesData.find(s => s.id === firstAvailable.size_id);
-          if (matchedSize) setSelectedSize(matchedSize.size);
-        }
+      setProductSizes(productSizesData);
+      if (productSizesData.length > 0) {
+        const firstAvailable = productSizesData.find(ps => Number(ps.stock) > 0 && ps.size);
+        if (firstAvailable) setSelectedSize(firstAvailable.size);
       }
       
       setRatings(ratingsPage.data || []);
@@ -131,10 +127,7 @@ export default function ProductDetail() {
       return;
     }
 
-    const matchedPS = productSizes.find(ps => {
-      const s = sizes.find(sz => sz.id === ps.size_id);
-      return s?.size === selectedSize;
-    });
+    const matchedPS = productSizes.find(ps => ps.size === selectedSize);
 
     if (!matchedPS || Number(matchedPS.stock) <= 0) {
       notifyAction("Size này hiện đã hết hàng. Vui lòng chọn size khác.", "error");
@@ -403,10 +396,7 @@ export default function ProductDetail() {
                     <span className="text-xs text-slate-500">
                       Kho hàng: <span className="font-bold text-slate-900">
                         {(() => {
-                          const ps = productSizes.find(p => {
-                            const s = sizes.find(sz => sz.id === p.size_id);
-                            return s?.size === selectedSize;
-                          });
+                          const ps = productSizes.find((item) => item.size === selectedSize);
                           return Number(ps?.stock ?? 0) > 0 ? `${ps?.stock} chiếc` : "Tạm hết hàng";
                         })()}
                       </span>
@@ -416,17 +406,16 @@ export default function ProductDetail() {
 
                 <div className="flex flex-wrap gap-2.5">
                   {productSizes.map((ps) => {
-                    const size = sizes.find((s) => s.id === ps.size_id);
                     const stock = Number(ps?.stock ?? 0);
                     const out = stock <= 0;
-                    const isSelected = selectedSize === size?.size;
+                    const isSelected = selectedSize === ps.size;
 
                     return (
                       <div key={ps.id} className="relative group">
                         <button
                           type="button"
                           disabled={out}
-                          onClick={() => setSelectedSize(size?.size)}
+                          onClick={() => setSelectedSize(ps.size)}
                           className={`min-w-12 h-11 px-4 rounded-xl font-black text-xs sm:text-sm transition-all duration-150 flex items-center justify-center gap-1.5 border ${
                             isSelected
                               ? "bg-slate-900 text-white border-slate-900 shadow-md scale-105"
@@ -435,7 +424,7 @@ export default function ProductDetail() {
                               : "bg-white text-slate-800 border-slate-200 hover:border-slate-900 hover:bg-slate-50"
                           }`}
                         >
-                          <span>{size?.size}</span>
+                          <span>{ps.size}</span>
                         </button>
                         {isAdmin && (
                           <button
@@ -550,8 +539,7 @@ export default function ProductDetail() {
                 <h4 className="font-extrabold text-slate-900 text-sm">Kích cỡ và tình trạng</h4>
                 <ul className="space-y-1.5 text-slate-600">
                   {productSizes.map((productSize) => {
-                    const size = sizes.find((item) => item.id === productSize.size_id);
-                    return size ? <li key={productSize.id}>• {size.size}: {Number(productSize.stock) > 0 ? `Còn ${productSize.stock}` : "Tạm hết hàng"}</li> : null;
+                    return productSize.size ? <li key={productSize.id}>• {productSize.size}: {Number(productSize.stock) > 0 ? `Còn ${productSize.stock}` : "Tạm hết hàng"}</li> : null;
                   })}
                   {productSizes.length === 0 && <li>• Thông tin kích cỡ đang được cập nhật.</li>}
                 </ul>

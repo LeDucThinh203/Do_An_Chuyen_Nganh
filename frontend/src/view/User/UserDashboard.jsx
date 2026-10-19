@@ -1,13 +1,14 @@
 // src/view/User/UserDashboard.jsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { lazy, Suspense, useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Session from "../../Session/session";
-import UserInfo from "./UserInfo";
-import ChangePassword from "./ChangePassword";
-import ManageAddress from "./ManageAddress";
-import Address from "./Address";
-import OrderManager from "./OrderManager";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
+
+const UserInfo = lazy(() => import("./UserInfo"));
+const ChangePassword = lazy(() => import("./ChangePassword"));
+const ManageAddress = lazy(() => import("./ManageAddress"));
+const Address = lazy(() => import("./Address"));
+const OrderManager = lazy(() => import("./OrderManager"));
 
 export default function UserDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -345,11 +346,13 @@ export default function UserDashboard() {
         {/* Content Body */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-transparent">
           <div className="max-w-6xl mx-auto">
-            {activeTab === "info" && <UserInfo onNavigate={setActiveTab} />}
-            {activeTab === "orders" && <OrderManager onNavigate={setActiveTab} />}
-            {activeTab === "addressList" && <Address onNavigate={setActiveTab} />}
-            {activeTab === "manageAddress" && <ManageAddress onNavigate={setActiveTab} />}
-            {activeTab === "password" && <ChangePassword onNavigate={setActiveTab} />}
+            <Suspense fallback={<div className="py-8 text-center text-sm text-slate-500">Đang tải…</div>}>
+              {activeTab === "info" && <UserInfo onNavigate={setActiveTab} />}
+              {activeTab === "orders" && <OrderManager onNavigate={setActiveTab} />}
+              {activeTab === "addressList" && <Address onNavigate={setActiveTab} />}
+              {activeTab === "manageAddress" && <ManageAddress onNavigate={setActiveTab} />}
+              {activeTab === "password" && <ChangePassword onNavigate={setActiveTab} />}
+            </Suspense>
           </div>
         </main>
       </div>

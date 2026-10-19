@@ -1,18 +1,37 @@
 // src/view/Product/ProductList.js
-import React, { useEffect, useState, useRef } from "react";
-import { getProductsPage, deleteProduct, getAllCategories, getAllSizes } from "../../api";
+import React, { lazy, Suspense, useEffect, useMemo, useState, useRef } from "react";
+import { getStorefrontPage, deleteProduct } from "../../api";
 import { Link, useNavigate } from "react-router-dom";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
-import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
 
+const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
+
+const HOME_STORE_CACHE_KEY = "coolshop-storefront-home-v1";
+
+const readStorefrontCache = (key) => {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+};
+
+const writeStorefrontCache = (key, value) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // The page still works when browser storage is unavailable or full.
+  }
+};
+
 export default function ProductList() {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [sizes, setSizes] = useState([]);
-  const [productSizes, setProductSizes] = useState([]);
+  const [initialCache] = useState(() => readStorefrontCache(HOME_STORE_CACHE_KEY));
+  const [products, setProducts] = useState(() => initialCache?.data || []);
+  const [categories, setCategories] = useState(() => initialCache?.categories || []);
+  const [productSizes, setProductSizes] = useState(() => initialCache?.productSizes || []);
   const [searchName, setSearchName] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState({});
@@ -22,10 +41,10 @@ export default function ProductList() {
   const [cartCount, setCartCount] = useState(0);
   const [cartNotice, setCartNotice] = useState(null);
   const cartNoticeTimer = useRef(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialCache);
   const [categoryVisibleCounts, setCategoryVisibleCounts] = useState({});
-  const [nextCursor, setNextCursor] = useState(null);
-  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [nextCursor, setNextCursor] = useState(() => initialCache?.pagination?.nextCursor || null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(() => Boolean(initialCache?.pagination?.hasMore));
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
 
   const navigate = useNavigate();
@@ -52,19 +71,26 @@ export default function ProductList() {
   };
 
   const fetchData = async () => {
-    try {
+    const cached = readStorefrontCache(HOME_STORE_CACHE_KEY);
+    if (cached) {
+      setProducts(cached.data || []);
+      setCategories(cached.categories || []);
+      setProductSizes(cached.productSizes || []);
+      setNextCursor(cached.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(cached.pagination?.hasMore));
+      setLoading(false);
+    } else {
       setLoading(true);
-      const [productPage, catData, sizesData] = await Promise.all([
-        getProductsPage({ limit: 50 }),
-        getAllCategories(),
-        getAllSizes()
-      ]);
+    }
+
+    try {
+      const productPage = await getStorefrontPage({ limit: 24 });
       setProducts(productPage.data || []);
       setNextCursor(productPage.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
-      setCategories(catData);
-      setSizes(sizesData);
+      setCategories(productPage.categories || []);
       setProductSizes(productPage.productSizes || []);
+      writeStorefrontCache(HOME_STORE_CACHE_KEY, productPage);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
     } finally {
@@ -76,7 +102,7 @@ export default function ProductList() {
     if (!nextCursor || loadingMoreProducts) return;
     try {
       setLoadingMoreProducts(true);
-      const page = await getProductsPage({ limit: 50, cursor: nextCursor });
+      const page = await getStorefrontPage({ limit: 24, cursor: nextCursor });
       setProducts((current) => [...current, ...(page.data || [])]);
       setProductSizes((current) => [...current, ...(page.productSizes || [])]);
       setNextCursor(page.pagination?.nextCursor || null);
@@ -106,18 +132,22 @@ export default function ProductList() {
     }));
   };
 
-  const getAvailableSizes = (productId) => {
-    const availableProductSizes = productSizes.filter(ps => ps.product_id === productId);
-    const result = availableProductSizes.map(ps => {
-      const size = sizes.find(s => s.id === ps.size_id);
-      const stock = Number(ps.stock ?? 0);
-      return size ? { id: ps.id, size: size.size, stock } : null;
-    }).filter(Boolean);
-    return result;
-  };
+  const productSizesByProduct = useMemo(() => {
+    const grouped = new Map();
+    for (const item of productSizes) {
+      const key = String(item.product_id);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(item);
+    }
+    return grouped;
+  }, [productSizes]);
+
+  const getAvailableSizes = (productId) => (productSizesByProduct.get(String(productId)) || [])
+    .filter((item) => item.size != null)
+    .map((item) => ({ id: item.id, size: item.size, stock: Number(item.stock ?? 0) }));
 
   const getStockForSize = (productId, sizeName) => {
-    const match = productSizes.find(ps => ps.product_id === productId && (sizes.find(s => s.id === ps.size_id)?.size === sizeName));
+    const match = (productSizesByProduct.get(String(productId)) || []).find((item) => item.size === sizeName);
     return Number(match?.stock ?? 0);
   };
 
@@ -209,8 +239,6 @@ export default function ProductList() {
   const featuredProducts = filteredProducts
     .filter((p) => Number(p.discount_percent || 0) > 0)
     .slice(0, 5);
-  const heroProduct = featuredProducts[0] || filteredProducts[0] || products[0];
-
   // Phân loại sản phẩm theo danh mục
   const categorizedProducts = categories.map((cat) => {
     const catProducts = filteredProducts.filter((p) => p.category_id === cat.id);
@@ -301,17 +329,23 @@ export default function ProductList() {
           </div>
         ) : (
           <>
-            <section className="home-video-banner" aria-label="Banner video thể thao CoolShop">
-              <video
-                className="home-video-banner__video"
-                src="https://media3.coolmate.me/uploads/videos/banner_chaybo_coolfast.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="metadata"
-                aria-hidden="true"
-              />
+            <section className="home-video-banner" aria-label="Giới thiệu CoolShop">
+              <div className="home-video-banner__content">
+                <span className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-100">CoolShop · Đồ thể thao</span>
+                <h1 className="mt-3 max-w-2xl text-3xl font-black tracking-tight text-white sm:text-5xl">
+                  Sẵn sàng cho trận đấu tiếp theo.
+                </h1>
+                <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
+                  Chọn trang phục, giày và phụ kiện phù hợp với phong cách thi đấu của bạn.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("product-sections")}
+                  className="mt-6 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:bg-cyan-50"
+                >
+                  Khám phá sản phẩm <span aria-hidden="true">→</span>
+                </button>
+              </div>
             </section>
 
             <section className="store-benefits" aria-label="Hỗ trợ mua sắm">
@@ -634,7 +668,7 @@ export default function ProductList() {
           {cartNotice.message}
         </div>
       )}
-      {isAdmin && <AdminSupportChatWidget forceAdmin />}
+      {isAdmin && <Suspense fallback={null}><AdminSupportChatWidget forceAdmin /></Suspense>}
     </div>
   );
 }

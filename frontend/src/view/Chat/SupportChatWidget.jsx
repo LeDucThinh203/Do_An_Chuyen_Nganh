@@ -19,6 +19,7 @@ export default function SupportChatWidget({ onModeChange }) {
   const [sending, setSending] = useState(false);
   const [unread, setUnread] = useState(0);
   const messagesEndRef = useRef(null);
+  const historyLoadedRoomRef = useRef(null);
 
   const appendMessageUnique = (msg) => {
     if (!msg) return;
@@ -49,28 +50,12 @@ export default function SupportChatWidget({ onModeChange }) {
     let mounted = true;
     const socket = getSupportSocket();
 
-    const bootstrap = async () => {
-      try {
-        socket.emit('support:register', {
-          role: 'user',
-          userId: senderId,
-          guestId: null,
-          username: senderName,
-        });
-
-        if (!computedRoomId) return;
-
-        const history = await getSupportMessages(computedRoomId);
-        if (mounted) {
-          setMessages(history || []);
-          if ((history || []).length > 0) {
-            setRoomId(computedRoomId);
-          }
-        }
-      } catch (err) {
-        console.error('[Support Widget] init error:', err);
-      }
-    };
+    socket.emit('support:register', {
+      role: 'user',
+      userId: senderId,
+      guestId: null,
+      username: senderName,
+    });
 
     const onNewMessage = (msg) => {
       if (!msg) return;
@@ -87,13 +72,32 @@ export default function SupportChatWidget({ onModeChange }) {
 
     socket.on('support:new-message', onNewMessage);
 
-    bootstrap();
-
     return () => {
       mounted = false;
       socket.off('support:new-message', onNewMessage);
     };
   }, [computedRoomId, isAdmin, isLoggedIn, senderId, senderName]);
+
+  useEffect(() => {
+    if (!open || !computedRoomId || isAdmin || !isLoggedIn || historyLoadedRoomRef.current === computedRoomId) return;
+
+    let mounted = true;
+    setRoomId(computedRoomId);
+    getSupportMessages(computedRoomId)
+      .then((history) => {
+        if (!mounted) return;
+        setMessages((current) => {
+          const seen = new Set(current.map((message) => message.id).filter(Boolean));
+          return [...(history || []).filter((message) => !message.id || !seen.has(message.id)), ...current];
+        });
+        historyLoadedRoomRef.current = computedRoomId;
+      })
+      .catch((err) => console.error('[Support Widget] history error:', err));
+
+    return () => {
+      mounted = false;
+    };
+  }, [computedRoomId, isAdmin, isLoggedIn, open]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

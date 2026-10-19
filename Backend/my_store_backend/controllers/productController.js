@@ -1,5 +1,7 @@
 import * as productRepo from '../repositories/productRepository.js';
+import * as productSizesRepo from '../repositories/productSizesRepository.js';
 import * as ratingRepo from '../repositories/ratingRepository.js';
+import * as categoryRepo from '../repositories/categoryRepository.js';
 import { decodeCursor, parseLimit } from '../utils/pagination.js';
 
 const getPageOptions = (req) => {
@@ -17,6 +19,18 @@ const getPageOptions = (req) => {
 };
 
 const hasPagination = (req) => req.query.limit !== undefined || req.query.cursor !== undefined;
+
+export const getStorefrontPage = async (req, res) => {
+  try {
+    const [page, categories] = await Promise.all([
+      productRepo.getProductsPage(getPageOptions(req)),
+      categoryRepo.getAllCategories(),
+    ]);
+    res.json({ ...page, categories });
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message });
+  }
+};
 
 export const getAllProducts = async (req, res) => {
   try {
@@ -71,6 +85,19 @@ export const getProductById = async (req, res) => {
     const product = await productRepo.getProductById(req.params.id);
     if (!product) return res.status(404).json({ error: 'Sản phẩm không tồn tại' });
     res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getProductDetails = async (req, res) => {
+  try {
+    const [product, productSizes] = await Promise.all([
+      productRepo.getProductById(req.params.id),
+      productSizesRepo.getAllProductSizes(req.params.id),
+    ]);
+    if (!product) return res.status(404).json({ error: 'Sáº£n pháº©m khĂ´ng tá»“n táº¡i' });
+    res.json({ product, productSizes });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

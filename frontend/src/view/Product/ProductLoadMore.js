@@ -1,59 +1,86 @@
 // src/view/Product/ProductLoadMore.js
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getProductsPage, getAllCategories, getAllSizes, deleteProduct } from "../../api";
+import { getStorefrontPage, deleteProduct } from "../../api";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
-import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
+
+const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
+
+const readStorefrontCache = (key) => {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+};
+
+const writeStorefrontCache = (key, value) => {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // The page still works when browser storage is unavailable or full.
+  }
+};
 
 export default function ProductLoadMore() {
   const { categoryId } = useParams();
   const normalizedCategoryId = String(categoryId);
+  const storeCacheKey = `coolshop-storefront-category-v1:${normalizedCategoryId}`;
+  const [initialCache] = useState(() => readStorefrontCache(storeCacheKey));
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [category, setCategory] = useState(null);
-  const [sizes, setSizes] = useState([]);
-  const [productSizes, setProductSizes] = useState([]);
+  const [products, setProducts] = useState(() => initialCache?.data || []);
+  const [category, setCategory] = useState(() => (initialCache?.categories || []).find((item) => String(item.id) === normalizedCategoryId) || null);
+  const [productSizes, setProductSizes] = useState(() => initialCache?.productSizes || []);
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartCount, setCartCount] = useState(0);
   const [cartNotice, setCartNotice] = useState(null);
   const cartNoticeTimer = useRef(null);
   const [visibleCount, setVisibleCount] = useState(8);
-  const [nextCursor, setNextCursor] = useState(null);
-  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [nextCursor, setNextCursor] = useState(() => initialCache?.pagination?.nextCursor || null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(() => Boolean(initialCache?.pagination?.hasMore));
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [sortOrder, setSortOrder] = useState("default");
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !initialCache);
 
   const user = Session.getUser();
   const isAdmin = Session.isAdmin();
 
   const fetchData = useCallback(async () => {
-    try {
+    const cached = readStorefrontCache(storeCacheKey);
+    if (cached) {
+      setProducts(cached.data || []);
+      setNextCursor(cached.pagination?.nextCursor || null);
+      setHasMoreProducts(Boolean(cached.pagination?.hasMore));
+      setProductSizes(cached.productSizes || []);
+      setCategory((cached.categories || []).find((item) => String(item.id) === normalizedCategoryId) || null);
+      setVisibleCount(8);
+      setLoading(false);
+    } else {
       setLoading(true);
-      const [productPage, catData, sizesData] = await Promise.all([
-        getProductsPage({ limit: 24, categoryId: normalizedCategoryId }),
-        getAllCategories(),
-        getAllSizes()
-      ]);
+    }
+
+    try {
+      const productPage = await getStorefrontPage({ limit: 24, categoryId: normalizedCategoryId });
       setProducts(productPage.data || []);
       setNextCursor(productPage.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(productPage.pagination?.hasMore));
-      setSizes(sizesData);
       setProductSizes(productPage.productSizes || []);
-      
-      const currentCategory = catData.find(c => String(c.id) === normalizedCategoryId);
+
+      const currentCategory = (productPage.categories || []).find(c => String(c.id) === normalizedCategoryId);
       setCategory(currentCategory);
+      setVisibleCount(8);
+      writeStorefrontCache(storeCacheKey, productPage);
     } catch (err) {
       console.error("Lấy dữ liệu thất bại:", err);
     } finally {
       setLoading(false);
     }
-  }, [normalizedCategoryId]);
+  }, [normalizedCategoryId, storeCacheKey]);
 
   useEffect(() => {
     fetchData();
@@ -92,16 +119,22 @@ export default function ProductLoadMore() {
     }));
   };
 
-  const getAvailableSizes = (productId) => {
-    const availableProductSizes = productSizes.filter(ps => ps.product_id === productId);
-    return availableProductSizes.map(ps => {
-      const size = sizes.find(s => s.id === ps.size_id);
-      return size ? { id: ps.id, size: size.size, stock: Number(ps.stock ?? 0) } : null;
-    }).filter(Boolean);
-  };
+  const productSizesByProduct = useMemo(() => {
+    const grouped = new Map();
+    for (const item of productSizes) {
+      const key = String(item.product_id);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(item);
+    }
+    return grouped;
+  }, [productSizes]);
+
+  const getAvailableSizes = (productId) => (productSizesByProduct.get(String(productId)) || [])
+    .filter((item) => item.size != null)
+    .map((item) => ({ id: item.id, size: item.size, stock: Number(item.stock ?? 0) }));
 
   const getStockForSize = (productId, sizeName) => {
-    const match = productSizes.find(ps => ps.product_id === productId && (sizes.find(s => s.id === ps.size_id)?.size === sizeName));
+    const match = (productSizesByProduct.get(String(productId)) || []).find((item) => item.size === sizeName);
     return Number(match?.stock ?? 0);
   };
 
@@ -191,12 +224,20 @@ export default function ProductLoadMore() {
     if (!nextCursor || loadingMoreProducts) return;
     try {
       setLoadingMoreProducts(true);
-      const page = await getProductsPage({ limit: 24, categoryId: normalizedCategoryId, cursor: nextCursor });
-      setProducts(current => [...current, ...(page.data || [])]);
-      setProductSizes(current => [...current, ...(page.productSizes || [])]);
+      const page = await getStorefrontPage({ limit: 24, categoryId: normalizedCategoryId, cursor: nextCursor });
+      const combinedProducts = [...products, ...(page.data || [])];
+      const combinedProductSizes = [...productSizes, ...(page.productSizes || [])];
+      setProducts(combinedProducts);
+      setProductSizes(combinedProductSizes);
       setNextCursor(page.pagination?.nextCursor || null);
       setHasMoreProducts(Boolean(page.pagination?.hasMore));
       setVisibleCount(prev => prev + 8);
+      writeStorefrontCache(storeCacheKey, {
+        ...page,
+        data: combinedProducts,
+        productSizes: combinedProductSizes,
+        categories: page.categories || [],
+      });
     } catch (err) {
       console.error("Không thể tải thêm sản phẩm:", err);
     } finally {
@@ -365,7 +406,7 @@ export default function ProductLoadMore() {
           {cartNotice.message}
         </div>
       )}
-      {isAdmin && <AdminSupportChatWidget forceAdmin />}
+      {isAdmin && <Suspense fallback={null}><AdminSupportChatWidget forceAdmin /></Suspense>}
     </div>
   );
 }

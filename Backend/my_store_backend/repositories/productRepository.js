@@ -89,21 +89,23 @@ export const getProductsPage = async ({ includeDeleted = false, limit = 25, curs
            ps.id AS "__product_size_id",
            ps.product_id AS "__product_size_product_id",
            ps.size_id AS "__product_size_size_id",
-           ps.${stockColumn} AS "__product_size_stock"
+           ps.${stockColumn} AS "__product_size_stock",
+           s.size AS "__product_size_name"
     FROM (
-      SELECT p.*,
+      SELECT p.*${includeDeleted ? `,
              EXISTS (
                SELECT 1
-               FROM order_details od
-               INNER JOIN product_sizes purchased_sizes ON purchased_sizes.id = od.product_sizes_id
+               FROM product_sizes purchased_sizes
+               INNER JOIN order_details od ON od.product_sizes_id = purchased_sizes.id
                WHERE purchased_sizes.product_id = p.id
-             ) AS "hasPurchases"
+             ) AS "hasPurchases"` : ''}
       FROM product p
       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
       ORDER BY p.id DESC
       LIMIT ?
     ) page_rows
     LEFT JOIN product_sizes ps ON ps.product_id = page_rows.id
+    LEFT JOIN sizes s ON s.id = ps.size_id
     ORDER BY page_rows.id DESC, ps.id ASC
   `;
   const [rows] = await db.query(sql, values);
@@ -116,12 +118,13 @@ export const getProductsPage = async ({ includeDeleted = false, limit = 25, curs
       __product_size_product_id: productId,
       __product_size_size_id: sizeId,
       __product_size_stock: stock,
+      __product_size_name: sizeName,
       ...product
     } = row;
     productsById.set(String(product.id), product);
 
     if (productSizeId != null) {
-      productSizes.push({ id: productSizeId, product_id: productId, size_id: sizeId, stock });
+      productSizes.push({ id: productSizeId, product_id: productId, size_id: sizeId, size: sizeName, stock });
     }
   }
 

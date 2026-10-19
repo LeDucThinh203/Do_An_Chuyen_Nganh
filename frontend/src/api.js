@@ -59,6 +59,15 @@ export const getProductsPage = async ({ limit = 25, cursor = null, categoryId = 
   return await safeJson(res);
 };
 
+export const getStorefrontPage = async ({ limit = 24, cursor = null, categoryId = null } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  if (categoryId != null) params.set("category_id", String(categoryId));
+  const res = await fetch(`${PRODUCT_API_URL}/storefront?${params.toString()}`);
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load storefront"));
+  return await safeJson(res);
+};
+
 export const getProductRatingsPage = async (productId, { limit = 20, cursor = null } = {}) => {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
@@ -99,6 +108,12 @@ export const getAllProductsAdmin = async () => {
 export const getProductById = async (id) => {
   const res = await fetch(`${PRODUCT_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy sản phẩm thất bại");
+  return await safeJson(res);
+};
+
+export const getProductDetails = async (id) => {
+  const res = await fetch(`${PRODUCT_API_URL}/${id}/details`);
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load product details"));
   return await safeJson(res);
 };
 

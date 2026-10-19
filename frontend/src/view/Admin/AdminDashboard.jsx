@@ -1,18 +1,19 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { lazy, Suspense, useState, useMemo, useEffect } from "react";
 import Session from "../../Session/session";
-import AdminInfo from "./AdminInfo";
-import AdminAddressManager from "./AdminAddressManager";
-import UserManager from "./UserManager";
-import ProductManager from "./ProductManager";
-import SizeManager from "./SizeManager";
-import CategoryManager from "./categories/CategoryManager";
-import OrderManager from "./OrderManager";
-import Revenue from "./Revenue";
-import SupportChatManager from "./SupportChatManager";
 import { getSupportRooms } from "../../api";
 import { getSupportSocket } from "../../socket/supportSocket";
 import { useLocation, Link } from "react-router-dom";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
+
+const AdminInfo = lazy(() => import("./AdminInfo"));
+const AdminAddressManager = lazy(() => import("./AdminAddressManager"));
+const UserManager = lazy(() => import("./UserManager"));
+const ProductManager = lazy(() => import("./ProductManager"));
+const SizeManager = lazy(() => import("./SizeManager"));
+const CategoryManager = lazy(() => import("./categories/CategoryManager"));
+const OrderManager = lazy(() => import("./OrderManager"));
+const Revenue = lazy(() => import("./Revenue"));
+const SupportChatManager = lazy(() => import("./SupportChatManager"));
 
 export default function AdminDashboard() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -287,19 +288,21 @@ export default function AdminDashboard() {
 
         {/* Content Area - Scrollable */}
         <main className={`flex-1 min-h-0 bg-transparent p-4 sm:p-6 lg:p-8 ${activeTab === "supportChat" ? "overflow-hidden" : "overflow-y-auto"}`}>
-          {activeTab === "revenue" && <Revenue />}
-          {activeTab === "info" && <AdminInfo />}
-          {activeTab === "product" && <ProductManager />}
-          {activeTab === "category" && <CategoryManager />}
-          {activeTab === "size" && <SizeManager />}
-          {activeTab === "orderManager" && <OrderManager />}
-          {activeTab === "supportChat" && (
-            <div className="h-full min-h-0">
-              <SupportChatManager />
-            </div>
-          )}
-          {activeTab === "userManager" && <UserManager />}
-          {activeTab === "address" && <AdminAddressManager />}
+          <Suspense fallback={<div className="py-8 text-center text-sm text-slate-500">Đang tải dữ liệu…</div>}>
+            {activeTab === "revenue" && <Revenue />}
+            {activeTab === "info" && <AdminInfo />}
+            {activeTab === "product" && <ProductManager />}
+            {activeTab === "category" && <CategoryManager />}
+            {activeTab === "size" && <SizeManager />}
+            {activeTab === "orderManager" && <OrderManager />}
+            {activeTab === "supportChat" && (
+              <div className="h-full min-h-0">
+                <SupportChatManager />
+              </div>
+            )}
+            {activeTab === "userManager" && <UserManager />}
+            {activeTab === "address" && <AdminAddressManager />}
+          </Suspense>
         </main>
       </div>
     </div>

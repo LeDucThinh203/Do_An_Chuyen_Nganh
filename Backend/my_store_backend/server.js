@@ -128,16 +128,15 @@ const shutdown = (signal) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-const startServer = async () => {
-  try {
-    await ensureDemoAccounts();
-  } catch (error) {
-    console.error('[demo] Could not initialize demo accounts:', error.message);
-  }
-
+const startServer = () => {
   httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);
+
+  // Don't delay the HTTP listener for optional demo-account checks or bcrypt.
+  ensureDemoAccounts().catch((error) => {
+    console.error('[demo] Could not initialize demo accounts:', error.message);
+  });
 
   // Initialize AI schema AND embeddings in background (don't block startup)
   (async () => {
