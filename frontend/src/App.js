@@ -41,7 +41,6 @@ import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 import { ThemeProvider } from "./context/ThemeContext";
 import ThemeBackground from "./view/common/ThemeBackground";
 import ThemeToggleBtn from "./view/common/ThemeToggleBtn";
-import LuxuryCursor from "./view/common/LuxuryCursor";
 
 // Lazy load Cart & Checkout
 const Cart = lazy(() => import("./view/Cart/Cart"));
@@ -50,10 +49,18 @@ const Confirmation = lazy(() => import("./view/Cart/Confirmation"));
 
 // ScrollToTop Component
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (!hash) {
+      window.scrollTo(0, 0);
+      return undefined;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname, hash]);
   return null;
 }
 
@@ -80,27 +87,31 @@ function AppContent() {
   };
 
   const AdminRoute = ({ children }) => {
-    if (!Session.isAdmin()) return <Login setUser={setUser} />;
+    if (!Session.isLoggedIn()) {
+      return <Navigate to="/login" replace state={{ message: "Đăng nhập bằng tài khoản quản trị để tiếp tục.", returnTo: pathname }} />;
+    }
+    if (!Session.isAdmin()) return <Navigate to="/" replace />;
     return children;
   };
 
   const UserRoute = ({ children }) => {
-    if (!Session.isLoggedIn() || Session.isAdmin()) return <Login setUser={setUser} />;
+    if (!Session.isLoggedIn()) {
+      return <Navigate to="/login" replace state={{ message: "Đăng nhập để xem hồ sơ và đơn hàng.", returnTo: "/user" }} />;
+    }
+    if (Session.isAdmin()) return <Navigate to="/admin" replace />;
     return children;
   };
 
   const CheckoutRoute = ({ children }) => {
     if (!Session.isLoggedIn()) {
-      window.alert("Bạn cần đăng nhập để thanh toán!");
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/login" replace state={{ message: "Đăng nhập để tiếp tục thanh toán.", returnTo: "/checkout" }} />;
     }
     return children;
   };
 
   const ConfirmationRoute = ({ children }) => {
     if (!Session.isLoggedIn()) {
-      window.alert("Bạn cần đăng nhập để xác nhận đơn hàng!");
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/login" replace state={{ message: "Đăng nhập để xem xác nhận đơn hàng.", returnTo: "/order-confirmation" }} />;
     }
     return children;
   };
@@ -118,10 +129,7 @@ function AppContent() {
 
   return (
     <div className="relative flex min-h-screen w-full min-w-0 flex-col font-sans transition-colors duration-500">
-      {/* Interactive Luxury Cursor & Shimmering Bubble Sparks */}
-      <LuxuryCursor />
-
-      {/* Background Star & Meteor Effects */}
+      {/* Quiet background keeps attention on products and controls. */}
       <ThemeBackground />
 
       {/* Navbar */}

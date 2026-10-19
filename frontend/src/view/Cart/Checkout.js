@@ -152,7 +152,7 @@ export default function Checkout() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (checkoutItems.length === 0) return alert("Chưa có sản phẩm nào để thanh toán!");
+    if (checkoutItems.length === 0) return;
 
     // Build full human-readable address string
     const provName = provinces.find((p) => String(p.code) === String(form.province))?.name || "";
@@ -234,10 +234,10 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="checkout-page min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Stepper Header */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+        <div className="checkout-stepper bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm font-bold">
             <Link to="/cart" className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition">
               <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs">
@@ -578,9 +578,7 @@ export default function Checkout() {
                 </div>
                 <div className="flex justify-between">
                   <span>Phí vận chuyển:</span>
-                  <span className="font-bold text-emerald-600">
-                    {total >= 299000 ? "0 ₫ (Freeship)" : "Miễn phí"}
-                  </span>
+                  <span className="font-bold text-emerald-600">0 ₫</span>
                 </div>
                 <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
                   <span className="font-bold text-slate-900">Tổng thanh toán:</span>
@@ -590,16 +588,9 @@ export default function Checkout() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1.5 text-[11px] text-slate-500">
-                <div className="flex items-center gap-2">
-                  <span>🔒</span>
-                  <span>Bảo mật dữ liệu thanh toán 100%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>⚡</span>
-                  <span>CoolShop Athletic phục vụ 24/7</span>
-                </div>
-              </div>
+              <p className="rounded-xl bg-slate-50 px-3.5 py-3 text-[11px] leading-relaxed text-slate-500">
+                Kiểm tra tên, số điện thoại và địa chỉ nhận hàng trước khi xác nhận đơn.
+              </p>
             </div>
           </div>
         </div>

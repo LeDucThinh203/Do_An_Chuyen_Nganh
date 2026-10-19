@@ -129,7 +129,7 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className="flex h-screen h-[100dvh] overflow-hidden bg-transparent"
+      className="admin-dashboard flex h-screen h-[100dvh] overflow-hidden bg-transparent"
       style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, margin: 0, padding: 0 }}
     >
       {menuOpen && (
@@ -176,13 +176,8 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* System Status Pill */}
-          <div className="px-5 py-3 border-b border-slate-800/60 bg-slate-950/20 flex items-center justify-between text-[11px]">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Hệ thống trực tuyến</span>
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">v2.5</span>
+          <div className="px-5 py-3 border-b border-slate-800/60 bg-slate-950/20 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Quản trị cửa hàng
           </div>
 
           {/* Grouped Menu List */}
@@ -200,7 +195,7 @@ export default function AdminDashboard() {
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between text-xs sm:text-sm font-semibold group ${
                         isActive
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 scale-101"
+                          ? "bg-blue-700 text-white shadow-sm"
                           : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                       }`}
                     >
@@ -283,7 +278,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="text-right hidden sm:block">
                   <p className="text-xs font-bold text-slate-800 leading-tight">{user.username}</p>
-                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Super Admin</span>
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Quản trị viên</span>
                 </div>
               </div>
             </div>

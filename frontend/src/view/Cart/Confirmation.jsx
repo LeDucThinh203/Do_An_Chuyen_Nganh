@@ -266,14 +266,15 @@ export default function Confirmation() {
                 <p className="text-3xl font-black mt-1">
                   {Number(orderData.total).toLocaleString("vi-VN")} ₫
                 </p>
+                <p className="text-xs text-slate-300 mt-1">Phí vận chuyển: 0 ₫</p>
                 <p className="text-xs text-slate-300 mt-1">
-                  Miễn phí vận chuyển toàn quốc (Freeship)
+                  Phương thức: {String(orderData.payment_method).toLowerCase() === "vnpay" ? "VNPay" : "Thanh toán khi nhận hàng"}
                 </p>
               </div>
 
               <div className="text-[11px] text-slate-300/80 space-y-1 pt-3 border-t border-white/10">
-                <p>• Hỗ trợ kiểm tra hàng trước khi nhận</p>
-                <p>• Đổi trả trong 60 ngày nếu không vừa size</p>
+                <p>• Địa chỉ nhận hàng được lưu cùng đơn</p>
+                <p>• Xem trạng thái đơn trong tài khoản</p>
               </div>
             </div>
           </div>

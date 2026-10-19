@@ -12,9 +12,7 @@ export function ThemeProvider({ children }) {
     try {
       const savedTheme = localStorage.getItem("coolshop_theme");
       if (savedTheme) return savedTheme;
-      return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
+      return "light";
     } catch (e) {
       return "light";
     }

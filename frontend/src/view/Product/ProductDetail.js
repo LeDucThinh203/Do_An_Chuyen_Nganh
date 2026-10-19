@@ -1,5 +1,5 @@
 // src/view/Product/ProductDetail.js
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
   getProductById, 
@@ -37,6 +37,8 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("desc");
   const [addedToast, setAddedToast] = useState(false);
+  const [actionNotice, setActionNotice] = useState(null);
+  const actionNoticeTimer = useRef(null);
 
   // Rating state
   const [ratings, setRatings] = useState([]);
@@ -49,6 +51,14 @@ export default function ProductDetail() {
   const [currentUser] = useState(() => JSON.parse(localStorage.getItem("user")));
   const isUser = currentUser?.role === "user";
   const isAdmin = currentUser?.role === "admin";
+
+  const notifyAction = (message, tone = "success") => {
+    window.clearTimeout(actionNoticeTimer.current);
+    setActionNotice({ message, tone });
+    actionNoticeTimer.current = window.setTimeout(() => setActionNotice(null), 2800);
+  };
+
+  useEffect(() => () => window.clearTimeout(actionNoticeTimer.current), []);
 
   const fetchProductDetail = useCallback(async () => {
     try {
@@ -117,7 +127,7 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("⚠️ Vui lòng chọn kích cỡ (Size) trước khi thêm vào giỏ hàng!");
+      notifyAction("Vui lòng chọn kích cỡ trước khi thêm vào giỏ hàng.", "error");
       return;
     }
 
@@ -127,7 +137,7 @@ export default function ProductDetail() {
     });
 
     if (!matchedPS || Number(matchedPS.stock) <= 0) {
-      alert("⚠️ Size này hiện đã hết hàng, vui lòng chọn size khác!");
+      notifyAction("Size này hiện đã hết hàng. Vui lòng chọn size khác.", "error");
       return;
     }
 
@@ -162,7 +172,7 @@ export default function ProductDetail() {
 
   const handleAddRating = async () => {
     if (!eligibleOrderDetailId) {
-      alert("Bạn cần mua sản phẩm này và hoàn thành đơn hàng để viết đánh giá!");
+      notifyAction("Bạn cần mua và hoàn tất đơn hàng trước khi gửi đánh giá.", "error");
       return;
     }
 
@@ -172,27 +182,27 @@ export default function ProductDetail() {
         rating_value: userRating.rating_value,
         comment: userRating.comment,
       });
-      alert("✅ Cảm ơn bạn đã gửi đánh giá sản phẩm!");
+      notifyAction("Cảm ơn bạn đã gửi đánh giá sản phẩm.");
       setUserRating({ rating_value: 5, comment: "" });
       setEligibleOrderDetailId(null);
       fetchProductDetail();
     } catch (err) {
-      alert("Lỗi khi gửi đánh giá: " + (err.message || "Vui lòng thử lại"));
+      notifyAction("Không thể gửi đánh giá: " + (err.message || "Vui lòng thử lại."), "error");
     }
   };
 
   const handleAddSize = async () => {
     if (!adminSelectedSizeId) {
-      alert("Vui lòng chọn size cần thêm!");
+      notifyAction("Vui lòng chọn size cần thêm.", "error");
       return;
     }
     try {
       await createProductSize({ product_id: id, size_id: adminSelectedSizeId, stock: 50 });
-      alert("✅ Thêm size thành công!");
+      notifyAction("Đã thêm size.");
       setAdminSelectedSizeId("");
       fetchProductDetail();
     } catch (err) {
-      alert("Lỗi thêm size: " + err.message);
+      notifyAction("Không thể thêm size: " + err.message, "error");
     }
   };
 
@@ -200,10 +210,10 @@ export default function ProductDetail() {
     if (!window.confirm("Bạn có chắc muốn xóa size này?")) return;
     try {
       await deleteProductSize(psId);
-      alert("✅ Đã xóa size khỏi sản phẩm!");
+      notifyAction("Đã xóa size khỏi sản phẩm.");
       fetchProductDetail();
     } catch (err) {
-      alert("Lỗi xóa size: " + err.message);
+      notifyAction("Không thể xóa size: " + err.message, "error");
     }
   };
 
@@ -240,10 +250,16 @@ export default function ProductDetail() {
 
   const averageRating = ratingSummary.total > 0
     ? ratingSummary.average.toFixed(1)
-    : "5.0";
+    : null;
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="product-detail-page min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+      {actionNotice && (
+        <div className={`cart-toast cart-toast--${actionNotice.tone}`} role="status" aria-live="polite">
+          <span aria-hidden="true">{actionNotice.tone === "error" ? "!" : "✓"}</span>
+          {actionNotice.message}
+        </div>
+      )}
       {/* Added to cart toast */}
       {addedToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-fadeIn">
@@ -282,7 +298,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Hero Product Detail Card */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        <div className="product-detail-card bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/80 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Left: Image Showcase */}
           <div className="lg:col-span-6 space-y-4">
             <div className="relative rounded-3xl overflow-hidden bg-slate-100 border border-slate-200/80 aspect-square group shadow-inner">
@@ -299,8 +315,8 @@ export default function ProductDetail() {
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-white text-[11px] font-extrabold uppercase tracking-wider shadow-lg">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Pro Athletic 2026</span>
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                  <span>CoolShop</span>
                 </span>
                 {Number(product.discount_percent || 0) > 0 && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-rose-600 to-amber-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
@@ -309,27 +325,24 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-bold text-slate-800 shadow-md">
-                100% Chính Hãng
-              </div>
             </div>
 
-            {/* Micro Feature badges */}
+            {/* Purchase information */}
             <div className="grid grid-cols-3 gap-3 pt-2 text-center text-xs">
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-0.5">
-                <span className="text-base">🚀</span>
-                <p className="font-bold text-slate-800">Giao siêu tốc 2h</p>
-                <p className="text-[10px] text-slate-400">Nội thành 2-4h</p>
+                <span className="text-base">↔</span>
+                <p className="font-bold text-slate-800">Chọn kích cỡ</p>
+                <p className="text-[10px] text-slate-400">Size hết hàng sẽ khóa</p>
               </div>
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-0.5">
-                <span className="text-base">🔄</span>
-                <p className="font-bold text-slate-800">Đổi trả 60 ngày</p>
-                <p className="text-[10px] text-slate-400">Miễn phí tận nơi</p>
+                <span className="text-base">✓</span>
+                <p className="font-bold text-slate-800">Tồn kho rõ ràng</p>
+                <p className="text-[10px] text-slate-400">Theo từng kích cỡ</p>
               </div>
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-0.5">
-                <span className="text-base">💎</span>
-                <p className="font-bold text-slate-800">Chuẩn thi đấu</p>
-                <p className="text-[10px] text-slate-400">Kháng khuẩn 4 chiều</p>
+                <span className="text-base">₫</span>
+                <p className="font-bold text-slate-800">COD / VNPay</p>
+                <p className="text-[10px] text-slate-400">Chọn khi thanh toán</p>
               </div>
             </div>
           </div>
@@ -340,14 +353,16 @@ export default function ProductDetail() {
               {/* Category & Status */}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                  Thời Trang Thể Thao Cao Cấp
+                  Sản phẩm thể thao
                 </span>
 
-                <div className="flex items-center gap-1 text-amber-500 text-xs font-extrabold">
-                  <span>★</span>
-                  <span>{averageRating}</span>
-                  <span className="text-slate-400 font-normal">({ratingSummary.total} đánh giá)</span>
-                </div>
+                {ratingSummary.total > 0 ? (
+                  <div className="flex items-center gap-1 text-amber-500 text-xs font-extrabold">
+                    <span>★</span>
+                    <span>{averageRating}</span>
+                    <span className="text-slate-400 font-normal">({ratingSummary.total} đánh giá)</span>
+                  </div>
+                ) : <span className="text-xs text-slate-500">Chưa có đánh giá</span>}
               </div>
 
               {/* Title */}
@@ -474,13 +489,10 @@ export default function ProductDetail() {
 
               <div className="flex items-center justify-center gap-6 text-xs text-slate-500 pt-1">
                 <span className="flex items-center gap-1.5">
-                  <span className="text-emerald-500">✓</span> Freeship đơn từ 299K
+                  <span className="text-emerald-500">✓</span> Size hiển thị theo tồn kho
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="text-emerald-500">✓</span> Kiểm tra hàng trước
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="text-emerald-500">✓</span> Hỗ trợ 24/7
+                  <span className="text-emerald-500">✓</span> COD hoặc VNPay
                 </span>
               </div>
             </div>
@@ -526,14 +538,8 @@ export default function ProductDetail() {
           {activeTab === "desc" && (
             <div className="space-y-4 text-slate-700 leading-relaxed text-sm animate-fadeIn">
               <p className="whitespace-pre-line">
-                {product.description || "Sản phẩm đồ thể thao CoolShop được gia công từ sợi vải công nghệ cao, kháng khuẩn và thoáng khí vượt trội, phù hợp cho tập luyện cường độ cao và mặc hàng ngày."}
+                {product.description || "Thông tin mô tả cho sản phẩm này chưa được cập nhật."}
               </p>
-              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/60 text-xs text-blue-900 space-y-1">
-                <p className="font-bold">✨ Điểm nổi bật của dòng sản phẩm Pro Athletic 2026:</p>
-                <p>• Sợi vải dệt tổ ong phân tử giúp thoát mồ hôi siêu tốc chỉ sau 3 giây vận động.</p>
-                <p>• Co giãn 4 chiều đa phương, giữ form áo chuẩn kể cả sau 100 lần giặt máy.</p>
-                <p>• Logo in decal nhiệt cao cấp không bong tróc, màu sắc sắc nét chuẩn thi đấu.</p>
-              </div>
             </div>
           )}
 
@@ -541,22 +547,13 @@ export default function ProductDetail() {
           {activeTab === "specs" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs animate-fadeIn">
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-                <h4 className="font-extrabold text-slate-900 text-sm">Chất liệu & Gia công:</h4>
+                <h4 className="font-extrabold text-slate-900 text-sm">Kích cỡ và tình trạng</h4>
                 <ul className="space-y-1.5 text-slate-600">
-                  <li>• Thành phần: 92% Polyester Microfiber, 8% Spandex cao cấp</li>
-                  <li>• Công nghệ: Dry-Fit thoát nhiệt đa chiều</li>
-                  <li>• Đường may: Chần 4 kim 6 chỉ tiêu chuẩn thi đấu quốc tế</li>
-                  <li>• Nơi sản xuất: Gia công chính hãng tại Việt Nam</li>
-                </ul>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-                <h4 className="font-extrabold text-slate-900 text-sm">Hướng dẫn bảo quản:</h4>
-                <ul className="space-y-1.5 text-slate-600">
-                  <li>• Giặt ở nhiệt độ bình thường với đồ có màu tương tự</li>
-                  <li>• Không dùng hóa chất tẩy rửa mạnh có chứa clo</li>
-                  <li>• Phơi ở nơi thoáng mát, tránh ánh nắng gắt trực tiếp</li>
-                  <li>• Ủi ở nhiệt độ thấp dưới 110°C (không ủi trực tiếp lên decal)</li>
+                  {productSizes.map((productSize) => {
+                    const size = sizes.find((item) => item.id === productSize.size_id);
+                    return size ? <li key={productSize.id}>• {size.size}: {Number(productSize.stock) > 0 ? `Còn ${productSize.stock}` : "Tạm hết hàng"}</li> : null;
+                  })}
+                  {productSizes.length === 0 && <li>• Thông tin kích cỡ đang được cập nhật.</li>}
                 </ul>
               </div>
             </div>
@@ -568,16 +565,16 @@ export default function ProductDetail() {
               {/* Rating summary */}
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/70 flex flex-col sm:flex-row items-center gap-6">
                 <div className="text-center sm:text-left space-y-1">
-                  <span className="text-4xl font-black text-slate-900">{averageRating}</span>
-                  <div className="text-amber-400 text-lg">
-                    {"★".repeat(Math.round(averageRating))}{"☆".repeat(5 - Math.round(averageRating))}
+                  <span className="text-4xl font-black text-slate-900">{averageRating || "—"}</span>
+                  <div className="text-amber-400 text-lg" aria-label={averageRating ? `${averageRating} trên 5 sao` : "Chưa có xếp hạng"}>
+                    {averageRating ? `${"★".repeat(Math.round(averageRating))}${"☆".repeat(5 - Math.round(averageRating))}` : "Chưa xếp hạng"}
                   </div>
-                  <p className="text-xs text-slate-500">{ratingSummary.total} lượt đánh giá từ người mua</p>
+                  <p className="text-xs text-slate-500">{ratingSummary.total} lượt đánh giá</p>
                 </div>
 
                 <div className="flex-1 text-xs text-slate-600 border-t sm:border-t-0 sm:border-l border-slate-200 sm:pl-6 pt-4 sm:pt-0 space-y-1">
-                  <p className="font-bold text-slate-800">100% Khách hàng đánh giá tốt về chất liệu & form dáng</p>
-                  <p className="text-slate-500">Mọi đánh giá đều được xác minh từ những khách hàng đã đặt hàng thành công tại CoolShop.</p>
+                  <p className="font-bold text-slate-800">Chia sẻ trải nghiệm của bạn</p>
+                  <p className="text-slate-500">Bạn có thể gửi đánh giá sau khi mua và hoàn tất đơn hàng.</p>
                 </div>
               </div>
 

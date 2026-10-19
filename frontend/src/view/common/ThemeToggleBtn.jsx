@@ -3,7 +3,7 @@ import React from "react";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
 
   if (variant === "floating") {
     return (
@@ -12,7 +12,7 @@ export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
           onClick={toggleTheme}
           type="button"
           aria-label={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
-          title={isDark ? "Chuyển sang Giao diện Sáng (Ánh sao lấp lánh)" : "Chuyển sang Giao diện Tối (Mưa sao băng)"}
+          title={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
           className={`group relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 border backdrop-blur-md ${
             isDark
               ? "bg-slate-900/90 text-amber-300 border-amber-500/30 hover:border-amber-400/60 shadow-indigo-950/60"
@@ -27,7 +27,7 @@ export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
                 </svg>
               </div>
               <span className="text-xs font-bold text-slate-200 pr-1 hidden sm:inline-block">
-                Mưa sao băng 🌠
+                Chuyển sang sáng
               </span>
             </>
           ) : (
@@ -38,7 +38,7 @@ export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
                 </svg>
               </div>
               <span className="text-xs font-bold text-slate-700 pr-1 hidden sm:inline-block">
-                Ánh sao ✨
+                Chuyển sang tối
               </span>
             </>
           )}
@@ -53,7 +53,7 @@ export default function ThemeToggleBtn({ variant = "navbar", className = "" }) {
       onClick={toggleTheme}
       type="button"
       aria-label={isDark ? "Chuyển sang giao diện Sáng" : "Chuyển sang giao diện Tối"}
-      title={isDark ? "Chuyển sang Giao diện Sáng (Ánh sao lấp lánh)" : "Chuyển sang Giao diện Tối (Mưa sao băng)"}
+      title={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
       className={`relative p-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 flex items-center justify-center border group ${
         isDark
           ? "bg-slate-800/80 text-amber-300 border-slate-700 hover:bg-slate-700/80 hover:border-amber-400/50 shadow-md shadow-amber-500/10"

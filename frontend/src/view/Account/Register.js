@@ -47,13 +47,13 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/50 to-teal-50/40 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+    <div className="auth-page register-page">
       {/* Radiant light ambient background orbs */}
       <div className="absolute top-10 right-10 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-300/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-200/15 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-emerald-500/10 border border-slate-200/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+      <div className="auth-card register-card">
         {/* Left Side: Brand Showcase */}
         <div className="lg:col-span-5 bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-700 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden shadow-inner">
           <div className="absolute -top-16 -left-16 w-64 h-64 bg-cyan-300/25 rounded-full blur-2xl pointer-events-none"></div>
@@ -68,16 +68,16 @@ export default function Register() {
 
             <div className="mt-12 space-y-3.5">
               <span className="inline-block text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm">
-                Gia Nhập CoolClub
+                Tạo tài khoản
               </span>
               <h1 className="text-2xl sm:text-3xl font-black leading-tight drop-shadow-sm">
-                Khởi Đầu Hành Trình <br />
+                Quản lý đơn hàng <br />
                 <span className="text-cyan-200">
-                  Đẳng Cấp Thể Thao
+                  thuận tiện hơn
                 </span>
               </h1>
               <p className="text-emerald-50 text-xs sm:text-sm leading-relaxed">
-                Tạo tài khoản ngay hôm nay để nhận voucher giảm giá 10% đơn đầu tiên và tích lũy điểm thưởng thành viên thân thiết.
+                Tạo tài khoản để lưu thông tin nhận hàng và xem lại các đơn đã đặt.
               </p>
             </div>
           </div>
@@ -85,15 +85,15 @@ export default function Register() {
           <div className="mt-10 pt-6 border-t border-white/20 space-y-2.5 text-xs text-emerald-50">
             <div className="flex items-center gap-2">
               <span className="text-base">🎁</span>
-              <span>Tặng ngay Voucher 10% chào đón thành viên mới</span>
+              <span>Theo dõi trạng thái đơn hàng</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base">⚡</span>
-              <span>Thông báo sớm nhất các bộ sưu tập thể thao 2026</span>
+              <span>Lưu và cập nhật địa chỉ nhận hàng</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base">🔒</span>
-              <span>Bảo mật dữ liệu cá nhân theo chuẩn quốc tế</span>
+              <span>Đổi mật khẩu trong phần tài khoản</span>
             </div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 hover:shadow-emerald-600/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.01]"
+                className="auth-submit"
               >
                 {loading ? (
                   <>

@@ -39,7 +39,7 @@ export default function UserInfo({ onNavigate }) {
                 {user.username}
               </h2>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-400/20 to-yellow-500/20 text-yellow-300 border border-yellow-400/30">
-                ✨ Hội Viên CoolClub
+                Khách hàng
               </span>
             </div>
 
@@ -49,7 +49,7 @@ export default function UserInfo({ onNavigate }) {
 
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2">
               <div className="inline-flex items-center gap-2 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <span>Tài khoản đang hoạt động</span>
               </div>
               <div className="inline-flex items-center gap-1.5 text-xs text-slate-300 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
@@ -66,7 +66,7 @@ export default function UserInfo({ onNavigate }) {
         {/* Card 1: ID */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">ID Thành viên</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">ID tài khoản</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
               #
             </div>

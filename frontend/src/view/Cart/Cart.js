@@ -61,10 +61,7 @@ export default function Cart() {
   const purchasableItems = cart.filter((i) => !isOutOfStock(i));
 
   const handleCheckout = () => {
-    if (purchasableItems.length === 0) {
-      alert("Giỏ hàng chỉ toàn sản phẩm hết hàng. Vui lòng chọn sản phẩm khác hoặc liên hệ CSKH.");
-      return;
-    }
+    if (purchasableItems.length === 0) return;
     localStorage.setItem("checkout_items", JSON.stringify(purchasableItems));
     navigate("/checkout");
   };
@@ -106,7 +103,7 @@ export default function Cart() {
             Giỏ Hàng Đang Trống
           </h2>
           <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
-            Bạn chưa chọn món đồ thể thao nào. Hãy khám phá ngay bộ sưu tập thể thao Pro Athletic 2026!
+            Giỏ hàng chưa có sản phẩm. Hãy duyệt danh mục và chọn size phù hợp trước khi thêm vào giỏ.
           </p>
           <Link
             to="/"
@@ -121,10 +118,10 @@ export default function Cart() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="cart-page min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Checkout Progress Stepper */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+        <div className="checkout-stepper bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm font-bold">
             <div className="flex items-center gap-2 text-blue-600">
               <span className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">
@@ -163,6 +160,12 @@ export default function Cart() {
               </span>
             </div>
 
+            {purchasableItems.length === 0 && (
+              <div className="cart-stock-alert" role="status">
+                Các sản phẩm trong giỏ hiện đã hết hàng. Bạn có thể xóa sản phẩm này hoặc quay lại chọn size còn hàng.
+              </div>
+            )}
+
             {groupedCartArray.map((item) => {
               const out = isOutOfStock(item);
               return (
@@ -188,7 +191,9 @@ export default function Cart() {
                         {item.name}
                       </h3>
                       <button
+                        type="button"
                         onClick={() => handleRemove(item.id, item.size)}
+                        aria-label={`Xóa ${item.name} khỏi giỏ hàng`}
                         className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
                         title="Xóa sản phẩm này"
                       >
@@ -231,8 +236,10 @@ export default function Cart() {
                       {/* Quantity Stepper */}
                       <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
                         <button
+                          type="button"
                           onClick={() => !out && handleQuantityChange(item.id, item.size, -1)}
                           disabled={out || item.quantity <= 1}
+                          aria-label={`Giảm số lượng ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg font-bold transition disabled:opacity-40"
                         >
                           -
@@ -241,8 +248,10 @@ export default function Cart() {
                           {item.quantity}
                         </span>
                         <button
+                          type="button"
                           onClick={() => !out && handleQuantityChange(item.id, item.size, 1)}
                           disabled={out}
+                          aria-label={`Tăng số lượng ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg font-bold transition disabled:opacity-40"
                         >
                           +
@@ -276,7 +285,7 @@ export default function Cart() {
 
           {/* Right Column: Order Summary Card */}
           <div className="lg:col-span-4 space-y-4">
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xl space-y-5 sticky top-28">
+            <div className="cart-summary bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xl space-y-5 lg:sticky lg:top-28">
               <h2 className="text-lg font-extrabold text-slate-900 pb-3 border-b border-slate-100 flex items-center justify-between">
                 <span>Tóm Tắt Đơn Hàng</span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">
@@ -294,17 +303,8 @@ export default function Cart() {
 
                 <div className="flex justify-between text-slate-600">
                   <span>Phí vận chuyển:</span>
-                  <span className="font-bold text-emerald-600">
-                    {totalPrice >= 299000 ? "Miễn phí (Freeship)" : "Theo khu vực"}
-                  </span>
+                  <span className="font-bold text-emerald-600">0 ₫</span>
                 </div>
-
-                {totalPrice >= 299000 && (
-                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-semibold flex items-center gap-2">
-                    <span>🎉</span>
-                    <span>Đơn hàng đủ điều kiện FREESHIP toàn quốc!</span>
-                  </div>
-                )}
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
@@ -337,11 +337,11 @@ export default function Cart() {
               <div className="pt-4 border-t border-slate-100 space-y-2 text-[11px] text-slate-500">
                 <div className="flex items-center gap-2">
                   <span>🛡️</span>
-                  <span>Đổi trả 60 ngày miễn phí tận nơi</span>
+                  <span>Kiểm tra tồn kho trước khi thanh toán</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>⚡</span>
-                  <span>Giao hàng hỏa tốc trong 2h tại TP.HCM & HN</span>
+                  <span>Thanh toán COD hoặc VNPay</span>
                 </div>
               </div>
             </div>

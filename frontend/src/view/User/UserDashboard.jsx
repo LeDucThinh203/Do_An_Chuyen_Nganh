@@ -112,7 +112,7 @@ export default function UserDashboard() {
       case "info":
         return {
           title: "Hồ Sơ Cá Nhân",
-          subtitle: "Quản lý thông tin tài khoản và quyền lợi thành viên CoolClub",
+          subtitle: "Quản lý thông tin tài khoản và đơn hàng của bạn",
           icon: "👤"
         };
       case "orders":
@@ -152,7 +152,7 @@ export default function UserDashboard() {
   const userInitial = (user.username || "U").charAt(0).toUpperCase();
 
   return (
-    <div className="flex h-screen h-[100dvh] overflow-hidden bg-transparent font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
+    <div className="user-dashboard-shell flex h-screen h-[100dvh] overflow-hidden bg-transparent font-sans" style={{ position: "fixed", inset: 0, margin: 0, padding: 0 }}>
       {/* Backdrop for Mobile */}
       {menuOpen && (
         <button
@@ -211,7 +211,7 @@ export default function UserDashboard() {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span className="text-[11px] font-semibold text-emerald-300 uppercase tracking-wide">
-                  Hội viên CoolClub
+                  Khách hàng
                 </span>
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function UserDashboard() {
                 title={!menuOpen ? item.label : undefined}
                 className={`w-full flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group relative ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30"
+                    ? "bg-blue-700 text-white shadow-sm"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/70"
                 }`}
               >

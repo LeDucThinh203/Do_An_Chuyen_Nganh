@@ -6,6 +6,7 @@ import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import AdminSupportChatWidget from "../Admin/AdminSupportChatWidget";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
+import ProductCard from "./ProductCard";
 
 export default function ProductLoadMore() {
   const { categoryId } = useParams();
@@ -17,6 +18,8 @@ export default function ProductLoadMore() {
   const [productSizes, setProductSizes] = useState([]);
   const [selectedSizes, setSelectedSizes] = useState({});
   const [cartCount, setCartCount] = useState(0);
+  const [cartNotice, setCartNotice] = useState(null);
+  const cartNoticeTimer = useRef(null);
   const [visibleCount, setVisibleCount] = useState(8);
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMoreProducts, setHasMoreProducts] = useState(false);
@@ -56,6 +59,14 @@ export default function ProductLoadMore() {
     fetchData();
     updateCartCount();
   }, [fetchData]);
+
+  const notifyCart = (message, tone = "success") => {
+    window.clearTimeout(cartNoticeTimer.current);
+    setCartNotice({ message, tone });
+    cartNoticeTimer.current = window.setTimeout(() => setCartNotice(null), 2600);
+  };
+
+  useEffect(() => () => window.clearTimeout(cartNoticeTimer.current), []);
 
   const updateCartCount = () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
@@ -98,13 +109,13 @@ export default function ProductLoadMore() {
     const selectedSize = sizeOverride || selectedSizes[product.id];
     
     if (!selectedSize) {
-      alert("⚠️ Vui lòng chọn size trước khi thêm vào giỏ hàng!");
+      notifyCart("Vui lòng chọn size trước khi thêm vào giỏ hàng.", "error");
       return;
     }
 
     const stock = getStockForSize(product.id, selectedSize);
     if (stock <= 0) {
-      alert("❌ Size này đã hết hàng. Vui lòng chọn size khác.");
+      notifyCart("Size này đã hết hàng. Vui lòng chọn size khác.", "error");
       return;
     }
 
@@ -118,7 +129,7 @@ export default function ProductLoadMore() {
 
     if (existingItem) {
       if (existingItem.quantity >= stock) {
-        alert(`❌ Bạn đã thêm tối đa ${stock} sản phẩm size ${selectedSize}!`);
+        notifyCart(`Bạn đã đạt số lượng tối đa còn trong kho (${stock}, size ${selectedSize}).`, "error");
         return;
       }
       existingItem.quantity += 1;
@@ -135,7 +146,7 @@ export default function ProductLoadMore() {
 
     localStorage.setItem("cart", JSON.stringify(cart));
     updateCartCount();
-    alert(`🛒 Đã thêm "${product.name}" (Size: ${selectedSize}) vào giỏ hàng!`);
+    notifyCart(`Đã thêm ${product.name} · Size ${selectedSize} vào giỏ hàng.`);
   };
 
   const handleLogout = () => {
@@ -208,7 +219,7 @@ export default function ProductLoadMore() {
         cartCount={cartCount}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 sm:pt-32 pb-16">
+      <div className="category-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 sm:pt-32 pb-16">
         {loading ? (
           <div className="space-y-6">
             <SkeletonBlock className="h-12 w-1/3 rounded-2xl" />
@@ -218,7 +229,7 @@ export default function ProductLoadMore() {
         ) : (
           <>
             {/* Category Hero Header */}
-            <div className="mb-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-xl relative overflow-hidden">
+            <div className="category-hero mb-8 p-6 sm:p-8 rounded-3xl text-white relative overflow-hidden">
               <div className="relative z-10 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-blue-300">
                   <Link to="/" className="hover:text-white transition">Trang chủ</Link>
@@ -348,6 +359,12 @@ export default function ProductLoadMore() {
         )}
       </div>
 
+      {cartNotice && (
+        <div className={`cart-toast cart-toast--${cartNotice.tone}`} role="status" aria-live="polite">
+          <span aria-hidden="true">{cartNotice.tone === "error" ? "!" : "✓"}</span>
+          {cartNotice.message}
+        </div>
+      )}
       {isAdmin && <AdminSupportChatWidget forceAdmin />}
     </div>
   );
@@ -422,9 +439,9 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 mx-auto sm:mx-0">
             <span className="inline-flex items-center justify-center bg-blue-500/30 text-blue-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-blue-400/30">
-              Ưu đãi
+              Thông tin
             </span>
-            <span>🔥 FREESHIP TOÀN QUỐC CHO ĐƠN TỪ 299K • ĐỔI TRẢ 60 NGÀY TẬN NƠI</span>
+            <span>Thanh toán khi nhận hàng hoặc qua VNPay • Theo dõi đơn trong tài khoản</span>
           </div>
         </div>
       </div>
@@ -442,7 +459,7 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
                 COOLSHOP
               </span>
               <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold -mt-1">
-                Pro Athletic
+                Đồ thể thao
               </span>
             </div>
           </Link>
@@ -551,169 +568,3 @@ function Header({ user, handleLogout, products = [], onSearch, cartCount = 0 }) 
     </header>
   );
 }
-
-/* ProductCard Component */
-const ProductCard = ({ 
-  product, 
-  availableSizes, 
-  selectedSize, 
-  onSizeSelect, 
-  handleAddToCart, 
-  handleDelete, 
-  handleImageClick, 
-  isAdmin 
-}) => {
-  const [overlayOpen, setOverlayOpen] = useState(false);
-
-  const price = Number(product.price || 0);
-  const discount = Number(product.discount_percent || 0);
-  const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
-
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200/70 hover:border-blue-300 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col w-full min-w-0 group">
-      <div 
-        className="relative overflow-hidden aspect-square cursor-pointer bg-slate-100"
-        onClick={() => handleImageClick(product.id)}
-        onMouseEnter={() => setOverlayOpen(true)}
-        onMouseLeave={() => setOverlayOpen(false)}
-      >
-        <img
-          src={resolveImage(product.image)}
-          alt={product.name}
-          onError={(e) => { e.target.src = '/images/placeholder.png'; }}
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-        />
-
-        {discount > 0 && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="bg-gradient-to-r from-rose-500 to-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full shadow-md shadow-red-500/25">
-              -{Math.round(discount)}%
-            </span>
-          </div>
-        )}
-
-        <div
-          className={`absolute inset-x-2 bottom-2 rounded-xl bg-slate-950/85 backdrop-blur-md text-white p-2.5 transition-all duration-300 ease-out z-10 ${
-            overlayOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="text-[11px] font-bold text-slate-300 mb-1.5">
-            Chọn kích cỡ (Size):
-          </div>
-
-          {availableSizes.length > 0 ? (
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-1.5">
-                {availableSizes.map((sizeObj) => {
-                  const out = Number(sizeObj.stock) <= 0;
-                  const isSelected = selectedSize === sizeObj.size;
-                  return (
-                    <button
-                      key={sizeObj.id}
-                      className={`px-2.5 py-1 text-[11px] rounded-lg font-bold transition-all ${
-                        out 
-                          ? 'bg-slate-800 text-slate-500 cursor-not-allowed line-through' 
-                          : isSelected
-                            ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white/50'
-                            : 'bg-white/20 text-white hover:bg-white/35'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (out) return;
-                        onSizeSelect(product.id, sizeObj.size);
-                      }}
-                      aria-disabled={out}
-                      title={out ? 'Hết hàng' : `Còn ${sizeObj.stock} sản phẩm`}
-                    >
-                      {sizeObj.size}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {selectedSize && (
-                <button
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs py-1.5 rounded-lg transition shadow-md flex items-center justify-center gap-1.5"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(product);
-                  }}
-                >
-                  <span>🛒 Thêm vào giỏ hàng</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="text-[11px] text-slate-400">Đang cập nhật kích cỡ</div>
-          )}
-        </div>
-      </div>
-
-      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between">
-        <div>
-          <h3 
-            className="text-xs sm:text-sm font-bold text-slate-800 mb-1.5 line-clamp-2 cursor-pointer hover:text-blue-600 transition leading-snug h-8 sm:h-10"
-            onClick={() => handleImageClick(product.id)}
-            title={product.name}
-          >
-            {product.name}
-          </h3>
-
-          <div className="mt-1 flex items-baseline gap-2 flex-wrap">
-            <span className={`text-sm sm:text-base font-black ${discount > 0 ? 'text-rose-600' : 'text-slate-900'}`}>
-              {Math.round(finalPrice).toLocaleString()} đ
-            </span>
-            {discount > 0 && (
-              <span className="text-[11px] sm:text-xs text-slate-400 line-through font-normal">
-                {Math.round(price).toLocaleString()} đ
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-3 pt-2 border-t border-slate-100 flex items-center gap-2">
-          {availableSizes.length > 0 && selectedSize ? (
-            <button
-              onClick={() => handleAddToCart(product)}
-              className="flex-1 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white font-bold text-xs py-2 rounded-xl transition duration-200 flex items-center justify-center gap-1.5"
-            >
-              <span>🛒</span>
-              <span>Thêm (Size {selectedSize})</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => handleImageClick(product.id)}
-              className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs py-2 rounded-xl border border-slate-200/60 transition flex items-center justify-center gap-1"
-            >
-              <span>Xem chi tiết</span>
-              <span>→</span>
-            </button>
-          )}
-
-          {isAdmin && (
-            <div className="flex gap-1.5">
-              <Link
-                to={`/edit/${product.id}`}
-                className="text-center text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-2 rounded-xl transition"
-                title="Sửa sản phẩm"
-              >
-                ✏️
-              </Link>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(product.id);
-                }}
-                className="text-center text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-2 rounded-xl transition"
-                title="Xóa sản phẩm"
-              >
-                🗑️
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};

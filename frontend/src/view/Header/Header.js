@@ -72,14 +72,12 @@ export default function Header() {
         <div className="max-w-7xl mx-auto flex min-w-0 items-center justify-center gap-3 sm:justify-between">
           <div className="mx-auto flex min-w-0 items-center gap-2 sm:mx-0">
             <span className="inline-flex items-center justify-center bg-blue-500/30 text-blue-300 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-blue-400/30">
-              Ưu đãi
+              Thông tin
             </span>
-            <span>🔥 FREESHIP TOÀN QUỐC CHO ĐƠN TỪ 299K • ĐỔI TRẢ 60 NGÀY TẬN NƠI</span>
+            <span>Thanh toán khi nhận hàng hoặc qua VNPay • Theo dõi đơn trong tài khoản</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-slate-300 text-xs">
-            <Link to="/" className="hover:text-white transition">Hỗ trợ 24/7</Link>
-            <span className="text-slate-600">•</span>
-            <Link to="/" className="hover:text-white transition">Tra cứu đơn hàng</Link>
+            <Link to="/user" className="hover:text-white transition">Đơn hàng của tôi</Link>
           </div>
         </div>
       </div>
@@ -100,22 +98,21 @@ export default function Header() {
                 COOLSHOP
               </span>
               <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold -mt-1">
-                Pro Athletic
+                Đồ thể thao
               </span>
             </div>
           </Link>
 
           {/* Quick Nav links */}
           <div className="hidden lg:flex items-center gap-5 xl:gap-8 text-sm font-semibold text-slate-600">
-            <Link to="/" className="hover:text-blue-600 transition flex items-center gap-1.5 py-1">
+            <Link to="/#product-sections" className="hover:text-blue-600 transition flex items-center gap-1.5 py-1">
               <span>Trang chủ</span>
             </Link>
             <Link to="/" className="hover:text-blue-600 transition flex items-center gap-1.5 py-1">
               <span>Sản phẩm</span>
             </Link>
-            <Link to="/" className="hover:text-rose-600 transition flex items-center gap-1.5 py-1">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <span className="text-rose-600 font-bold">Khuyến mãi Hot</span>
+            <Link to="/#featured-row" className="hover:text-rose-600 transition flex items-center gap-1.5 py-1">
+              <span className="text-rose-600 font-bold">Ưu đãi</span>
             </Link>
           </div>
 
@@ -248,14 +245,14 @@ export default function Header() {
 
         {mobileNavOpen && (
           <div id="mobile-site-navigation" className="absolute inset-x-3 top-full z-50 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl lg:hidden">
-            <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700">
+            <Link to="/#product-sections" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700">
               Trang chủ
             </Link>
             <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700">
               Sản phẩm
             </Link>
-            <Link to="/" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-rose-600 hover:bg-rose-50">
-              Khuyến mãi Hot
+              <Link to="/#featured-row" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-rose-600 hover:bg-rose-50">
+              Ưu đãi
             </Link>
             {!user && (
               <Link to="/register" onClick={() => setMobileNavOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">
