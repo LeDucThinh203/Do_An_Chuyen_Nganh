@@ -293,7 +293,7 @@ export default function ProductList() {
           </div>
         ) : (
           <>
-            <section className="home-video-banner" aria-labelledby="home-video-title">
+            <section className="home-video-banner" aria-label="Banner video thể thao CoolShop">
               <video
                 className="home-video-banner__video"
                 src="https://media3.coolmate.me/uploads/videos/banner_chaybo_coolfast.mp4"
@@ -304,40 +304,6 @@ export default function ProductList() {
                 preload="metadata"
                 aria-hidden="true"
               />
-              <div className="home-video-banner__overlay" aria-hidden="true" />
-              <div className="home-video-banner__content">
-                <span className="home-video-banner__eyebrow"><i aria-hidden="true" /> COOLSHOP · ĐỒ THỂ THAO CHO MỌI NGÀY</span>
-                <h1 id="home-video-title">Chinh phục từng nhịp chạy.<br /><span>Tự tin theo cách bạn.</span></h1>
-                <p>Khám phá trang phục, giày và phụ kiện thể thao cho mỗi buổi tập, mỗi cuộc chơi.</p>
-                <div className="home-video-banner__actions">
-                  <button type="button" className="home-video-banner__primary" onClick={() => scrollToSection('product-sections')}>
-                    Khám phá sản phẩm <span aria-hidden="true">→</span>
-                  </button>
-                  {featuredProducts.length > 0 && (
-                    <button type="button" className="home-video-banner__secondary" onClick={() => scrollToSection('featured-row')}>
-                      Xem sản phẩm ưu đãi
-                    </button>
-                  )}
-                </div>
-                <div className="home-video-banner__perks" aria-label="Tính năng mua sắm">
-                  <span><b>01</b> Size theo tồn kho</span>
-                  <span><b>02</b> COD và VNPay</span>
-                  <span><b>03</b> Theo dõi đơn hàng</span>
-                </div>
-              </div>
-              {heroProduct && (
-                <button
-                  type="button"
-                  className="home-video-banner__product"
-                  onClick={() => handleImageClick(heroProduct.id)}
-                  aria-label={`Xem ${heroProduct.name}`}
-                >
-                  <img src={resolveImage(heroProduct.image)} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/placeholder.png"; }} />
-                  <span>Gợi ý hôm nay</span>
-                  <strong>{heroProduct.name}</strong>
-                  <b>{Math.round(Number(heroProduct.price || 0) * (1 - Number(heroProduct.discount_percent || 0) / 100)).toLocaleString("vi-VN")} ₫</b>
-                </button>
-              )}
             </section>
 
             <section className="store-benefits" aria-label="Hỗ trợ mua sắm">

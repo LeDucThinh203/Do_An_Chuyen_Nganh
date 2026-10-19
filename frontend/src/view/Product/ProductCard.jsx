@@ -46,6 +46,33 @@ export default function ProductCard({
         </button>
         {discount > 0 && <span className="product-card__badge">-{Math.round(discount)}%</span>}
         {!canPurchase && <span className="product-card__stock">Tạm hết hàng</span>}
+        <div className="product-card__size-overlay">
+          <div className="product-card__sizes" aria-label="Chọn kích cỡ">
+            <span className="product-card__size-label">Size</span>
+            {availableSizes.length ? (
+              availableSizes.map((size) => {
+                const outOfStock = Number(size.stock) <= 0;
+                const isSelected = selectedSize === size.size;
+                return (
+                  <button
+                    key={size.id}
+                    type="button"
+                    disabled={outOfStock}
+                    aria-pressed={isSelected}
+                    aria-label={`${size.size}${outOfStock ? ", hết hàng" : `, còn ${size.stock}`}`}
+                    title={outOfStock ? "Hết hàng" : `Còn ${size.stock} sản phẩm`}
+                    onClick={() => onSizeSelect(product.id, size.size)}
+                    className={`product-card__size${isSelected ? " is-selected" : ""}${outOfStock ? " is-unavailable" : ""}`}
+                  >
+                    {size.size}
+                  </button>
+                );
+              })
+            ) : (
+              <span className="product-card__size-pending">Đang cập nhật</span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="product-card__body">
@@ -63,32 +90,6 @@ export default function ProductCard({
             {Math.round(finalPrice).toLocaleString("vi-VN")} ₫
           </span>
           {discount > 0 && <span className="product-card__old-price">{Math.round(price).toLocaleString("vi-VN")} ₫</span>}
-        </div>
-
-        <div className="product-card__sizes" aria-label="Chọn kích cỡ">
-          <span className="product-card__size-label">Size</span>
-          {availableSizes.length ? (
-            availableSizes.map((size) => {
-              const outOfStock = Number(size.stock) <= 0;
-              const isSelected = selectedSize === size.size;
-              return (
-                <button
-                  key={size.id}
-                  type="button"
-                  disabled={outOfStock}
-                  aria-pressed={isSelected}
-                  aria-label={`${size.size}${outOfStock ? ", hết hàng" : `, còn ${size.stock}`}`}
-                  title={outOfStock ? "Hết hàng" : `Còn ${size.stock} sản phẩm`}
-                  onClick={() => onSizeSelect(product.id, size.size)}
-                  className={`product-card__size${isSelected ? " is-selected" : ""}${outOfStock ? " is-unavailable" : ""}`}
-                >
-                  {size.size}
-                </button>
-              );
-            })
-          ) : (
-            <span className="product-card__size-pending">Đang cập nhật</span>
-          )}
         </div>
 
         <div className="product-card__actions">
