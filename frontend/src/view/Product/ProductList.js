@@ -254,6 +254,14 @@ export default function ProductList() {
     await fetchData();
   };
 
+  const handleReturnHome = () => {
+    setSelectedCategory("all");
+    setPriceRange([0, 5000000]);
+    setSortOrder("default");
+    setSearchName("");
+    setIsSearching(false);
+  };
+
   const handleQuickPrice = (min, max) => {
     setPriceRange([min, max]);
   };
@@ -273,7 +281,7 @@ export default function ProductList() {
         handleLogout={handleLogout}
         products={products}
         onSearch={handleSearch}
-        onResetFilters={handleResetFilters}
+        onResetFilters={handleReturnHome}
         cartCount={cartCount}
       />
 
@@ -681,14 +689,13 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
     }
   };
 
-  const handleLogoClick = async () => {
+  const handleLogoClick = () => {
     setSearchTerm("");
     setSuggestions([]);
     if (onSearch) onSearch("");
-    if (onResetFilters) {
-      await onResetFilters();
-    }
+    if (onResetFilters) onResetFilters();
     navigate("/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   useEffect(() => {
