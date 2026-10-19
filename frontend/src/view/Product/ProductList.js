@@ -46,10 +46,30 @@ export default function ProductList() {
   const [nextCursor, setNextCursor] = useState(() => initialCache?.pagination?.nextCursor || null);
   const [hasMoreProducts, setHasMoreProducts] = useState(() => Boolean(initialCache?.pagination?.hasMore));
   const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
+  const [homeVideoReady, setHomeVideoReady] = useState(false);
 
   const navigate = useNavigate();
   const user = Session.getUser();
   const isAdmin = Session.isAdmin();
+
+  useEffect(() => {
+    if (loading || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+
+    let idleHandle;
+    let timer;
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(() => setHomeVideoReady(true), { timeout: 1500 });
+    } else {
+      timer = window.setTimeout(() => setHomeVideoReady(true), 900);
+    }
+
+    return () => {
+      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      window.clearTimeout(timer);
+    };
+  }, [loading]);
 
   useEffect(() => {
     fetchData();
@@ -330,6 +350,16 @@ export default function ProductList() {
         ) : (
           <>
             <section className="home-video-banner" aria-label="Giới thiệu CoolShop">
+              <video
+                className="home-video-banner__video"
+                src={homeVideoReady ? "https://media3.coolmate.me/uploads/videos/banner_chaybo_coolfast.mp4" : undefined}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload={homeVideoReady ? "metadata" : "none"}
+                aria-hidden="true"
+              />
               <div className="home-video-banner__content">
                 <span className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-100">CoolShop · Đồ thể thao</span>
                 <h1 className="mt-3 max-w-2xl text-3xl font-black tracking-tight text-white sm:text-5xl">
