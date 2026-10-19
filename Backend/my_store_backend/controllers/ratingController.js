@@ -1,4 +1,5 @@
 import * as ratingRepo from '../repositories/ratingRepository.js';
+import { invalidateCacheNamespaces } from '../services/cache.js';
 
 export const getAllRatings = async (req, res) => {
   try {
@@ -21,6 +22,7 @@ export const getRatingById = async (req, res) => {
 export const createRating = async (req, res) => {
   try {
     const id = await ratingRepo.createRating(req.body);
+    await invalidateCacheNamespaces('product_ratings');
     res.status(201).json({ id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -30,6 +32,7 @@ export const createRating = async (req, res) => {
 export const updateRating = async (req, res) => {
   try {
     await ratingRepo.updateRating(req.params.id, req.body);
+    await invalidateCacheNamespaces('product_ratings');
     res.json({ message: 'Updated successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -39,6 +42,7 @@ export const updateRating = async (req, res) => {
 export const deleteRating = async (req, res) => {
   try {
     await ratingRepo.deleteRating(req.params.id);
+    await invalidateCacheNamespaces('product_ratings');
     res.json({ message: 'Deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });

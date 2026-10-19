@@ -1,5 +1,6 @@
 import * as ordersRepo from '../repositories/ordersRepository.js';
 import { decodeCursor, parseLimit } from '../utils/pagination.js';
+import { invalidateCacheNamespaces } from '../services/cache.js';
 
 const getPage = async (req, res, accountId = null) => {
   const cursor = decodeCursor(req.query.cursor);
@@ -69,6 +70,7 @@ export const getOrderById = async (req, res) => {
 export const createOrder = async (req, res) => {
   try {
     const id = await ordersRepo.createOrder(req.body);
+    await invalidateCacheNamespaces('inventory', 'inventory_item', 'storefront', 'product_details', 'admin_products');
     res.status(201).json({ id });
   } catch (err) {
     res.status(500).json({ error: err.message });

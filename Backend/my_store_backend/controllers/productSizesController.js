@@ -1,4 +1,5 @@
 import * as productSizesRepo from '../repositories/productSizesRepository.js';
+import { getOrSetCache, invalidateCacheNamespaces } from '../services/cache.js';
 
 export const getAllProductSizes = async (req, res) => {
   try {
@@ -11,7 +12,12 @@ export const getAllProductSizes = async (req, res) => {
     if (typeof productIds === 'string' && !/^\d+$/.test(productIds)) {
       return res.status(400).json({ error: 'product_id không hợp lệ' });
     }
-    const productSizes = await productSizesRepo.getAllProductSizes(productIds);
+    const productSizes = await getOrSetCache(
+      'inventory',
+      JSON.stringify(productIds),
+      5,
+      () => productSizesRepo.getAllProductSizes(productIds)
+    );
     res.json(productSizes);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -20,7 +26,12 @@ export const getAllProductSizes = async (req, res) => {
 
 export const getProductSizeById = async (req, res) => {
   try {
-    const productSize = await productSizesRepo.getProductSizeById(req.params.id);
+    const productSize = await getOrSetCache(
+      'inventory_item',
+      req.params.id,
+      3,
+      () => productSizesRepo.getProductSizeById(req.params.id)
+    );
     res.json(productSize);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -30,6 +41,7 @@ export const getProductSizeById = async (req, res) => {
 export const createProductSize = async (req, res) => {
   try {
     const id = await productSizesRepo.createProductSize(req.body);
+    await invalidateCacheNamespaces('inventory', 'inventory_item', 'products', 'storefront', 'product_details', 'admin_products');
     res.status(201).json({ id });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
@@ -42,6 +54,7 @@ export const createProductSize = async (req, res) => {
 export const updateProductSize = async (req, res) => {
   try {
     await productSizesRepo.updateProductSize(req.params.id, req.body);
+    await invalidateCacheNamespaces('inventory', 'inventory_item', 'products', 'storefront', 'product_details', 'admin_products');
     res.json({ message: 'Updated successfully' });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
@@ -54,6 +67,7 @@ export const updateProductSize = async (req, res) => {
 export const deleteProductSize = async (req, res) => {
   try {
     await productSizesRepo.deleteProductSize(req.params.id);
+    await invalidateCacheNamespaces('inventory', 'inventory_item', 'products', 'storefront', 'product_details', 'admin_products');
     res.json({ message: 'Deleted successfully' });
   } catch (err) {
     if (err.code === 'ER_ROW_IS_REFERENCED_2') {

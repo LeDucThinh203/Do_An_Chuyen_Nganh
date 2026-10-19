@@ -13,6 +13,7 @@ import { ensureAiSchema } from './services/ai/schema.js';
 import { ensureSupportChatSchema } from './services/supportChat/schema.js';
 import { ensureDemoAccounts } from './services/demoAccounts.js';
 import { initSupportSocket } from './services/supportChat/socketHub.js';
+import { closeCache, connectCache, getCacheStatus } from './services/cache.js';
 
 dotenv.config();
 const app = express();
@@ -93,7 +94,8 @@ app.get('/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    cache: getCacheStatus()
   });
 });
 
@@ -117,9 +119,9 @@ const shutdown = (signal) => {
     clearTimeout(forceExitTimer);
     if (error) console.error('[server] HTTP shutdown error:', error);
     try {
-      await db.end();
+      await Promise.all([db.end(), closeCache()]);
     } catch (poolError) {
-      console.error('[server] PostgreSQL pool shutdown error:', poolError);
+      console.error('[server] Database/cache shutdown error:', poolError);
     }
     process.exitCode = error ? 1 : 0;
   });
@@ -129,6 +131,8 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
 const startServer = () => {
+  // Cache is optional; PostgreSQL remains available while Redis connects or recovers.
+  void connectCache();
   httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);

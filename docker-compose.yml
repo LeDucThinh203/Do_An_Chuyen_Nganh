@@ -23,6 +23,22 @@ services:
       timeout: 5s
       retries: 5
 
+  # Disposable Redis/Valkey cache. Cache data is safe to lose and will be rebuilt from PostgreSQL.
+  cache:
+    image: redis:7-alpine
+    container_name: my_store_cache
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   # Backend API
   backend:
     build:
@@ -42,12 +58,15 @@ services:
       DB_POOL_MAX: ${DB_POOL_MAX:-10}
       DB_IDLE_TIMEOUT_MS: ${DB_IDLE_TIMEOUT_MS:-30000}
       DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-15000}
+      REDIS_URL: redis://cache:6379
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-here}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       PORT: 3006
       NODE_ENV: production
     depends_on:
       database:
+        condition: service_healthy
+      cache:
         condition: service_healthy
     networks:
       - app_network

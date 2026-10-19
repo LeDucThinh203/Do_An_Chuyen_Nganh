@@ -1,4 +1,13 @@
 services:
+  # Shared cache; disposable by design, with PostgreSQL as the source of truth.
+  - type: keyvalue
+    name: my-store-cache
+    plan: free
+    region: singapore
+    maxmemoryPolicy: allkeys-lru
+    persistenceMode: off
+    ipAllowList: []
+
   # Backend API Service
   - type: web
     name: my-store-backend
@@ -21,6 +30,11 @@ services:
         value: 30000
       - key: DB_CONN_TIMEOUT_MS
         value: 15000
+      - key: REDIS_URL
+        fromService:
+          name: my-store-cache
+          type: keyvalue
+          property: connectionString
       - key: ENABLE_DEMO_ACCOUNTS
         value: "true"
       - key: DEMO_ADMIN_EMAIL
