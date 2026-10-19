@@ -77,7 +77,7 @@ export default function Header() {
             <span>Thanh toán khi nhận hàng hoặc qua VNPay • Theo dõi đơn trong tài khoản</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-slate-300 text-xs">
-            <Link to="/user" className="hover:text-white transition">Đơn hàng của tôi</Link>
+            <Link to="/cart" className="hover:text-white transition">Đơn hàng của tôi</Link>
           </div>
         </div>
       </div>

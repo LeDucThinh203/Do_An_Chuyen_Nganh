@@ -293,40 +293,51 @@ export default function ProductList() {
           </div>
         ) : (
           <>
-            <section className="home-hero" aria-labelledby="home-hero-title">
-              <div className="home-hero__content">
-                <span className="home-hero__eyebrow">COOLSHOP · ĐỒ THỂ THAO CHO MỌI NGÀY</span>
-                <h1 id="home-hero-title">Sẵn sàng vận động.<br /><span>Tự tin theo cách bạn.</span></h1>
-                <p>Tìm trang phục và phụ kiện phù hợp với môn thể thao, phong cách và ngân sách của bạn.</p>
-                <div className="home-hero__actions">
-                  <button type="button" className="home-hero__primary" onClick={() => scrollToSection('product-sections')}>
+            <section className="home-video-banner" aria-labelledby="home-video-title">
+              <video
+                className="home-video-banner__video"
+                src="https://media3.coolmate.me/uploads/videos/banner_chaybo_coolfast.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                aria-hidden="true"
+              />
+              <div className="home-video-banner__overlay" aria-hidden="true" />
+              <div className="home-video-banner__content">
+                <span className="home-video-banner__eyebrow"><i aria-hidden="true" /> COOLSHOP · ĐỒ THỂ THAO CHO MỌI NGÀY</span>
+                <h1 id="home-video-title">Chinh phục từng nhịp chạy.<br /><span>Tự tin theo cách bạn.</span></h1>
+                <p>Khám phá trang phục, giày và phụ kiện thể thao cho mỗi buổi tập, mỗi cuộc chơi.</p>
+                <div className="home-video-banner__actions">
+                  <button type="button" className="home-video-banner__primary" onClick={() => scrollToSection('product-sections')}>
                     Khám phá sản phẩm <span aria-hidden="true">→</span>
                   </button>
                   {featuredProducts.length > 0 && (
-                    <button type="button" className="home-hero__secondary" onClick={() => scrollToSection('featured-row')}>
+                    <button type="button" className="home-video-banner__secondary" onClick={() => scrollToSection('featured-row')}>
                       Xem sản phẩm ưu đãi
                     </button>
                   )}
                 </div>
-                <div className="home-hero__perks" aria-label="Tính năng mua sắm">
+                <div className="home-video-banner__perks" aria-label="Tính năng mua sắm">
                   <span><b>01</b> Size theo tồn kho</span>
                   <span><b>02</b> COD và VNPay</span>
                   <span><b>03</b> Theo dõi đơn hàng</span>
                 </div>
               </div>
-              <div className="home-hero__visual">
-                <button type="button" className="home-hero__product" onClick={() => heroProduct && handleImageClick(heroProduct.id)} aria-label={heroProduct ? `Xem ${heroProduct.name}` : "Khám phá sản phẩm"}>
-                  <img src={resolveImage(heroProduct?.image)} alt={heroProduct?.name || "Sản phẩm thể thao"} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/placeholder.png"; }} />
+              {heroProduct && (
+                <button
+                  type="button"
+                  className="home-video-banner__product"
+                  onClick={() => handleImageClick(heroProduct.id)}
+                  aria-label={`Xem ${heroProduct.name}`}
+                >
+                  <img src={resolveImage(heroProduct.image)} alt="" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/images/placeholder.png"; }} />
+                  <span>Gợi ý hôm nay</span>
+                  <strong>{heroProduct.name}</strong>
+                  <b>{Math.round(Number(heroProduct.price || 0) * (1 - Number(heroProduct.discount_percent || 0) / 100)).toLocaleString("vi-VN")} ₫</b>
                 </button>
-                {heroProduct && (
-                  <div className="home-hero__product-label">
-                    <span>Gợi ý hôm nay</span>
-                    <strong>{heroProduct.name}</strong>
-                    <b>{Math.round(Number(heroProduct.price || 0) * (1 - Number(heroProduct.discount_percent || 0) / 100)).toLocaleString("vi-VN")} ₫</b>
-                  </div>
-                )}
-                <span className="home-hero__index" aria-hidden="true">MOVE<br />WITH<br />PURPOSE</span>
-              </div>
+              )}
             </section>
 
             <section className="store-benefits" aria-label="Hỗ trợ mua sắm">
@@ -739,7 +750,7 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
             <span>Thanh toán khi nhận hàng hoặc qua VNPay • Theo dõi đơn trong tài khoản</span>
           </div>
           <div className="hidden sm:flex items-center gap-4 text-slate-300 text-xs">
-            <Link to="/user" className="hover:text-white transition">Đơn hàng của tôi</Link>
+            <Link to="/cart" className="hover:text-white transition">Đơn hàng của tôi</Link>
           </div>
         </div>
       </div>
