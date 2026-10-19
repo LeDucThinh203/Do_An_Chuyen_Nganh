@@ -314,13 +314,6 @@ export default function ProductList() {
     setPriceRange([min, max]);
   };
 
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
   return (
     <div className="bg-transparent min-h-screen overflow-x-hidden">
       {/* Elevated Glass Header */}
@@ -360,22 +353,6 @@ export default function ProductList() {
                 preload={homeVideoReady ? "metadata" : "none"}
                 aria-hidden="true"
               />
-              <div className="home-video-banner__content">
-                <span className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-100">CoolShop · Đồ thể thao</span>
-                <h1 className="mt-3 max-w-2xl text-3xl font-black tracking-tight text-white sm:text-5xl">
-                  Sẵn sàng cho trận đấu tiếp theo.
-                </h1>
-                <p className="mt-3 max-w-xl text-sm text-white/85 sm:text-base">
-                  Chọn trang phục, giày và phụ kiện phù hợp với phong cách thi đấu của bạn.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => scrollToSection("product-sections")}
-                  className="mt-6 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-900 shadow-lg transition hover:bg-cyan-50"
-                >
-                  Khám phá sản phẩm <span aria-hidden="true">→</span>
-                </button>
-              </div>
             </section>
 
             <section className="store-benefits" aria-label="Hỗ trợ mua sắm">
