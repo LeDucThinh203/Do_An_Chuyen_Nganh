@@ -11,6 +11,7 @@ import {
   createRating,
 } from "../../api";
 import { ProductDetailSkeleton } from "../common/Skeletons";
+import { readCart, writeCart } from "../../utils/cartStorage";
 
 // Resolve image URL for products
 const resolveImage = (img) => {
@@ -134,7 +135,7 @@ export default function ProductDetail() {
       return;
     }
 
-    const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const currentCart = readCart();
     const existingIndex = currentCart.findIndex(
       item => item.id === product.id && item.size === selectedSize
     );
@@ -158,7 +159,7 @@ export default function ProductDetail() {
       });
     }
 
-    localStorage.setItem("cart", JSON.stringify(currentCart));
+    writeCart(currentCart);
     setAddedToast(true);
     setTimeout(() => setAddedToast(false), 3000);
   };

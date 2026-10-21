@@ -38,9 +38,8 @@ export default function AdminAddressManager() {
     if (!user || user.role !== "admin") return;
     setLoading(true);
     try {
-      const data = await addressAPI.getAllAddresses();
-      const myAddresses = data.filter((a) => a.account_id === user.id);
-      setAddresses(myAddresses);
+      const data = await addressAPI.getMyAddresses();
+      setAddresses(data);
     } catch {
       setErr("Không tải được danh sách địa chỉ");
     } finally {
@@ -88,6 +87,7 @@ export default function AdminAddressManager() {
     const wardObj = wards.find((w) => String(w.code) === String(form.ward));
 
     const payload = {
+      account_id: user.id,
       name: form.name,
       phone: form.phone,
       address_detail: form.address,

@@ -163,43 +163,67 @@ export const createOrder = async (orderData) => {
 
     const orderId = result.insertId;
 
-    if (order_details && order_details.length > 0) {
-      // Kiểm tra và giảm stock cho từng sản phẩm
-      for (const detail of order_details) {
-        const { product_sizes_id, quantity } = detail;
-        
-        // Lấy stock hiện tại
-        const [stockRows] = await conn.query(
-          `SELECT ${stockColumn} AS stock FROM product_sizes WHERE id = ?`,
-          [product_sizes_id]
-        );
-        
-        if (!stockRows[0]) {
-          throw new Error(`Product size ID ${product_sizes_id} không tồn tại`);
-        }
-        
-        const currentStock = stockRows[0].stock;
-        
-        if (currentStock < quantity) {
-          throw new Error(`Không đủ hàng trong kho. Còn lại: ${currentStock}, yêu cầu: ${quantity}`);
-        }
-        
-        // Giảm stock
-        await conn.query(
-          `UPDATE product_sizes SET ${stockColumn} = ${stockColumn} - ? WHERE id = ?`,
-          [quantity, product_sizes_id]
-        );
-      }
-      
-      // Insert order details (PostgreSQL-friendly, one statement per detail)
-      for (const d of order_details) {
-        await conn.query(
-          'INSERT INTO order_details (order_id, product_sizes_id, quantity, price) VALUES (?, ?, ?, ?)',
-          [orderId, d.product_sizes_id, d.quantity, d.price]
-        );
-      }
-    }
+    if (Array.isArray(order_details) && order_details.length > 0) {
+      const details = order_details;
+      const requestedStock = new Map();
 
+      for (const detail of details) {
+        const productSizeId = String(detail.product_sizes_id ?? '');
+        const quantity = Number(detail.quantity);
+        if (!/^\d+$/.test(productSizeId) || Number(productSizeId) < 1) {
+          throw new Error(`Product size ID ${productSizeId || '(empty)'} không hợp lệ`);
+        }
+        if (!Number.isSafeInteger(quantity) || quantity < 1) {
+          throw new Error(`Số lượng không hợp lệ cho product size ID ${productSizeId}`);
+        }
+
+        const current = requestedStock.get(productSizeId);
+        requestedStock.set(productSizeId, {
+          id: current?.id ?? detail.product_sizes_id,
+          quantity: (current?.quantity || 0) + quantity,
+        });
+      }
+
+      const stockRequests = [...requestedStock.values()];
+      const stockValues = [];
+      const stockTuples = stockRequests.map(({ id, quantity }) => {
+        stockValues.push(id, quantity);
+        return '(?, ?)';
+      });
+      const [, updatedStockRows] = await conn.query(
+        `UPDATE product_sizes AS ps
+         SET ${stockColumn} = ps.${stockColumn} - requested.quantity
+         FROM (VALUES ${stockTuples.join(', ')}) AS requested(id, quantity)
+         WHERE ps.id = requested.id
+           AND ps.${stockColumn} >= requested.quantity
+         RETURNING ps.id`,
+        stockValues
+      );
+
+      if (updatedStockRows.length !== stockRequests.length) {
+        const updatedIds = new Set(updatedStockRows.map((row) => String(row.id)));
+        const failedRequest = stockRequests.find(({ id }) => !updatedIds.has(String(id)));
+        const [stockRows] = await conn.query(
+          `SELECT id, ${stockColumn} AS stock FROM product_sizes WHERE id = ?`,
+          [failedRequest.id]
+        );
+        const currentStock = stockRows[0];
+        if (!currentStock) throw new Error(`Product size ID ${failedRequest.id} không tồn tại`);
+        throw new Error(`Không đủ hàng trong kho. Còn lại: ${currentStock.stock}, yêu cầu: ${failedRequest.quantity}`);
+      }
+
+      const detailValues = [];
+      const detailTuples = details.map((detail) => {
+        detailValues.push(orderId, detail.product_sizes_id, detail.quantity, detail.price);
+        return '(?, ?, ?, ?)';
+      });
+      await conn.query(
+        `INSERT INTO order_details (order_id, product_sizes_id, quantity, price)
+         VALUES ${detailTuples.join(', ')}
+         RETURNING id`,
+        detailValues
+      );
+    }
     await conn.commit();
     return orderId;
   } catch (err) {

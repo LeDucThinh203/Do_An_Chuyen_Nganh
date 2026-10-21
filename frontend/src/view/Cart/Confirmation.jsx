@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createOrder, getAllProductSizes, createVNPayPaymentUrl } from "../../api";
+import { clearCart } from "../../utils/cartStorage";
 
 export default function Confirmation() {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ export default function Confirmation() {
             if (vnpayResponse.success && vnpayResponse.data.paymentUrl) {
               localStorage.setItem("pending_order_id", result.id);
               localStorage.removeItem("last_order");
-              localStorage.removeItem("cart");
+              clearCart();
               localStorage.removeItem("checkout_items");
               localStorage.removeItem("checkout_form");
 
@@ -126,7 +127,7 @@ export default function Confirmation() {
           }
         } else {
           localStorage.removeItem("last_order");
-          localStorage.removeItem("cart");
+          clearCart();
           localStorage.removeItem("checkout_items");
           localStorage.removeItem("checkout_form");
 

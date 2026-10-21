@@ -92,7 +92,7 @@ export const getProductsPage = async ({ includeDeleted = false, limit = 25, curs
            ps.${stockColumn} AS "__product_size_stock",
            s.size AS "__product_size_name"
     FROM (
-      SELECT p.*${includeDeleted ? `,
+      SELECT p.id, p.name, p.price, p.image, p.category_id, p.discount_percent, p.deleted_at${includeDeleted ? `,
              EXISTS (
                SELECT 1
                FROM product_sizes purchased_sizes

@@ -1,22 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
+import { CART_UPDATED_EVENT, getCartItemCount } from "../../utils/cartStorage";
 
 export default function Header() {
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const [cartCount, setCartCount] = useState(getCartItemCount);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   // Cập nhật số lượng sản phẩm trong giỏ hàng
-  const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    setCartCount(totalItems);
-  };
-
   // Lấy user từ localStorage khi component mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -24,23 +19,22 @@ export default function Header() {
       setUser(JSON.parse(storedUser));
     }
     
-    updateCartCount();
-    
     const handleStorageChange = (e) => {
       if (e.key === "cart") {
-        updateCartCount();
+        setCartCount(getCartItemCount());
       }
       if (e.key === "user") {
         setUser(e.newValue ? JSON.parse(e.newValue) : null);
       }
     };
     
+    const handleCartUpdate = () => setCartCount(getCartItemCount());
     window.addEventListener("storage", handleStorageChange);
-    const interval = setInterval(updateCartCount, 1000);
+    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdate);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
+      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdate);
     };
   }, []);
 

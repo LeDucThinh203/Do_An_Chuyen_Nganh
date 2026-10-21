@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { updateOrderPaymentStatus } from "../../api";
 import Session from "../../Session/session";
+import { clearCart } from "../../utils/cartStorage";
 
 export default function VNPayReturn() {
   const [searchParams] = useSearchParams();
@@ -79,7 +80,7 @@ export default function VNPayReturn() {
             
             // Xóa localStorage sau khi thanh toán thành công
             localStorage.removeItem("last_order");
-            localStorage.removeItem("cart");
+            clearCart();
             localStorage.removeItem("checkout_items");
             localStorage.removeItem("checkout_form");
             localStorage.removeItem("pending_order_id");

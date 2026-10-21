@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAllProductSizes } from "../../api";
+import { readCart, writeCart } from "../../utils/cartStorage";
 
 export default function Cart() {
   const [cart, setCart] = useState([]);
@@ -10,7 +11,7 @@ export default function Cart() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const storedCart = readCart();
     setCart(storedCart);
     (async () => {
       try {
@@ -27,7 +28,7 @@ export default function Cart() {
       !(item.id === id && item.size === size)
     );
     setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+    writeCart(newCart);
   };
 
   const handleQuantityChange = (id, size, delta) => {
@@ -41,7 +42,7 @@ export default function Cart() {
       return item;
     });
     setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+    writeCart(newCart);
   };
 
   const getStockForItem = (item) => {

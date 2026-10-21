@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
+import { clearCart } from "../../utils/cartStorage";
 
 export default function Checkout() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -169,7 +170,7 @@ export default function Checkout() {
       address: fullAddress,
     };
     localStorage.setItem("last_order", JSON.stringify(orderData));
-    localStorage.removeItem("cart");
+    clearCart();
     localStorage.removeItem("checkout_items");
     localStorage.removeItem("checkout_form");
 

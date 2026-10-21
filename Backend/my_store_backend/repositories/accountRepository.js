@@ -1,10 +1,53 @@
 import db from '../db.js';
 import bcrypt from 'bcryptjs';
+import { encodeCursor } from '../utils/pagination.js';
 
 /** ================= Account ================= */
 export const getAllAccounts = async () => {
-  const [rows] = await db.query('SELECT * FROM account');
+  const [rows] = await db.query(
+    'SELECT id, email, username, role, created_at, updated_at FROM account ORDER BY id DESC'
+  );
   return rows;
+};
+
+export const getAccountsPage = async ({ limit = 25, cursor = null, query = '' } = {}) => {
+  const search = String(query || '').trim();
+  const conditions = [];
+  const values = [];
+  if (search) {
+    conditions.push('(email ILIKE ? OR username ILIKE ?)');
+    values.push(`%${search}%`, `%${search}%`);
+  }
+  const filterSql = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const totalPromise = cursor
+    ? Promise.resolve(null)
+    : db.query(`SELECT COUNT(*)::integer AS total FROM account ${filterSql}`, values)
+        .then(([rows]) => Number(rows[0]?.total || 0));
+
+  const pageConditions = [...conditions];
+  const pageValues = [...values];
+  if (cursor?.id != null && Number.isInteger(Number(cursor.id))) {
+    pageConditions.push('id < ?');
+    pageValues.push(cursor.id);
+  }
+  pageValues.push(limit + 1);
+
+  const [pageResult, total] = await Promise.all([
+    db.query(
+      `SELECT id, email, username, role, created_at, updated_at
+       FROM account
+       ${pageConditions.length ? `WHERE ${pageConditions.join(' AND ')}` : ''}
+       ORDER BY id DESC
+       LIMIT ?`,
+      pageValues
+    ),
+    totalPromise,
+  ]);
+  const [rows] = pageResult;
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore && data.length ? encodeCursor({ id: data[data.length - 1].id }) : null;
+  return { data, pagination: { limit, hasMore, nextCursor, total } };
 };
 
 export const getAdminEmails = async () => {

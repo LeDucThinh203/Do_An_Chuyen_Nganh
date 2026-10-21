@@ -47,9 +47,16 @@ CREATE INDEX IF NOT EXISTS idx_rating_order_detail
 CREATE INDEX IF NOT EXISTS idx_account_reset_token
   ON account(reset_token) WHERE reset_token IS NOT NULL;
 
+-- Admin account search uses case-insensitive substring matches on email/name.
+CREATE INDEX IF NOT EXISTS idx_account_email_trgm
+  ON account USING GIN (email gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_account_username_trgm
+  ON account USING GIN (username gin_trgm_ops);
+
 ANALYZE product;
 ANALYZE product_sizes;
 ANALYZE orders;
 ANALYZE order_details;
 ANALYZE address;
 ANALYZE rating;
+ANALYZE account;

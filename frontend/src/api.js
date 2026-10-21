@@ -299,6 +299,15 @@ export const getAllAccounts = async () => {
   return await safeJson(res);
 };
 
+export const getAccountsPage = async ({ limit = 30, cursor = null, query = "" } = {}) => {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (cursor) params.set("cursor", cursor);
+  if (query.trim()) params.set("q", query.trim());
+  const res = await fetch(`${ACCOUNT_API_URL}?${params.toString()}`, { headers: getAuthHeaders() });
+  if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load accounts"));
+  return await safeJson(res);
+};
+
 export const getAccountById = async (id) => {
   const res = await fetch(`${ACCOUNT_API_URL}/${id}`, {
     headers: getAuthHeaders()

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { generateToken } from '../middleware/auth.js';
+import { decodeCursor, parseLimit } from '../utils/pagination.js';
 
 const getEmailAuthConfig = () => {
   const user = String(process.env.EMAIL_USER || '').trim();
@@ -238,6 +239,21 @@ export const login = async (req, res) => {
 /** ================= Lấy tất cả tài khoản ================= */
 export const getAllAccounts = async (req, res) => {
   try {
+    if (req.query.limit !== undefined || req.query.cursor !== undefined || req.query.q !== undefined) {
+      const cursor = decodeCursor(req.query.cursor);
+      if (req.query.cursor && (!cursor || !Number.isInteger(Number(cursor.id)) || Number(cursor.id) < 1)) {
+        return res.status(400).json({ error: 'Cursor phân trang không hợp lệ' });
+      }
+      const query = String(req.query.q || '').trim();
+      if (query.length > 120) return res.status(400).json({ error: 'Từ khóa tìm kiếm quá dài' });
+      const page = await accountRepo.getAccountsPage({
+        limit: parseLimit(req.query.limit),
+        cursor,
+        query,
+      });
+      return res.json(page);
+    }
+
     const accounts = await accountRepo.getAllAccounts();
     res.json(accounts);
   } catch (err) {

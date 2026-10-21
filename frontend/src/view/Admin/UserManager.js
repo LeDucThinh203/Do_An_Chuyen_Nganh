@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Session from "../../Session/session";
 import * as api from "../../api";
 import { AdminPanelSkeleton } from "../common/Skeletons";
@@ -7,9 +7,12 @@ export default function UserManager() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
 
   const [accounts, setAccounts] = useState([]);
-  const [filteredAccounts, setFilteredAccounts] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [loading, setLoading] = useState(false);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMoreAccounts, setHasMoreAccounts] = useState(false);
+  const [loadingMoreAccounts, setLoadingMoreAccounts] = useState(false);
+  const [totalAccounts, setTotalAccounts] = useState(0);
+  const accountRequestId = useRef(0);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [selectedRoles, setSelectedRoles] = useState({});
@@ -17,37 +20,61 @@ export default function UserManager() {
   const [searchEmail, setSearchEmail] = useState("");
 
   useEffect(() => {
-    const fetchAccounts = async () => {
-      if (!user || user.role !== "admin") return;
+    if (!user || user.role !== "admin") return undefined;
+
+    let active = true;
+    const requestId = ++accountRequestId.current;
+    const timer = window.setTimeout(async () => {
       setLoading(true);
+      setError("");
       try {
-        const data = await api.getAllAccounts();
+        const page = await api.getAccountsPage({ limit: 30, query: searchEmail.trim() });
+        if (!active || requestId !== accountRequestId.current) return;
+        const data = page.data || [];
         setAccounts(data);
-        setFilteredAccounts(data);
-        const rolesMap = {};
-        data.forEach((a) => (rolesMap[a.id] = a.role));
-        setSelectedRoles(rolesMap);
+        setTotalAccounts(Number(page.pagination?.total || 0));
+        setNextCursor(page.pagination?.nextCursor || null);
+        setHasMoreAccounts(Boolean(page.pagination?.hasMore));
+        setSelectedRoles(Object.fromEntries(data.map((account) => [account.id, account.role])));
       } catch (err) {
+        if (!active || requestId !== accountRequestId.current) return;
         setError("Không thể tải danh sách tài khoản.");
         console.error(err);
       } finally {
-        setLoading(false);
+        if (active && requestId === accountRequestId.current) setLoading(false);
       }
-    };
-    fetchAccounts();
-  }, [user]);
+    }, searchEmail.trim() ? 250 : 0);
 
-  // Tìm kiếm theo email hoặc tên
-  useEffect(() => {
-    const query = searchEmail.toLowerCase().trim();
-    const filtered = accounts.filter(
-      (acc) =>
-        acc.email?.toLowerCase().includes(query) ||
-        acc.username?.toLowerCase().includes(query)
-    );
-    setFilteredAccounts(filtered);
-    setVisibleCount(6);
-  }, [searchEmail, accounts]);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [user, searchEmail]);
+
+  const loadMoreAccounts = async () => {
+    if (!nextCursor || loadingMoreAccounts) return;
+    const requestId = accountRequestId.current;
+    const query = searchEmail.trim();
+    try {
+      setLoadingMoreAccounts(true);
+      const page = await api.getAccountsPage({ limit: 30, cursor: nextCursor, query });
+      if (requestId !== accountRequestId.current || query !== searchEmail.trim()) return;
+      const data = page.data || [];
+      setAccounts((current) => [...current, ...data]);
+      setSelectedRoles((current) => ({
+        ...current,
+        ...Object.fromEntries(data.map((account) => [account.id, account.role])),
+      }));
+      setNextCursor(page.pagination?.nextCursor || null);
+      setHasMoreAccounts(Boolean(page.pagination?.hasMore));
+    } catch (err) {
+      setError(err.message || "Không thể tải thêm tài khoản.");
+    } finally {
+      setLoadingMoreAccounts(false);
+    }
+  };
+
+
 
   const handleRoleSelect = (id, newRole) => {
     setSelectedRoles((prev) => ({ ...prev, [id]: newRole }));
@@ -69,7 +96,7 @@ export default function UserManager() {
       await api.updateAccount(id, { role: newRole });
       setMessage(`✅ Đã cập nhật quyền của tài khoản #${id} thành "${newRole}".`);
       setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, role: newRole } : a)));
-      setFilteredAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, role: newRole } : a)));
+
       setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setError("❌ Lỗi khi cập nhật quyền người dùng.");
@@ -83,8 +110,9 @@ export default function UserManager() {
     try {
       await api.deleteAccount(id);
       setMessage(`🗑️ Đã xóa tài khoản #${id}`);
-      setAccounts(accounts.filter((a) => a.id !== id));
-      setFilteredAccounts(filteredAccounts.filter((a) => a.id !== id));
+      setAccounts((current) => current.filter((a) => a.id !== id));
+      setTotalAccounts((current) => Math.max(0, current - 1));
+
       setTimeout(() => setMessage(""), 4000);
     } catch (err) {
       setError("❌ Không thể xóa tài khoản này.");
@@ -130,9 +158,7 @@ export default function UserManager() {
     }
   };
 
-  const toggleVisible = () => {
-    setVisibleCount((prev) => (prev === 6 ? filteredAccounts.length : 6));
-  };
+
 
   if (!user)
     return <div className="text-rose-500 font-bold text-center mt-10">⚠️ Vui lòng đăng nhập</div>;
@@ -158,7 +184,7 @@ export default function UserManager() {
 
         <div className="flex items-center gap-3">
           <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
-            Tổng cộng: {accounts.length} tài khoản
+            Tổng cộng: {totalAccounts} tài khoản
           </span>
         </div>
       </div>
@@ -179,7 +205,7 @@ export default function UserManager() {
       {loading && <AdminPanelSkeleton cardCount={6} />}
 
       {/* Empty State */}
-      {!loading && filteredAccounts.length === 0 && (
+      {!loading && accounts.length === 0 && (
         <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 p-8">
           <div className="text-4xl mb-2">👤</div>
           <p className="text-slate-600 font-bold">Không tìm thấy tài khoản người dùng phù hợp.</p>
@@ -189,7 +215,7 @@ export default function UserManager() {
       {/* Accounts Grid */}
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredAccounts.slice(0, visibleCount).map((acc) => {
+          {accounts.map((acc) => {
             const isAdmin = acc.role === "admin";
             return (
               <div
@@ -302,14 +328,14 @@ export default function UserManager() {
         </div>
       )}
 
-      {/* Load more button */}
-      {filteredAccounts.length > 6 && (
+      {hasMoreAccounts && (
         <div className="text-center pt-4">
           <button
-            onClick={toggleVisible}
-            className="px-6 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm border border-slate-200 shadow-sm transition"
+            onClick={loadMoreAccounts}
+            disabled={loadingMoreAccounts}
+            className="px-6 py-2.5 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm border border-slate-200 shadow-sm transition disabled:opacity-50"
           >
-            {visibleCount === 6 ? `Xem thêm ${filteredAccounts.length - 6} tài khoản` : "Thu gọn ▲"}
+            {loadingMoreAccounts ? "Đang tải..." : `Tải thêm tài khoản (${Math.max(0, totalAccounts - accounts.length)} còn lại)`}
           </button>
         </div>
       )}

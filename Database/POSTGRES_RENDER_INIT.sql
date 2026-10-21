@@ -104,5 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_order_details_order_id ON order_details(order_id,
 CREATE INDEX IF NOT EXISTS idx_order_details_product_size ON order_details(product_sizes_id);
 CREATE INDEX IF NOT EXISTS idx_rating_order_detail ON rating(order_detail_id);
 CREATE INDEX IF NOT EXISTS idx_account_reset_token ON account(reset_token) WHERE reset_token IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_account_email_trgm ON account USING GIN (email gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_account_username_trgm ON account USING GIN (username gin_trgm_ops);
 
 COMMIT;

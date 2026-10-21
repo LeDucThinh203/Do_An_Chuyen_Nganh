@@ -6,6 +6,7 @@ import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
+import { readCart, writeCart } from "../../utils/cartStorage";
 
 const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
 
@@ -85,7 +86,7 @@ export default function ProductList() {
   useEffect(() => () => window.clearTimeout(cartNoticeTimer.current), []);
 
   const updateCartCount = () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const cart = readCart();
     const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     setCartCount(totalItems);
   };
@@ -189,7 +190,7 @@ export default function ProductList() {
     const discount = Number(product.discount_percent || 0);
     const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
 
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cart = readCart();
     const existingItem = cart.find(item => 
       item.id === product.id && item.size === selectedSize
     );
@@ -211,7 +212,7 @@ export default function ProductList() {
       });
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    writeCart(cart);
     updateCartCount();
     notifyCart(`Đã thêm ${product.name} · Size ${selectedSize} vào giỏ hàng.`);
   };
