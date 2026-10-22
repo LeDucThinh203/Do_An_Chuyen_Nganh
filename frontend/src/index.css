@@ -1454,6 +1454,26 @@ code {
     gap: 9px;
   }
 
+  .product-card__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .product-card__add {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 40px;
+    font-size: 11px;
+  }
+
+  .product-card__admin,
+  .product-card__delete {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 8px;
+  }
+
   .checkout-stepper > div > span:nth-child(even) {
     display: none;
   }
@@ -1535,6 +1555,18 @@ code {
 
   .admin-dashboard main .grid.grid-cols-7 {
     gap: 2px;
+  }
+}
+
+@media (max-width: 359px) {
+  .store-main .sale-section .grid,
+  .store-main .store-category-section .grid,
+  .category-page > .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-card__media {
+    aspect-ratio: 1.25 / 1;
   }
 }
 
