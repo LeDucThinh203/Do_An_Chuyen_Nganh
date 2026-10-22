@@ -6,7 +6,7 @@ import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
-import { readCart, writeCart } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
@@ -37,7 +37,6 @@ export default function ProductLoadMore() {
   const [category, setCategory] = useState(() => (initialCache?.categories || []).find((item) => String(item.id) === normalizedCategoryId) || null);
   const [productSizes, setProductSizes] = useState(() => initialCache?.productSizes || []);
   const [selectedSizes, setSelectedSizes] = useState({});
-  const [cartCount, setCartCount] = useState(0);
   const [cartNotice, setCartNotice] = useState(null);
   const cartNoticeTimer = useRef(null);
   const [visibleCount, setVisibleCount] = useState(8);
@@ -49,6 +48,7 @@ export default function ProductLoadMore() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(() => !initialCache);
 
+  const { count: cartCount, addItem } = useCart();
   const user = Session.getUser();
   const isAdmin = Session.isAdmin();
 
@@ -86,7 +86,6 @@ export default function ProductLoadMore() {
 
   useEffect(() => {
     fetchData();
-    updateCartCount();
   }, [fetchData]);
 
   const notifyCart = (message, tone = "success") => {
@@ -96,12 +95,6 @@ export default function ProductLoadMore() {
   };
 
   useEffect(() => () => window.clearTimeout(cartNoticeTimer.current), []);
-
-  const updateCartCount = () => {
-    const cart = readCart();
-    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    setCartCount(totalItems);
-  };
 
   const handleDelete = async (id) => {
     if (window.confirm("🗑️ Bạn có chắc muốn xóa sản phẩm này?")) {
@@ -140,48 +133,44 @@ export default function ProductLoadMore() {
     return Number(match?.stock ?? 0);
   };
 
-  const handleAddToCart = (product, sizeOverride = null) => {
+  const handleAddToCart = async (product, sizeOverride = null) => {
     const selectedSize = sizeOverride || selectedSizes[product.id];
-    
+
     if (!selectedSize) {
-      notifyCart("Vui lòng chọn size trước khi thêm vào giỏ hàng.", "error");
+      notifyCart("Vui l\u00f2ng ch\u1ecdn size tr\u01b0\u1edbc khi th\u00eam v\u00e0o gi\u1ecf h\u00e0ng.", "error");
       return;
     }
 
-    const stock = getStockForSize(product.id, selectedSize);
-    if (stock <= 0) {
-      notifyCart("Size này đã hết hàng. Vui lòng chọn size khác.", "error");
+    const variant = productSizes.find((item) => (
+      String(item.product_id) === String(product.id) && item.size === selectedSize
+    ));
+    const stock = Number(variant?.stock ?? 0);
+    if (!variant || stock <= 0) {
+      notifyCart("Size n\u00e0y \u0111\u00e3 h\u1ebft h\u00e0ng. Vui l\u00f2ng ch\u1ecdn size kh\u00e1c.", "error");
       return;
     }
 
     const discount = Number(product.discount_percent || 0);
-    const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+    const originalPrice = Number(product.price || 0);
+    const finalPrice = discount > 0 ? originalPrice * (1 - discount / 100) : originalPrice;
 
-    const cart = readCart();
-    const existingItem = cart.find(item => 
-      item.id === product.id && item.size === selectedSize
-    );
-
-    if (existingItem) {
-      if (existingItem.quantity >= stock) {
-        notifyCart(`Bạn đã đạt số lượng tối đa còn trong kho (${stock}, size ${selectedSize}).`, "error");
-        return;
-      }
-      existingItem.quantity += 1;
-    } else {
-      cart.push({ 
-        ...product, 
+    try {
+      await addItem({
+        ...product,
+        id: product.id,
+        product_sizes_id: variant.id,
         price: finalPrice,
-        original_price: product.price,
+        original_price: originalPrice,
         discount_percent: discount,
+        image: resolveImage(product.image),
         size: selectedSize,
-        quantity: 1 
+        quantity: 1,
+        stock,
       });
+      notifyCart(`\u0110\u00e3 th\u00eam ${product.name} \u00b7 Size ${selectedSize} v\u00e0o gi\u1ecf h\u00e0ng.`);
+    } catch (error) {
+      notifyCart(error.message || "Kh\u00f4ng th\u1ec3 th\u00eam s\u1ea3n ph\u1ea9m v\u00e0o gi\u1ecf h\u00e0ng.", "error");
     }
-
-    writeCart(cart);
-    updateCartCount();
-    notifyCart(`Đã thêm ${product.name} · Size ${selectedSize} vào giỏ hàng.`);
   };
 
   const handleLogout = async () => {

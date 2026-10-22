@@ -185,6 +185,22 @@ export const createOrder = async (orderData) => {
       }
 
       const stockRequests = [...requestedStock.values()];
+      if (account_id) {
+        const [cartRows] = await conn.query(
+          'SELECT product_sizes_id, quantity FROM cart WHERE account_id = ? AND product_sizes_id = ANY(?) FOR UPDATE',
+          [account_id, stockRequests.map(({ id }) => id)]
+        );
+        const cartQuantities = new Map(cartRows.map((item) => [String(item.product_sizes_id), Number(item.quantity)]));
+        const missingCartItem = stockRequests.find(({ id, quantity }) => (
+          (cartQuantities.get(String(id)) || 0) < quantity
+        ));
+        if (missingCartItem) {
+          const error = new Error('Gi\\u1ecf h\\u00e0ng \\u0111\\u00e3 thay \\u0111\\u1ed5i. H\\u00e3y t\\u1ea3i l\\u1ea1i gi\\u1ecf h\\u00e0ng tr\\u01b0\\u1edbc khi \\u0111\\u1eb7t.');
+          error.status = 409;
+          throw error;
+        }
+      }
+
       const stockValues = [];
       const stockTuples = stockRequests.map(({ id, quantity }) => {
         stockValues.push(id, quantity);
@@ -224,6 +240,28 @@ export const createOrder = async (orderData) => {
         detailValues
       );
     }
+    if (account_id && Array.isArray(order_details) && order_details.length > 0) {
+      const purchasedQuantities = new Map();
+      for (const detail of order_details) {
+        const productSizeId = String(detail.product_sizes_id);
+        purchasedQuantities.set(
+          productSizeId,
+          (purchasedQuantities.get(productSizeId) || 0) + Number(detail.quantity)
+        );
+      }
+
+      for (const [productSizeId, quantity] of purchasedQuantities) {
+        await conn.query(
+          'DELETE FROM cart WHERE account_id = ? AND product_sizes_id = ? AND quantity = ?',
+          [account_id, productSizeId, quantity]
+        );
+        await conn.query(
+          'UPDATE cart SET quantity = quantity - ?, updated_at = NOW() WHERE account_id = ? AND product_sizes_id = ? AND quantity > ?',
+          [quantity, account_id, productSizeId, quantity]
+        );
+      }
+    }
+
     await conn.commit();
     return orderId;
   } catch (err) {

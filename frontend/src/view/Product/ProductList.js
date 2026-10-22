@@ -6,7 +6,7 @@ import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
-import { readCart, writeCart } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
@@ -40,7 +40,6 @@ export default function ProductList() {
   const [priceRange, setPriceRange] = useState([0, 5000000]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("default");
-  const [cartCount, setCartCount] = useState(0);
   const [cartNotice, setCartNotice] = useState(null);
   const cartNoticeTimer = useRef(null);
   const [loading, setLoading] = useState(() => !initialCache);
@@ -51,6 +50,7 @@ export default function ProductList() {
   const [homeVideoReady, setHomeVideoReady] = useState(false);
 
   const navigate = useNavigate();
+  const { count: cartCount, addItem } = useCart();
   const user = Session.getUser();
   const isAdmin = Session.isAdmin();
 
@@ -75,7 +75,6 @@ export default function ProductList() {
 
   useEffect(() => {
     fetchData();
-    updateCartCount();
   }, []);
 
   const notifyCart = (message, tone = "success") => {
@@ -85,12 +84,6 @@ export default function ProductList() {
   };
 
   useEffect(() => () => window.clearTimeout(cartNoticeTimer.current), []);
-
-  const updateCartCount = () => {
-    const cart = readCart();
-    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    setCartCount(totalItems);
-  };
 
   const fetchData = async () => {
     const cached = readStorefrontCache(HOME_STORE_CACHE_KEY);
@@ -173,49 +166,44 @@ export default function ProductList() {
     return Number(match?.stock ?? 0);
   };
 
-  const handleAddToCart = (product, sizeOverride = null) => {
+  const handleAddToCart = async (product, sizeOverride = null) => {
     const selectedSize = sizeOverride || selectedSizes[product.id];
-    
+
     if (!selectedSize) {
-      notifyCart("Vui lòng chọn size trước khi thêm vào giỏ hàng.", "error");
+      notifyCart("Vui l\u00f2ng ch\u1ecdn size tr\u01b0\u1edbc khi th\u00eam v\u00e0o gi\u1ecf h\u00e0ng.", "error");
       return;
     }
 
-    const stock = getStockForSize(product.id, selectedSize);
-    if (stock <= 0) {
-      notifyCart("Size này đã hết hàng. Vui lòng chọn size khác.", "error");
+    const variant = productSizes.find((item) => (
+      String(item.product_id) === String(product.id) && item.size === selectedSize
+    ));
+    const stock = Number(variant?.stock ?? 0);
+    if (!variant || stock <= 0) {
+      notifyCart("Size n\u00e0y hi\u1ec7n \u0111\u00e3 h\u1ebft h\u00e0ng. Vui l\u00f2ng ch\u1ecdn size kh\u00e1c.", "error");
       return;
     }
 
-    // Tính giá sau giảm
     const discount = Number(product.discount_percent || 0);
-    const finalPrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+    const originalPrice = Number(product.price || 0);
+    const finalPrice = discount > 0 ? originalPrice * (1 - discount / 100) : originalPrice;
 
-    const cart = readCart();
-    const existingItem = cart.find(item => 
-      item.id === product.id && item.size === selectedSize
-    );
-
-    if (existingItem) {
-      if (existingItem.quantity >= stock) {
-        notifyCart(`Bạn đã đạt số lượng tối đa còn trong kho (${stock}, size ${selectedSize}).`, "error");
-        return;
-      }
-      existingItem.quantity += 1;
-    } else {
-      cart.push({ 
-        ...product, 
+    try {
+      await addItem({
+        ...product,
+        id: product.id,
+        product_sizes_id: variant.id,
         price: finalPrice,
-        original_price: product.price,
+        original_price: originalPrice,
         discount_percent: discount,
+        image: resolveImage(product.image),
         size: selectedSize,
-        quantity: 1 
+        quantity: 1,
+        stock,
       });
+      notifyCart(`\u0110\u00e3 th\u00eam ${product.name} \u00b7 Size ${selectedSize} v\u00e0o gi\u1ecf h\u00e0ng.`);
+    } catch (error) {
+      notifyCart(error.message || "Kh\u00f4ng th\u1ec3 th\u00eam s\u1ea3n ph\u1ea9m v\u00e0o gi\u1ecf h\u00e0ng.", "error");
     }
-
-    writeCart(cart);
-    updateCartCount();
-    notifyCart(`Đã thêm ${product.name} · Size ${selectedSize} vào giỏ hàng.`);
   };
 
   const handleLogout = async () => {

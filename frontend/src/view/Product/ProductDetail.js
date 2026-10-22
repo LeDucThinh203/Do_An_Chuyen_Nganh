@@ -11,13 +11,14 @@ import {
   createRating,
 } from "../../api";
 import { ProductDetailSkeleton } from "../common/Skeletons";
-import { readCart, writeCart } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 import Session from "../../Session/session";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem } = useCart();
   const [product, setProduct] = useState(null);
   const [sizes, setSizes] = useState([]);
   const [productSizes, setProductSizes] = useState([]);
@@ -118,46 +119,41 @@ export default function ProductDetail() {
     fetchProductDetail();
   }, [fetchProductDetail]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedSize) {
-      notifyAction("Vui lòng chọn kích cỡ trước khi thêm vào giỏ hàng.", "error");
+      notifyAction("Vui l\u00f2ng ch\u1ecdn k\u00edch c\u1ee1 tr\u01b0\u1edbc khi th\u00eam v\u00e0o gi\u1ecf h\u00e0ng.", "error");
       return;
     }
 
-    const matchedPS = productSizes.find(ps => ps.size === selectedSize);
-
-    if (!matchedPS || Number(matchedPS.stock) <= 0) {
-      notifyAction("Size này hiện đã hết hàng. Vui lòng chọn size khác.", "error");
+    const matchedPS = productSizes.find((ps) => ps.size === selectedSize);
+    const stock = Number(matchedPS?.stock || 0);
+    if (!matchedPS || stock <= 0) {
+      notifyAction("Size n\u00e0y hi\u1ec7n \u0111\u00e3 h\u1ebft h\u00e0ng. Vui l\u00f2ng ch\u1ecdn size kh\u00e1c.", "error");
       return;
     }
 
-    const currentCart = readCart();
-    const existingIndex = currentCart.findIndex(
-      item => item.id === product.id && item.size === selectedSize
-    );
+    const discount = Number(product.discount_percent || 0);
+    const originalPrice = Number(product.price || 0);
+    const finalPrice = discount > 0 ? originalPrice * (1 - discount / 100) : originalPrice;
 
-    const priceAfterDiscount = Number(product.discount_percent || 0) > 0
-      ? product.price * (1 - product.discount_percent / 100)
-      : product.price;
-
-    if (existingIndex > -1) {
-      currentCart[existingIndex].quantity += 1;
-    } else {
-      currentCart.push({
+    try {
+      await addItem({
         id: product.id,
+        product_sizes_id: matchedPS.id,
         name: product.name,
-        price: priceAfterDiscount,
-        original_price: product.price,
-        discount_percent: product.discount_percent || 0,
+        price: finalPrice,
+        original_price: originalPrice,
+        discount_percent: discount,
         image: resolveImage(product.image),
         size: selectedSize,
-        quantity: 1
+        quantity: 1,
+        stock,
       });
+      setAddedToast(true);
+      setTimeout(() => setAddedToast(false), 3000);
+    } catch (error) {
+      notifyAction(error.message || "Kh\u00f4ng th\u1ec3 th\u00eam s\u1ea3n ph\u1ea9m v\u00e0o gi\u1ecf h\u00e0ng.", "error");
     }
-
-    writeCart(currentCart);
-    setAddedToast(true);
-    setTimeout(() => setAddedToast(false), 3000);
   };
 
   const handleAddRating = async () => {

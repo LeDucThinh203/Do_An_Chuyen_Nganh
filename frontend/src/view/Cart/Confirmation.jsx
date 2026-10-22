@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createOrder, getAllProductSizes, createVNPayPaymentUrl } from "../../api";
-import { clearCart } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 import Session from "../../Session/session";
 import { handleImageError, resolveImageUrl as resolveImage, resolveVnpayPaymentUrl } from "../../utils/imageUrl";
 
 export default function Confirmation() {
   const navigate = useNavigate();
+  const { resetAfterOrder } = useCart();
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -95,6 +96,7 @@ export default function Confirmation() {
       const result = await createOrder(orderPayload);
 
       if (result && result.id) {
+        resetAfterOrder(orderDetails.map((item) => item.product_sizes_id));
         if (orderData.payment_method === "vnpay") {
           try {
             const uniqueOrderId = `${result.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -113,7 +115,6 @@ export default function Confirmation() {
             if (vnpayResponse.success && paymentUrl) {
               localStorage.setItem("pending_order_id", result.id);
               localStorage.removeItem("last_order");
-              clearCart();
               localStorage.removeItem("checkout_items");
               localStorage.removeItem("checkout_form");
 
@@ -130,7 +131,6 @@ export default function Confirmation() {
           }
         } else {
           localStorage.removeItem("last_order");
-          clearCart();
           localStorage.removeItem("checkout_items");
           localStorage.removeItem("checkout_form");
 

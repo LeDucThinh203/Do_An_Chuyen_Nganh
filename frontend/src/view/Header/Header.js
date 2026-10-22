@@ -1,33 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
-import { CART_UPDATED_EVENT, getCartItemCount } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 
 export default function Header({ user = null, handleLogout = () => {} } = {}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(getCartItemCount);
+  const { count: cartCount } = useCart();
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   // Cập nhật số lượng sản phẩm trong giỏ hàng.
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === "cart") {
-        setCartCount(getCartItemCount());
-      }
-    };
-    
-    const handleCartUpdate = () => setCartCount(getCartItemCount());
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdate);
-    
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdate);
-    };
-  }, []);
-
   // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {

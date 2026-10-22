@@ -11,6 +11,7 @@ import db from './db.js';
 import uiRoutes from './routes/ui.js'; // gom tất cả route
 import { ensureAiSchema } from './services/ai/schema.js';
 import { ensureSupportChatSchema } from './services/supportChat/schema.js';
+import { ensureCartSchema } from './services/cart/schema.js';
 import { ensureDemoAccounts } from './services/demoAccounts.js';
 import { initSupportSocket } from './services/supportChat/socketHub.js';
 import { closeCache, connectCache, getCacheStatus } from './services/cache.js';
@@ -135,9 +136,16 @@ const shutdown = (signal) => {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 
-const startServer = () => {
+const startServer = async () => {
   // Cache is optional; PostgreSQL remains available while Redis connects or recovers.
   void connectCache();
+  try {
+    await ensureCartSchema();
+  } catch (error) {
+    console.error('[cart] Could not initialize cart schema:', error.message);
+    process.exitCode = 1;
+    return;
+  }
   httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
   console.log(`🔗 Swagger UI: ${SERVER_URL}/swagger`);

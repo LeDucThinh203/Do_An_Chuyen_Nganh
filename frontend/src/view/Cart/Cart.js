@@ -1,59 +1,59 @@
 // src/view/Cart/Cart.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAllProductSizes } from "../../api";
-import { readCart, writeCart } from "../../utils/cartStorage";
+import { useCart } from "../../context/CartContext";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function Cart() {
-  const [cart, setCart] = useState([]);
+  const { items: cart, loading, error, refreshCart, removeItem, updateQuantity } = useCart();
   const [visibleCount, setVisibleCount] = useState(10);
   const [productSizes, setProductSizes] = useState([]);
+  const [cartActionError, setCartActionError] = useState("");
   const navigate = useNavigate();
+  const productIdsKey = useMemo(() => [...new Set(cart.map((item) => String(item.id)))].join(","), [cart]);
 
   useEffect(() => {
-    const storedCart = readCart();
-    setCart(storedCart);
-    (async () => {
-      try {
-        const psData = await getAllProductSizes([...new Set(storedCart.map((item) => item.id))]);
-        setProductSizes(psData);
-      } catch (e) {
-        console.error("Không thể tải tồn kho:", e);
-      }
-    })();
-  }, []);
+    if (!productIdsKey) {
+      setProductSizes([]);
+      return undefined;
+    }
+    let active = true;
+    getAllProductSizes(productIdsKey.split(","))
+      .then((sizes) => { if (active) setProductSizes(sizes); })
+      .catch((loadError) => console.error("Kh\u00f4ng th\u1ec3 t\u1ea3i t\u1ed3n kho:", loadError));
+    return () => { active = false; };
+  }, [productIdsKey]);
 
-  const handleRemove = (id, size = "") => {
-    const newCart = cart.filter((item) => 
-      !(item.id === id && item.size === size)
-    );
-    setCart(newCart);
-    writeCart(newCart);
+  const handleRemove = async (item) => {
+    setCartActionError("");
+    try {
+      await removeItem(item);
+    } catch (actionError) {
+      setCartActionError(actionError.message || "Kh\u00f4ng th\u1ec3 x\u00f3a s\u1ea3n ph\u1ea9m kh\u1ecfi gi\u1ecf h\u00e0ng.");
+    }
   };
 
-  const handleQuantityChange = (id, size, delta) => {
-    const newCart = cart.map((item) => {
-      if (item.id === id && item.size === size) {
-        const stock = getStockForItem(item);
-        const newQuantity = item.quantity + delta;
-        const finalQuantity = Math.max(1, Math.min(newQuantity, stock));
-        return { ...item, quantity: finalQuantity };
-      }
-      return item;
-    });
-    setCart(newCart);
-    writeCart(newCart);
+  const handleQuantityChange = async (item, delta) => {
+    const stock = getStockForItem(item);
+    const quantity = Math.max(1, Math.min(Number(item.quantity) + delta, stock));
+    if (quantity === Number(item.quantity)) return;
+    setCartActionError("");
+    try {
+      await updateQuantity(item, quantity);
+    } catch (actionError) {
+      setCartActionError(actionError.message || "Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt s\u1ed1 l\u01b0\u1ee3ng.");
+    }
   };
 
   const getStockForItem = (item) => {
     const matched = productSizes.find(
       (ps) => String(ps.product_id) === String(item.id) && ps.size === (item.size || "")
     );
-    return Number(matched?.stock ?? 0);
+    return Number(item.stock ?? matched?.stock ?? 0);
   };
 
-  const isOutOfStock = (item) => getStockForItem(item) <= 0;
+  const isOutOfStock = (item) => item.available === false || getStockForItem(item) <= 0;
 
   const purchasableItems = cart.filter((i) => !isOutOfStock(i));
 
@@ -80,6 +80,21 @@ export default function Cart() {
   }, {});
 
   const groupedCartArray = Object.values(groupedCart);
+
+  if (loading && cart.length === 0) {
+    return <div className="min-h-[60vh] flex items-center justify-center text-slate-500">Loading cart...</div>;
+  }
+
+  if (error && cart.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-rose-600">{error}</p>
+        <button type="button" onClick={() => refreshCart().catch(() => {})} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-bold text-white">
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -109,6 +124,11 @@ export default function Cart() {
   return (
     <div className="cart-page min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
+        {(cartActionError || error) && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+            {cartActionError || error}
+          </div>
+        )}
         {/* Checkout Progress Stepper */}
         <div className="checkout-stepper bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm font-bold">
@@ -178,7 +198,7 @@ export default function Cart() {
                       </h3>
                       <button
                         type="button"
-                        onClick={() => handleRemove(item.id, item.size)}
+                        onClick={() => handleRemove(item)}
                         aria-label={`Xóa ${item.name} khỏi giỏ hàng`}
                         className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
                         title="Xóa sản phẩm này"
@@ -223,7 +243,7 @@ export default function Cart() {
                       <div className="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
                         <button
                           type="button"
-                          onClick={() => !out && handleQuantityChange(item.id, item.size, -1)}
+                          onClick={() => !out && handleQuantityChange(item, -1)}
                           disabled={out || item.quantity <= 1}
                           aria-label={`Giảm số lượng ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg font-bold transition disabled:opacity-40"
@@ -235,7 +255,7 @@ export default function Cart() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => !out && handleQuantityChange(item.id, item.size, 1)}
+                          onClick={() => !out && handleQuantityChange(item, 1)}
                           disabled={out}
                           aria-label={`Tăng số lượng ${item.name}`}
                           className="w-7 h-7 flex items-center justify-center text-slate-600 hover:bg-white rounded-lg font-bold transition disabled:opacity-40"

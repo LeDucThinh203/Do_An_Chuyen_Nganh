@@ -3,7 +3,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
-import { clearCart } from "../../utils/cartStorage";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function Checkout() {
@@ -171,7 +170,6 @@ export default function Checkout() {
       address: fullAddress,
     };
     localStorage.setItem("last_order", JSON.stringify(orderData));
-    clearCart();
     localStorage.removeItem("checkout_items");
     localStorage.removeItem("checkout_form");
 

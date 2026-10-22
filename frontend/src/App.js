@@ -7,6 +7,7 @@ import { getCurrentUser, logout as logoutApi } from "./api";
 import Header from "./view/Header/Header";
 import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 import { ThemeProvider } from "./context/ThemeContext";
+import { CartProvider } from "./context/CartContext";
 import ThemeBackground from "./view/common/ThemeBackground";
 
 // Split route screens so the initial storefront bundle does not include admin,
@@ -59,7 +60,10 @@ function AppContent() {
   const { pathname } = useLocation();
   const [user, setUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
-  const [chatMode, setChatMode] = useState(() => localStorage.getItem("chat_mode") || "support");
+  const [chatMode, setChatMode] = useState(() => (
+    window.localStorage.getItem("chat_mode") === "ai" ? "ai" : "support"
+  ));
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -89,6 +93,14 @@ function AppContent() {
   useEffect(() => {
     localStorage.setItem("chat_mode", chatMode);
   }, [chatMode]);
+
+  const handleChatModeChange = (mode) => {
+    if (mode !== "ai" && mode !== "support") return;
+    setChatMode(mode);
+    // Choosing a chat channel should open it. Keep this state above both
+    // widgets so changing channels cannot reset the window to its closed state.
+    setChatOpen(true);
+  };
 
   const handleLogout = async () => {
     try {
@@ -274,7 +286,18 @@ function AppContent() {
 
       {!isAdminPage && (
         <Suspense fallback={null}>
-          {chatMode === "ai" ? <ChatWidget onModeChange={setChatMode} /> : <SupportChatWidget onModeChange={setChatMode} />}
+          <ChatWidget
+            active={chatMode === "ai"}
+            isOpen={chatOpen}
+            onOpenChange={setChatOpen}
+            onModeChange={handleChatModeChange}
+          />
+          <SupportChatWidget
+            active={chatMode === "support"}
+            isOpen={chatOpen}
+            onOpenChange={setChatOpen}
+            onModeChange={handleChatModeChange}
+          />
         </Suspense>
       )}
 
@@ -292,8 +315,10 @@ export default function App() {
   return (
     <ThemeProvider>
       <Router>
-        <ScrollToTop />
-        <AppContent />
+        <CartProvider>
+          <ScrollToTop />
+          <AppContent />
+        </CartProvider>
       </Router>
     </ThemeProvider>
   );

@@ -13,6 +13,7 @@ import sizesRoutes from './sizes.js';
 
 import aiRoutes from './ai.js';
 import supportChatRoutes from './support_chat.js';
+import cartRoutes from './cart.js';
 
 import vnpayRoutes from './vnpay.js';
 
@@ -32,6 +33,7 @@ router.use('/sizes', sizesRoutes);
 
 router.use('/ai', aiRoutes);
 router.use('/support-chat', supportChatRoutes);
+router.use('/cart', cartRoutes);
 
 router.use('/vnpay', vnpayRoutes);
 

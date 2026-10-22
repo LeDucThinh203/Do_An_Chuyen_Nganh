@@ -69,11 +69,11 @@ export const getOrderById = async (req, res) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const id = await ordersRepo.createOrder(req.body);
+    const id = await ordersRepo.createOrder({ ...req.body, account_id: req.user.id });
     await invalidateCacheNamespaces('inventory', 'inventory_item', 'storefront', 'product_details', 'admin_products');
     res.status(201).json({ id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 

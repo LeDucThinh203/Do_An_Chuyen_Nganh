@@ -1,6 +1,6 @@
 import express from 'express';
 import * as ordersController from '../controllers/ordersController.js';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { authenticate, requireAdmin, requireUser } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -135,7 +135,7 @@ router.get('/:id', ordersController.getOrderById);
  *       201:
  *         description: Đơn hàng được tạo
  */
-router.post('/', ordersController.createOrder);
+router.post('/', authenticate, requireUser, ordersController.createOrder);
 
 /**
  * @swagger

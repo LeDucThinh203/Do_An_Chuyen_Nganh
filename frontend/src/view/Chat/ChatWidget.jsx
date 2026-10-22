@@ -4,8 +4,7 @@ import { aiChat, clearMyAiHistory } from '../../api';
 import { handleImageError, resolveImageUrl as resolveImage } from '../../utils/imageUrl';
 import './ChatWidget.css';
 
-const ChatWidget = ({ onModeChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ChatWidget = ({ active = true, isOpen = false, onOpenChange, onModeChange }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -32,18 +31,11 @@ const ChatWidget = ({ onModeChange }) => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Scroll to bottom when chat is opened
-  useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-    }
-  }, [isOpen]);
+    if (active && isOpen) scrollToBottom();
+  }, [active, isOpen, messages]);
 
   const toggleChat = () => {
-    setIsOpen(!isOpen);
+    onOpenChange?.(!isOpen);
     if (!isOpen) {
       setIsMinimized(false);
     }
@@ -146,14 +138,14 @@ const ChatWidget = ({ onModeChange }) => {
   };
 
   return (
-    <div className="fixed right-3 md:right-24 bottom-6 z-[1200]">
+    <div hidden={!active} className="fixed right-3 md:right-24 bottom-6 z-[1200]">
       {!isOpen && onModeChange && (
         <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
           <button
             type="button"
             className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white"
             onClick={() => onModeChange('ai')}
-            aria-pressed
+            aria-pressed="true"
           >
             AI Chat
           </button>

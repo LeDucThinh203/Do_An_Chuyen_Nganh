@@ -19,6 +19,7 @@ model account {
   updated_at         DateTime    @default(now()) @updatedAt
   address            address[]
   orders             orders[]
+  carts              cart[]
 
   @@map("account")
 }
@@ -65,6 +66,7 @@ model product_sizes {
   product       product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
   sizes         sizes           @relation(fields: [size_id], references: [id], onDelete: Cascade)
   order_details order_details[]
+  carts         cart[]
 
   @@unique([product_id, size_id])
   @@index([product_id], map: "idx_product_sizes_product")
@@ -117,6 +119,21 @@ model order_details {
 
   @@index([order_id], map: "idx_order_details_order")
   @@map("order_details")
+}
+
+model cart {
+  id               BigInt        @id @default(autoincrement())
+  account_id       BigInt
+  product_sizes_id BigInt
+  quantity         Int           @default(1)
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @default(now()) @updatedAt
+  account          account       @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  product_sizes    product_sizes @relation(fields: [product_sizes_id], references: [id], onDelete: Cascade)
+
+  @@unique([account_id, product_sizes_id], map: "uq_cart_account_product_size")
+  @@index([account_id, updated_at(sort: Desc), id(sort: Desc)], map: "idx_cart_account_updated")
+  @@map("cart")
 }
 
 model rating {

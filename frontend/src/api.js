@@ -544,6 +544,59 @@ export const deleteProductSize = async (id) => {
   return true;
 };
 
+// ================= Account Cart API =================
+const CART_API_URL = `${API_BASE_URL}/cart`;
+
+const readCartResponse = async (res, fallback) => {
+  if (!res.ok) throw new Error(await getErrorMessage(res, fallback));
+  return await safeJson(res);
+};
+
+export const getMyCart = async () => {
+  const res = await apiFetch(CART_API_URL);
+  return readCartResponse(res, 'Không thể tải giỏ hàng.');
+};
+
+export const addMyCartItem = async ({ product_sizes_id, quantity = 1 }) => {
+  const res = await apiFetch(`${CART_API_URL}/items`, {
+    method: 'POST',
+    headers: getApiHeaders(),
+    body: JSON.stringify({ product_sizes_id, quantity }),
+  });
+  return readCartResponse(res, 'Không thể thêm sản phẩm vào giỏ hàng.');
+};
+
+export const updateMyCartItem = async (productSizesId, quantity) => {
+  const res = await apiFetch(`${CART_API_URL}/items/${encodeURIComponent(productSizesId)}`, {
+    method: 'PATCH',
+    headers: getApiHeaders(),
+    body: JSON.stringify({ quantity }),
+  });
+  return readCartResponse(res, 'Không thể cập nhật giỏ hàng.');
+};
+
+export const removeMyCartItem = async (productSizesId) => {
+  const res = await apiFetch(`${CART_API_URL}/items/${encodeURIComponent(productSizesId)}`, {
+    method: 'DELETE',
+    headers: getApiHeaders(),
+  });
+  return readCartResponse(res, 'Không thể xóa sản phẩm khỏi giỏ hàng.');
+};
+
+export const clearMyCart = async () => {
+  const res = await apiFetch(CART_API_URL, { method: 'DELETE', headers: getApiHeaders() });
+  return readCartResponse(res, 'Không thể làm trống giỏ hàng.');
+};
+
+export const mergeMyCart = async (items) => {
+  const res = await apiFetch(`${CART_API_URL}/merge`, {
+    method: 'POST',
+    headers: getApiHeaders(),
+    body: JSON.stringify({ items }),
+  });
+  return readCartResponse(res, 'Không thể đồng bộ giỏ hàng với tài khoản.');
+};
+
 // ================= Order API =================
 const ORDER_API_URL = `${API_BASE_URL}/orders`;
 

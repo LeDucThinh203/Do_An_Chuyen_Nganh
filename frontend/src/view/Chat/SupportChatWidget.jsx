@@ -7,12 +7,11 @@ import {
 } from '../../api';
 import { getSupportSocket } from '../../socket/supportSocket';
 
-export default function SupportChatWidget({ onModeChange }) {
+export default function SupportChatWidget({ active = true, isOpen = false, onOpenChange, onModeChange }) {
   const user = Session.getUser();
   const isLoggedIn = Session.isLoggedIn();
   const isAdmin = Session.isAdmin();
 
-  const [open, setOpen] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -20,6 +19,10 @@ export default function SupportChatWidget({ onModeChange }) {
   const [unread, setUnread] = useState(0);
   const messagesEndRef = useRef(null);
   const historyLoadedRoomRef = useRef(null);
+  const activeRef = useRef(active);
+  const openRef = useRef(isOpen);
+  activeRef.current = active;
+  openRef.current = isOpen;
 
   const appendMessageUnique = (msg) => {
     if (!msg) return;
@@ -47,7 +50,6 @@ export default function SupportChatWidget({ onModeChange }) {
   useEffect(() => {
     if (isAdmin || !isLoggedIn) return;
 
-    let mounted = true;
     const socket = getSupportSocket();
 
     socket.emit('support:register', {
@@ -65,7 +67,7 @@ export default function SupportChatWidget({ onModeChange }) {
         setRoomId(computedRoomId);
       }
 
-      if (!open && msg.sender_role === 'admin') {
+      if ((!activeRef.current || !openRef.current) && msg.sender_role === 'admin') {
         setUnread((prev) => prev + 1);
       }
     };
@@ -73,13 +75,12 @@ export default function SupportChatWidget({ onModeChange }) {
     socket.on('support:new-message', onNewMessage);
 
     return () => {
-      mounted = false;
       socket.off('support:new-message', onNewMessage);
     };
   }, [computedRoomId, isAdmin, isLoggedIn, senderId, senderName]);
 
   useEffect(() => {
-    if (!open || !computedRoomId || isAdmin || !isLoggedIn || historyLoadedRoomRef.current === computedRoomId) return;
+    if (!active || !isOpen || !computedRoomId || isAdmin || !isLoggedIn || historyLoadedRoomRef.current === computedRoomId) return;
 
     let mounted = true;
     setRoomId(computedRoomId);
@@ -97,19 +98,17 @@ export default function SupportChatWidget({ onModeChange }) {
     return () => {
       mounted = false;
     };
-  }, [computedRoomId, isAdmin, isLoggedIn, open]);
+  }, [active, computedRoomId, isAdmin, isLoggedIn, isOpen]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, open]);
+    if (active && isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [active, isOpen, messages]);
 
   useEffect(() => {
-    if (!open || !roomId) return;
+    if (!active || !isOpen || !roomId) return;
     setUnread(0);
     markSupportRoomRead({ roomId, readerRole: 'user' }).catch(() => {});
-  }, [open, roomId]);
-
-  if (isAdmin || !isLoggedIn) return null;
+  }, [active, isOpen, roomId]);
 
   const handleSend = async () => {
     const trimmed = input.trim();
@@ -139,8 +138,8 @@ export default function SupportChatWidget({ onModeChange }) {
   };
 
   return (
-    <div className="support-chat-widget fixed right-3 md:right-24 bottom-6 z-[1200]">
-      {!open && onModeChange && (
+    <div hidden={!active} className="support-chat-widget fixed right-3 md:right-24 bottom-6 z-[1200]">
+      {!isOpen && onModeChange && (
         <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
           <button
             type="button"
@@ -159,7 +158,7 @@ export default function SupportChatWidget({ onModeChange }) {
         </div>
       )}
 
-      {open && (
+      {isOpen && (
         <div
           className="support-chat-window absolute right-0 bottom-16 w-[min(340px,calc(100vw-16px))] max-w-[calc(100vw-16px)] h-[min(480px,calc(100vh-96px))] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
         >
@@ -168,11 +167,26 @@ export default function SupportChatWidget({ onModeChange }) {
               <p className="font-semibold">Chăm sóc khách hàng</p>
               <p className="text-xs text-blue-100">Admin đang trực tuyến</p>
             </div>
-            <button className="text-white/90 hover:text-white" onClick={() => setOpen(false)}>
+            <button className="text-white/90 hover:text-white" onClick={() => onOpenChange?.(false)}>
               ✕
             </button>
           </div>
 
+          {isAdmin || !isLoggedIn ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-slate-50 p-6 text-center">
+              <p className="text-sm text-slate-600">
+                {isAdmin
+                  ? 'Tài khoản quản trị hãy dùng cửa sổ CSKH realtime để trả lời khách hàng.'
+                  : 'Vui lòng đăng nhập để nhắn tin trực tiếp với bộ phận CSKH.'}
+              </p>
+              {!isAdmin && (
+                <a href="/login" className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                  Đăng nhập
+                </a>
+              )}
+            </div>
+          ) : (
+            <>
           <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50">
             {messages.length === 0 && (
               <div className="text-xs text-slate-500 text-center py-4">
@@ -216,11 +230,13 @@ export default function SupportChatWidget({ onModeChange }) {
               </button>
             </div>
           </div>
+            </>
+          )}
         </div>
       )}
 
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => onOpenChange?.(!isOpen)}
         className="relative w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl ring-4 ring-white hover:bg-blue-700 transition flex items-center justify-center"
         title="Mở chat chăm sóc khách hàng"
       >
