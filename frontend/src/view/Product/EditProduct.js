@@ -2,18 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { getProductById, updateProduct, getAllCategories } from "../../api";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-
-// Resolve image URL for products
-const resolveImage = (img) => {
-  if (!img) return "/images/placeholder.png";
-  const trimmed = String(img).trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  if (trimmed.startsWith("/")) {
-    const parts = trimmed.split("/");
-    return parts.map((part, idx) => (idx === 0 ? part : encodeURIComponent(part))).join("/");
-  }
-  return `/images/${encodeURIComponent(trimmed)}`;
-};
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function EditProduct() {
   const { id } = useParams();
@@ -30,6 +19,13 @@ export default function EditProduct() {
     loadProduct();
     loadCategories();
   }, [id]);
+
+  useEffect(() => {
+    const previewUrl = product?.newImagePreview;
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [product?.newImagePreview]);
 
   const loadCategories = async () => {
     try {
@@ -73,8 +69,10 @@ export default function EditProduct() {
 
     let imagePath = product.image; // giữ ảnh cũ nếu không chọn mới
     if (product.imageFile) {
-      imagePath = `/images/${product.imageFile.name}`;
+      setErrorMsg("Ảnh đã chọn mới chỉ xem trước trên trình duyệt, chưa được tải lên máy chủ. Hãy đặt ảnh vào frontend/public/images rồi nhập đường dẫn /images/tên-ảnh.");
+      return;
     }
+    imagePath = product.image ? resolveImage(product.image) : "";
 
     const updated = {
       name: product.name,
@@ -249,8 +247,7 @@ export default function EditProduct() {
                   alt="preview"
                   className="w-full h-48 object-cover rounded-xl shadow-md mx-auto"
                   onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/images/placeholder.png";
+                    handleImageError(e);
                   }}
                 />
 
@@ -260,11 +257,22 @@ export default function EditProduct() {
 
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={(e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files?.[0];
+                    if (file && !/^(image\/(png|jpeg|webp|gif|avif))$/i.test(file.type)) {
+                      setErrorMsg("Chỉ hỗ trợ ảnh PNG, JPG, WEBP, GIF hoặc AVIF.");
+                      e.target.value = "";
+                      return;
+                    }
+                    if (file && file.size > 5 * 1024 * 1024) {
+                      setErrorMsg("Ảnh phải có dung lượng tối đa 5 MB.");
+                      e.target.value = "";
+                      return;
+                    }
                     if (file) {
+                      setErrorMsg("");
                       setProduct({
                         ...product,
                         imageFile: file,
@@ -274,6 +282,33 @@ export default function EditProduct() {
                   }}
                 />
               </div>
+
+              {product.imageFile && (
+                <button
+                  type="button"
+                  onClick={() => setProduct({ ...product, imageFile: null, newImagePreview: null })}
+                  className="text-xs font-bold text-rose-600 hover:text-rose-700"
+                >
+                  Bỏ ảnh đang xem trước
+                </button>
+              )}
+
+              <label className="block text-xs font-bold text-slate-700" htmlFor="product-image-url">
+                Đường dẫn ảnh đã được lưu
+                <input
+                  id="product-image-url"
+                  type="text"
+                  inputMode="url"
+                  maxLength={2048}
+                  value={product.image || ""}
+                  onChange={(e) => setProduct({ ...product, image: e.target.value })}
+                  placeholder="/images/ten-anh.jpg hoặc https://..."
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-normal text-slate-800 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <span className="mt-1 block font-normal text-slate-500">
+                  Tệp vừa chọn chỉ xem trước; frontend hiện không tải tệp lên máy chủ.
+                </span>
+              </label>
             </div>
 
             {/* Quick Summary */}

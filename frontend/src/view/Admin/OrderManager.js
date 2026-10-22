@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getOrdersPage, updateOrderStatus, deleteOrder } from "../../api";
 import { OrderManagerSkeleton } from "../common/Skeletons";
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function OrderManager() {
   const [orders, setOrders] = useState([]);
@@ -226,14 +227,6 @@ export default function OrderManager() {
   };
 
   // Hàm xử lý đường dẫn hình ảnh
-  const resolveImage = (img) => {
-    if (!img) return '/images/placeholder.png';
-    const trimmed = String(img).trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-    if (trimmed.startsWith('/')) return encodeURI(trimmed);
-    return `/images/${encodeURI(trimmed)}`;
-  };
-
   // Thống kê số lượng đơn hàng theo trạng thái
   const getOrderStats = () => {
     const stats = {
@@ -1030,10 +1023,7 @@ export default function OrderManager() {
                             src={resolveImage(detail.image)} 
                             alt={detail.product_name}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = '/images/placeholder.png';
-                            }}
+                            onError={handleImageError}
                           />
                         </div>
                         <div className="flex-1 min-w-0">

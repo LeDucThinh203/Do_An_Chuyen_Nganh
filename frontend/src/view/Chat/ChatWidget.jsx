@@ -1,24 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Session from '../../Session/session';
 import { clearMyAiHistory } from '../../api';
+import { handleImageError, resolveImageUrl as resolveImage } from '../../utils/imageUrl';
 import './ChatWidget.css';
 
 const API_BASE_URL = process.env.NODE_ENV === 'development'
   ? ''
   : (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
 const AI_CHAT_API_URL = `${API_BASE_URL}/ai/chat`;
-
-// Resolve image URL for products
-const resolveImage = (img) => {
-  if (!img) return '/images/placeholder.png';
-  const trimmed = String(img).trim();
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (trimmed.startsWith('/')) {
-    const parts = trimmed.split('/');
-    return parts.map((part, idx) => idx === 0 ? part : encodeURIComponent(part)).join('/');
-  }
-  return `/images/${encodeURIComponent(trimmed)}`;
-};
 
 const ChatWidget = ({ onModeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -265,10 +254,7 @@ const ChatWidget = ({ onModeChange }) => {
                                   src={resolveImage(product.image)} 
                                   alt={product.name}
                                   className="product-image"
-                                  onError={(e) => {
-                                    console.error('Image load error:', product.image);
-                                    e.target.style.display = 'none';
-                                  }}
+                                  onError={handleImageError}
                                 />
                               )}
                               <div className="product-info">

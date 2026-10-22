@@ -12,18 +12,7 @@ import {
 } from "../../api";
 import { ProductDetailSkeleton } from "../common/Skeletons";
 import { readCart, writeCart } from "../../utils/cartStorage";
-
-// Resolve image URL for products
-const resolveImage = (img) => {
-  if (!img) return "/images/placeholder.png";
-  const trimmed = String(img).trim();
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  if (trimmed.startsWith("/")) {
-    const parts = trimmed.split("/");
-    return parts.map((part, idx) => (idx === 0 ? part : encodeURIComponent(part))).join("/");
-  }
-  return `/images/${encodeURIComponent(trimmed)}`;
-};
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -301,8 +290,7 @@ export default function ProductDetail() {
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/images/placeholder.png";
+                  handleImageError(e);
                 }}
               />
               

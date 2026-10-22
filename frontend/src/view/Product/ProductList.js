@@ -7,6 +7,7 @@ import Session from "../../Session/session";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import ProductCard from "./ProductCard";
 import { readCart, writeCart } from "../../utils/cartStorage";
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 const AdminSupportChatWidget = lazy(() => import("../Admin/AdminSupportChatWidget"));
 
@@ -682,17 +683,6 @@ export default function ProductList() {
 }
 
 // Resolve image URL
-const resolveImage = (img) => {
-  if (!img) return '/images/placeholder.png';
-  const trimmed = String(img).trim();
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (trimmed.startsWith('/')) {
-    const parts = trimmed.split('/');
-    return parts.map((part, idx) => idx === 0 ? part : encodeURIComponent(part)).join('/');
-  }
-  return `/images/${encodeURIComponent(trimmed)}`;
-};
-
 /* Unified Header component for ProductList */
 function Header({ user, handleLogout, products = [], onSearch, onResetFilters, cartCount = 0 }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -838,7 +828,7 @@ function Header({ user, handleLogout, products = [], onSearch, onResetFilters, c
                       <img
                         src={resolveImage(p.image)}
                         alt={p.name}
-                        onError={(e) => { e.target.src = '/images/placeholder.png'; }}
+                        onError={handleImageError}
                         className="w-11 h-11 object-cover rounded-lg border border-slate-100 flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0 text-left">

@@ -4,6 +4,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import Session from "../../Session/session";
 import * as addressAPI from "../../api";
 import { clearCart } from "../../utils/cartStorage";
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function Checkout() {
   const user = useMemo(() => (Session.isLoggedIn() ? Session.getUser() : null), []);
@@ -180,14 +181,6 @@ export default function Checkout() {
   const handleChooseAddress = (addr) => {
     fillFormFromAddress(addr);
     setUseSavedAddress(false);
-  };
-
-  const resolveImage = (img) => {
-    if (!img) return "/images/placeholder.png";
-    const trimmed = String(img).trim();
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-    if (trimmed.startsWith("/")) return encodeURI(trimmed);
-    return `/images/${encodeURI(trimmed)}`;
   };
 
   if (!user) {
@@ -550,10 +543,7 @@ export default function Checkout() {
                       src={resolveImage(item.image)}
                       alt={item.name}
                       className="w-14 h-14 object-cover rounded-xl border border-slate-200/60 bg-white flex-shrink-0"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/images/placeholder.png";
-                      }}
+                      onError={handleImageError}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-xs text-slate-900 truncate">{item.name}</p>

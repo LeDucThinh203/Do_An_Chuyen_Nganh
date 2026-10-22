@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { createProduct, getAllCategories } from "../../api";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ProductFormSkeleton } from "../common/Skeletons";
+import { handleImageError, resolveImageUrl } from "../../utils/imageUrl";
 
 export default function AddProduct() {
   const [product, setProduct] = useState({
@@ -10,6 +11,7 @@ export default function AddProduct() {
     price: "",
     description: "",
     category_id: "",
+    image: "",
     imageFile: null,
     imagePreview: "",
   });
@@ -25,6 +27,13 @@ export default function AddProduct() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const previewUrl = product.imagePreview;
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [product.imagePreview]);
 
   const fetchCategories = async () => {
     try {
@@ -50,10 +59,12 @@ export default function AddProduct() {
       return;
     }
 
-    let imagePath = "";
     if (product.imageFile) {
-      imagePath = `/images/${product.imageFile.name}`;
+      setErrorMsg("Ảnh đã chọn mới chỉ xem trước trên trình duyệt, chưa được tải lên máy chủ. Hãy đặt ảnh vào frontend/public/images rồi nhập đường dẫn /images/tên-ảnh.");
+      return;
     }
+
+    const imagePath = product.image.trim() ? resolveImageUrl(product.image) : "";
 
     const newProduct = {
       name: product.name,
@@ -94,6 +105,7 @@ export default function AddProduct() {
     );
   }
 
+  const imagePreview = product.imagePreview || (product.image ? resolveImageUrl(product.image) : "");
   const selectedCategoryName =
     categories.find((c) => String(c.id) === String(product.category_id))?.name || "Chưa chọn";
 
@@ -224,17 +236,18 @@ export default function AddProduct() {
               </h2>
 
               <div className="relative border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-4 text-center transition bg-slate-50/50">
-                {product.imagePreview ? (
+                {imagePreview ? (
                   <div className="space-y-3">
                     <img
-                      src={product.imagePreview}
+                      src={imagePreview}
                       alt="preview"
                       className="w-full h-48 object-cover rounded-xl shadow-md mx-auto"
+                      onError={handleImageError}
                     />
                     <button
                       type="button"
-                      onClick={() => setProduct({ ...product, imageFile: null, imagePreview: "" })}
-                      className="text-xs font-bold text-rose-600 hover:text-rose-700 py-1 px-3 rounded-lg hover:bg-rose-50 transition"
+                      onClick={() => setProduct({ ...product, image: "", imageFile: null, imagePreview: "" })}
+                      className="relative z-10 text-xs font-bold text-rose-600 hover:text-rose-700 py-1 px-3 rounded-lg hover:bg-rose-50 transition"
                     >
                       Xóa ảnh này
                     </button>
@@ -251,11 +264,22 @@ export default function AddProduct() {
 
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={(e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files?.[0];
+                    if (file && !/^(image\/(png|jpeg|webp|gif|avif))$/i.test(file.type)) {
+                      setErrorMsg("Chỉ hỗ trợ ảnh PNG, JPG, WEBP, GIF hoặc AVIF.");
+                      e.target.value = "";
+                      return;
+                    }
+                    if (file && file.size > 5 * 1024 * 1024) {
+                      setErrorMsg("Ảnh phải có dung lượng tối đa 5 MB.");
+                      e.target.value = "";
+                      return;
+                    }
                     if (file) {
+                      setErrorMsg("");
                       setProduct({
                         ...product,
                         imageFile: file,
@@ -265,6 +289,23 @@ export default function AddProduct() {
                   }}
                 />
               </div>
+
+              <label className="block text-xs font-bold text-slate-700" htmlFor="product-image-url">
+                Đường dẫn ảnh đã được lưu
+                <input
+                  id="product-image-url"
+                  type="text"
+                  inputMode="url"
+                  maxLength={2048}
+                  value={product.image}
+                  onChange={(e) => setProduct({ ...product, image: e.target.value })}
+                  placeholder="/images/ten-anh.jpg hoặc https://..."
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-normal text-slate-800 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <span className="mt-1 block font-normal text-slate-500">
+                  Tệp vừa chọn chỉ xem trước; frontend hiện không tải tệp lên máy chủ.
+                </span>
+              </label>
             </div>
 
             {/* Quick Live Preview */}

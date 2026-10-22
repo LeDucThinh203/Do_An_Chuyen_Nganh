@@ -35,7 +35,31 @@
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      "no-script-url": "error",
+      "no-restricted-properties": [
+        "error",
+        {
+          "property": "innerHTML",
+          "message": "Render untrusted content as React text instead of assigning HTML."
+        },
+        {
+          "property": "outerHTML",
+          "message": "Render untrusted content as React elements instead of assigning HTML."
+        },
+        {
+          "object": "document",
+          "property": "write",
+          "message": "document.write is not allowed in the frontend."
+        }
+      ],
+      "react/no-danger": "error",
+      "react/jsx-no-target-blank": "error"
+    }
   },
   "browserslist": {
     "production": [

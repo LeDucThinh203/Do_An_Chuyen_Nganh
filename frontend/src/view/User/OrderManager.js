@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyOrdersPage, deleteOrder } from "../../api";
 import Session from "../../Session/session";
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function OrderManager({ onNavigate }) {
   const [orders, setOrders] = useState([]);
@@ -161,14 +162,6 @@ export default function OrderManager({ onNavigate }) {
     if (order.payment_method === "vnpay") return "💳 VNPay";
     if (order.payment_method === "bank") return "🏦 Chuyển khoản";
     return order.payment_method || "N/A";
-  };
-
-  const resolveImage = (img) => {
-    if (!img) return "/images/placeholder.png";
-    const trimmed = String(img).trim();
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-    if (trimmed.startsWith("/")) return encodeURI(trimmed);
-    return `/images/${encodeURI(trimmed)}`;
   };
 
   // Status counts
@@ -503,10 +496,7 @@ export default function OrderManager({ onNavigate }) {
                             src={resolveImage(item.image)}
                             alt={item.product_name}
                             className="w-14 h-14 object-cover rounded-xl border border-slate-100 bg-slate-100 flex-shrink-0"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = "/images/placeholder.png";
-                            }}
+                            onError={handleImageError}
                           />
                           <div>
                             <h5 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">

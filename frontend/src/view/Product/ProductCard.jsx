@@ -1,13 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-
-const resolveImage = (image) => {
-  if (!image) return "/images/placeholder.png";
-  const value = String(image).trim();
-  if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith("/")) return encodeURI(value);
-  return `/images/${encodeURIComponent(value)}`;
-};
+import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
 
 export default function ProductCard({
   product,
@@ -39,8 +32,7 @@ export default function ProductCard({
             alt={product.name}
             loading="lazy"
             onError={(event) => {
-              event.currentTarget.onerror = null;
-              event.currentTarget.src = "/images/placeholder.png";
+              handleImageError(event);
             }}
           />
         </button>

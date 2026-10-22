@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createOrder, getAllProductSizes, createVNPayPaymentUrl } from "../../api";
 import { clearCart } from "../../utils/cartStorage";
+import { handleImageError, resolveImageUrl as resolveImage, resolveVnpayPaymentUrl } from "../../utils/imageUrl";
 
 export default function Confirmation() {
   const navigate = useNavigate();
@@ -106,15 +107,16 @@ export default function Confirmation() {
             };
 
             const vnpayResponse = await createVNPayPaymentUrl(vnpayData);
+            const paymentUrl = resolveVnpayPaymentUrl(vnpayResponse?.data?.paymentUrl);
 
-            if (vnpayResponse.success && vnpayResponse.data.paymentUrl) {
+            if (vnpayResponse.success && paymentUrl) {
               localStorage.setItem("pending_order_id", result.id);
               localStorage.removeItem("last_order");
               clearCart();
               localStorage.removeItem("checkout_items");
               localStorage.removeItem("checkout_form");
 
-              window.location.href = vnpayResponse.data.paymentUrl;
+              window.location.assign(paymentUrl);
               return;
             } else {
               throw new Error("Không thể khởi tạo cổng thanh toán VNPay lúc này");
@@ -174,14 +176,6 @@ export default function Confirmation() {
 
   const isValidOrder = validateOrderItems();
   const paymentBadge = getPaymentMethodBadge(orderData.payment_method);
-
-  const resolveImage = (img) => {
-    if (!img) return "/images/placeholder.png";
-    const trimmed = String(img).trim();
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-    if (trimmed.startsWith("/")) return encodeURI(trimmed);
-    return `/images/${encodeURI(trimmed)}`;
-  };
 
   return (
     <div className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
@@ -294,10 +288,7 @@ export default function Confirmation() {
                         src={resolveImage(item.image)}
                         alt={item.name}
                         className="w-14 h-14 object-cover rounded-xl border border-slate-200/60 bg-slate-50 flex-shrink-0"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/images/placeholder.png";
-                        }}
+                        onError={handleImageError}
                       />
                       <div>
                         <p className="font-bold text-sm text-slate-900">{item.name}</p>
