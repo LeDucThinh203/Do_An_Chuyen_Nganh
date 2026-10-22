@@ -41,8 +41,8 @@ export default function Login({ setUser }) {
 
     try {
       const user = await api.login({ email, password });
-      if (user && user.id && user.token) {
-        Session.setUser(user.id, user.username, user.role, user.email, user.token);
+      if (user && user.id) {
+        Session.setUser(user);
         setUser(user);
         navigate(location.state?.returnTo || "/");
       } else {

@@ -13,6 +13,13 @@ RUN npm install
 # Copy application code
 COPY . .
 
+# Keep API traffic on the nginx same-origin proxy. Socket.IO connects directly
+# to the backend and uses short-lived tickets instead of the session cookie.
+ARG REACT_APP_API_URL=/api
+ARG REACT_APP_SOCKET_URL=http://localhost:3006
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_SOCKET_URL=$REACT_APP_SOCKET_URL
+
 # Build the application
 RUN npm run build
 

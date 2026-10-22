@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -14,18 +14,23 @@ import { ensureSupportChatSchema } from './services/supportChat/schema.js';
 import { ensureDemoAccounts } from './services/demoAccounts.js';
 import { initSupportSocket } from './services/supportChat/socketHub.js';
 import { closeCache, connectCache, getCacheStatus } from './services/cache.js';
+import { allowedOrigins, csrfProtection } from './middleware/csrf.js';
 
-dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
 // --- Middleware ---
 app.use(express.json());
 app.use(cors({
-  origin: '*',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS'));
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'X-CSRF-Token']
 }));
+app.use(csrfProtection);
 
 // --- Mount tất cả route ---
 app.use('/', uiRoutes);
@@ -62,16 +67,16 @@ const swaggerOptions = {
     servers: [{ url: SERVER_URL }],
     components: {
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Nhập JWT token vào đây (không cần thêm "Bearer ")'
+        cookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'coolshop_session',
+          description: 'JWT được lưu trong cookie HttpOnly sau khi đăng nhập'
         }
       }
     },
     security: [{
-      bearerAuth: []
+      cookieAuth: []
     }]
   },
   apis: [join(__dirname, 'routes/*.js')],

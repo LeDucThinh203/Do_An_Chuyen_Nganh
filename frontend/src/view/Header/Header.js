@@ -3,28 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 import { CART_UPDATED_EVENT, getCartItemCount } from "../../utils/cartStorage";
 
-export default function Header() {
-  const [user, setUser] = useState(null);
+export default function Header({ user = null, handleLogout = () => {} } = {}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [cartCount, setCartCount] = useState(getCartItemCount);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Cập nhật số lượng sản phẩm trong giỏ hàng
-  // Lấy user từ localStorage khi component mount
+  // Cập nhật số lượng sản phẩm trong giỏ hàng.
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    
     const handleStorageChange = (e) => {
       if (e.key === "cart") {
         setCartCount(getCartItemCount());
-      }
-      if (e.key === "user") {
-        setUser(e.newValue ? JSON.parse(e.newValue) : null);
       }
     };
     
@@ -51,11 +41,9 @@ export default function Header() {
 
   const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setUser(null);
+  const onLogout = async () => {
     setDropdownOpen(false);
+    await handleLogout();
     navigate("/login");
   };
 
@@ -209,7 +197,7 @@ export default function Header() {
                     <div className="my-1 border-t border-slate-100"></div>
 
                     <button
-                      onClick={handleLogout}
+                      onClick={onLogout}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition"
                     >
                       <span className="text-base">🚪</span>

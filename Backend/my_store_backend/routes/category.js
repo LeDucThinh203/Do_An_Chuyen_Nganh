@@ -48,7 +48,7 @@ router.get('/:id', categoryController.getCategoryById);
  *     summary: Tạo danh mục mới (Admin only)
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -77,7 +77,7 @@ router.post('/', authenticate, requireAdmin, categoryController.createCategory);
  *     summary: Cập nhật danh mục (Admin only)
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -112,7 +112,7 @@ router.put('/:id', authenticate, requireAdmin, categoryController.updateCategory
  *     summary: Xóa danh mục (Admin only)
  *     tags: [Category]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id

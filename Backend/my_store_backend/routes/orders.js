@@ -54,7 +54,7 @@ router.get('/', ordersController.getAllOrders);
  *     summary: Lấy đơn hàng của tài khoản đang đăng nhập theo trang
  *     tags: [Orders]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: query
  *         name: limit
@@ -144,7 +144,7 @@ router.post('/', ordersController.createOrder);
  *     summary: Cập nhật trạng thái đơn hàng (Admin only)
  *     tags: [Orders]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -180,7 +180,7 @@ router.put('/:id', authenticate, requireAdmin, ordersController.updateOrderStatu
  *     summary: Xóa đơn hàng (Admin only)
  *     tags: [Orders]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id

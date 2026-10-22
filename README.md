@@ -14,7 +14,7 @@ Website thương mại điện tử bán đồ bóng đá với tích hợp AI c
 
 - 🛒 **E-commerce đầy đủ**: Giỏ hàng, đặt hàng, thanh toán
 - 🤖 **AI Chatbot**: Tư vấn sản phẩm bằng Google Gemini
-- 🔐 **Authentication**: Đăng ký, đăng nhập, JWT tokens
+- 🔐 **Authentication**: JWT trong cookie HttpOnly, bảo vệ CSRF cho request thay đổi dữ liệu
 - 📦 **Quản lý sản phẩm**: CRUD products, categories, sizes
 - 💳 **Thanh toán**: Tích hợp VNPay
 - 📊 **Admin Dashboard**: Quản lý đơn hàng, sản phẩm

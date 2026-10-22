@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { createOrder, getAllProductSizes, createVNPayPaymentUrl } from "../../api";
 import { clearCart } from "../../utils/cartStorage";
+import Session from "../../Session/session";
 import { handleImageError, resolveImageUrl as resolveImage, resolveVnpayPaymentUrl } from "../../utils/imageUrl";
 
 export default function Confirmation() {
@@ -15,7 +16,7 @@ export default function Confirmation() {
 
   useEffect(() => {
     const storedOrder = JSON.parse(localStorage.getItem("last_order"));
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedUser = Session.isLoggedIn() ? Session.getUser() : null;
 
     if (!storedOrder) {
       navigate("/");

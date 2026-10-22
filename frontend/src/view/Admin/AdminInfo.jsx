@@ -126,7 +126,7 @@ export default function AdminInfo() {
           <div className="space-y-3 pt-2 text-sm">
             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
               <span className="text-slate-600">Loại xác thực:</span>
-              <span className="font-bold text-slate-900">JWT Token Bearer</span>
+              <span className="font-bold text-slate-900">JWT trong cookie HttpOnly</span>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
               <span className="text-slate-600">Mã hóa kết nối:</span>

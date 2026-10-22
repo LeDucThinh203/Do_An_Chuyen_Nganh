@@ -49,7 +49,7 @@ router.get('/storefront', productController.getStorefrontPage);
  *     summary: Lấy tất cả sản phẩm gồm cả đã ẩn (Admin only)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Danh sách sản phẩm đầy đủ
@@ -90,7 +90,7 @@ router.get('/:id', productController.getProductById);
  *     summary: Tạo sản phẩm mới (Admin only)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -125,7 +125,7 @@ router.post('/', authenticate, requireAdmin, productController.createProduct);
  *     summary: Cập nhật sản phẩm (Admin only)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -166,7 +166,7 @@ router.put('/:id', authenticate, requireAdmin, productController.updateProduct);
  *     summary: Xóa sản phẩm (Admin only)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -191,7 +191,7 @@ router.delete('/:id', authenticate, requireAdmin, productController.deleteProduc
  *     summary: Khôi phục sản phẩm đã ẩn (Admin only)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -216,7 +216,7 @@ router.patch('/:id/restore', authenticate, requireAdmin, productController.resto
  *     summary: Xóa cứng sản phẩm (chỉ cho sản phẩm chưa được mua)
  *     tags: [Product]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id

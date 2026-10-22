@@ -1,7 +1,7 @@
 // src/view/Product/ProductLoadMore.js
 import React, { lazy, Suspense, useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { getStorefrontPage, deleteProduct } from "../../api";
+import { getStorefrontPage, deleteProduct, logout as logoutApi } from "../../api";
 import { ProductGridSkeleton, SkeletonBlock } from "../common/Skeletons";
 import Session from "../../Session/session";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
@@ -184,8 +184,9 @@ export default function ProductLoadMore() {
     notifyCart(`Đã thêm ${product.name} · Size ${selectedSize} vào giỏ hàng.`);
   };
 
-  const handleLogout = () => {
-    Session.logout();
+  const handleLogout = async () => {
+    try { await logoutApi(); } catch (error) { console.error("Đăng xuất thất bại:", error); }
+    Session.clearUser();
     navigate("/login");
   };
 

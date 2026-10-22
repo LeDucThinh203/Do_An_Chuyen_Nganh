@@ -1,65 +1,88 @@
-/**
- * Session helper cho frontend (React/JS)
- * Sử dụng localStorage để lưu thông tin người dùng và JWT token
- */
+const AUTH_CHANGED_EVENT = 'coolshop:auth-changed';
+let currentUser = null;
+let authVersion = 0;
+
+// Remove credentials and cached identity from older localStorage-based builds.
+if (typeof window !== 'undefined') {
+  try {
+    window.localStorage.removeItem('token');
+    window.localStorage.removeItem('user');
+  } catch {
+    // Authentication does not depend on browser storage being available.
+  }
+}
+
+const notifyAuthChanged = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+  }
+};
+
 const Session = {
+  AUTH_CHANGED_EVENT,
+
   normalizeRole(role) {
-    return String(role || "").trim().toLowerCase();
+    return String(role || '').trim().toLowerCase();
   },
 
-  setUser(id, username, role = "user", email = "", token = "") {
-    const user = { id, username, role: Session.normalizeRole(role) || "user", email };
-    localStorage.setItem("user", JSON.stringify(user));
-    if (token) {
-      localStorage.setItem("token", token);
-    }
-  },
-
-  getToken() {
-    return localStorage.getItem("token");
-  },
-
-  setToken(token) {
-    localStorage.setItem("token", token);
+  setUser(user) {
+    if (!user || !user.id) return Session.clearUser();
+    currentUser = {
+      id: user.id,
+      username: user.username || '',
+      role: Session.normalizeRole(user.role) || 'user',
+      email: user.email || '',
+    };
+    authVersion += 1;
+    notifyAuthChanged();
+    return currentUser;
   },
 
   isLoggedIn() {
-    return localStorage.getItem("user") !== null && localStorage.getItem("token") !== null;
+    return Boolean(currentUser?.id);
   },
 
   isAdmin() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return Session.normalizeRole(user?.role) === "admin";
+    return Session.normalizeRole(currentUser?.role) === 'admin';
   },
 
   getRole() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return Session.normalizeRole(user?.role) || "guest";
+    return Session.normalizeRole(currentUser?.role) || 'guest';
   },
 
   hasRole(role) {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return Session.normalizeRole(user?.role) === Session.normalizeRole(role);
+    return Session.normalizeRole(currentUser?.role) === Session.normalizeRole(role);
   },
 
   getAccountId() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.id || null;
+    return currentUser?.id || null;
   },
 
   getEmail() {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.email || "";
+    return currentUser?.email || '';
   },
 
   getUser() {
-    return JSON.parse(localStorage.getItem("user") || "{}");
+    return currentUser || {};
+  },
+
+  getUserOrNull() {
+    return currentUser;
+  },
+
+  getVersion() {
+    return authVersion;
+  },
+
+  clearUser() {
+    currentUser = null;
+    authVersion += 1;
+    notifyAuthChanged();
   },
 
   logout() {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-  }
+    Session.clearUser();
+  },
 };
 
 export default Session;

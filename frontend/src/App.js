@@ -1,6 +1,7 @@
 import React, { lazy, Suspense, useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Session from "./Session/session";
+import { getCurrentUser, logout as logoutApi } from "./api";
 
 // Components
 import Header from "./view/Header/Header";
@@ -56,27 +57,52 @@ function ScrollToTop() {
 
 function AppContent() {
   const { pathname } = useLocation();
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [chatMode, setChatMode] = useState(() => localStorage.getItem("chat_mode") || "support");
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setUser(JSON.parse(localStorage.getItem("user")));
+    let active = true;
+    const initialAuthVersion = Session.getVersion();
+    const handleAuthChange = () => setUser(Session.getUserOrNull());
+    window.addEventListener(Session.AUTH_CHANGED_EVENT, handleAuthChange);
+
+    getCurrentUser()
+      .then((profile) => {
+        if (!active || Session.getVersion() !== initialAuthVersion) return;
+        if (profile) Session.setUser(profile);
+        else Session.clearUser();
+      })
+      .catch(() => {
+        if (active && Session.getVersion() === initialAuthVersion) Session.clearUser();
+      })
+      .finally(() => {
+        if (active) setAuthReady(true);
+      });
+
+    return () => {
+      active = false;
+      window.removeEventListener(Session.AUTH_CHANGED_EVENT, handleAuthChange);
     };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   useEffect(() => {
     localStorage.setItem("chat_mode", chatMode);
   }, [chatMode]);
 
-  const handleLogout = () => {
-    Session.logout();
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (error) {
+      console.error("Đăng xuất phía máy chủ thất bại:", error);
+    } finally {
+      Session.clearUser();
+      setUser(null);
+    }
   };
 
   const AdminRoute = ({ children }) => {
+    if (!authReady) return <RouteFallbackSkeleton />;
     if (!Session.isLoggedIn()) {
       return <Navigate to="/login" replace state={{ message: "Đăng nhập bằng tài khoản quản trị để tiếp tục.", returnTo: pathname }} />;
     }
@@ -85,6 +111,7 @@ function AppContent() {
   };
 
   const UserRoute = ({ children }) => {
+    if (!authReady) return <RouteFallbackSkeleton />;
     if (!Session.isLoggedIn()) {
       return <Navigate to="/login" replace state={{ message: "Đăng nhập để xem hồ sơ và đơn hàng.", returnTo: "/user" }} />;
     }
@@ -93,6 +120,7 @@ function AppContent() {
   };
 
   const CheckoutRoute = ({ children }) => {
+    if (!authReady) return <RouteFallbackSkeleton />;
     if (!Session.isLoggedIn()) {
       return <Navigate to="/login" replace state={{ message: "Đăng nhập để tiếp tục thanh toán.", returnTo: "/checkout" }} />;
     }
@@ -100,6 +128,7 @@ function AppContent() {
   };
 
   const ConfirmationRoute = ({ children }) => {
+    if (!authReady) return <RouteFallbackSkeleton />;
     if (!Session.isLoggedIn()) {
       return <Navigate to="/login" replace state={{ message: "Đăng nhập để xem xác nhận đơn hàng.", returnTo: "/order-confirmation" }} />;
     }

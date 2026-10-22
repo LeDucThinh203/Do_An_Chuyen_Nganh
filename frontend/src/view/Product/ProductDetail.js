@@ -13,6 +13,7 @@ import {
 import { ProductDetailSkeleton } from "../common/Skeletons";
 import { readCart, writeCart } from "../../utils/cartStorage";
 import { handleImageError, resolveImageUrl as resolveImage } from "../../utils/imageUrl";
+import Session from "../../Session/session";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -37,9 +38,15 @@ export default function ProductDetail() {
   const [loadingMoreRatings, setLoadingMoreRatings] = useState(false);
   const [userRating, setUserRating] = useState({ rating_value: 5, comment: "" });
   const [eligibleOrderDetailId, setEligibleOrderDetailId] = useState(null);
-  const [currentUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+  const [currentUser, setCurrentUser] = useState(() => Session.getUserOrNull());
   const isUser = currentUser?.role === "user";
   const isAdmin = currentUser?.role === "admin";
+
+  useEffect(() => {
+    const syncUser = () => setCurrentUser(Session.getUserOrNull());
+    window.addEventListener(Session.AUTH_CHANGED_EVENT, syncUser);
+    return () => window.removeEventListener(Session.AUTH_CHANGED_EVENT, syncUser);
+  }, []);
 
   const notifyAction = (message, tone = "success") => {
     window.clearTimeout(actionNoticeTimer.current);
@@ -90,7 +97,7 @@ export default function ProductDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, currentUser]);
+  }, [id, currentUser, isAdmin]);
 
   const loadMoreRatings = async () => {
     if (!ratingsCursor || loadingMoreRatings) return;

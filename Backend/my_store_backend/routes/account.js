@@ -1,8 +1,14 @@
 import express from 'express';
 import * as accountController from '../controllers/accountController.js';
 import { authenticate, requireAdmin, requireSelfOrAdmin } from '../middleware/auth.js';
+import { issueCsrfToken } from '../middleware/csrf.js';
 
 const router = express.Router();
+
+router.get('/csrf', issueCsrfToken);
+router.get('/me', authenticate, accountController.getCurrentUser);
+router.post('/logout', accountController.logout);
+router.post('/socket-ticket', authenticate, accountController.createSupportSocketTicket);
 
 /**
  * @swagger
@@ -18,7 +24,7 @@ const router = express.Router();
  *     summary: Lấy tất cả tài khoản
  *     tags: [Account]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Danh sách tài khoản
@@ -36,7 +42,7 @@ router.get('/', authenticate, requireAdmin, accountController.getAllAccounts);
  *     summary: Lấy tài khoản theo ID
  *     tags: [Account]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -139,7 +145,7 @@ router.post('/', accountController.register);
  *     summary: Cập nhật tài khoản
  *     tags: [Account]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -178,7 +184,7 @@ router.put('/:id', authenticate, requireSelfOrAdmin, accountController.updateAcc
  *     summary: Xóa tài khoản
  *     tags: [Account]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id

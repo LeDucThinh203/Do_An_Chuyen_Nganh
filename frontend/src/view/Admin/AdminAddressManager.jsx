@@ -5,7 +5,7 @@ import { AdminPanelSkeleton } from "../common/Skeletons";
 
 export default function AdminAddressManager() {
   const user = useMemo(
-    () => (Session.isLoggedIn() ? JSON.parse(localStorage.getItem("user")) : null),
+    () => (Session.isLoggedIn() ? Session.getUser() : null),
     []
   );
 

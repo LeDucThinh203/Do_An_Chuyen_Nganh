@@ -1,13 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Session from '../../Session/session';
-import { clearMyAiHistory } from '../../api';
+import { aiChat, clearMyAiHistory } from '../../api';
 import { handleImageError, resolveImageUrl as resolveImage } from '../../utils/imageUrl';
 import './ChatWidget.css';
-
-const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? ''
-  : (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
-const AI_CHAT_API_URL = `${API_BASE_URL}/ai/chat`;
 
 const ChatWidget = ({ onModeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,24 +102,12 @@ const ChatWidget = ({ onModeChange }) => {
       const userId = user?.id || null;
 
       // Call AI API via configurable backend URL for local/dev/prod environments.
-      const response = await fetch(AI_CHAT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: inputMessage,
-          userId: userId,
-          sessionId: sessionId,
-          fast: true // Enable fast mode for better response time
-        })
+      const data = await aiChat({
+        message: inputMessage,
+        userId,
+        sessionId,
+        fast: true,
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
       console.log('API Response:', data); // Debug log
 
       const botMessage = {

@@ -85,6 +85,7 @@ Nhập vào Render Dashboard (Environment tab):
 - [ ] `DB_IDLE_TIMEOUT_MS` = `30000`
 - [ ] `DB_CONN_TIMEOUT_MS` = `15000`
 - [ ] `JWT_SECRET` = `<random-32-chars>`
+- [ ] `FRONTEND_ORIGINS` = exact frontend origin, for example `https://my-store-frontend.onrender.com`
 - [ ] `GEMINI_API_KEY` = `<your-gemini-key>`
 
 - [ ] Click **Create Web Service** / **Save Changes**
@@ -107,7 +108,7 @@ Nhập vào Render Dashboard (Environment tab):
 
 ### 🔗 Frontend Environment Variables
 - [ ] `REACT_APP_API_URL` = `https://your-backend.onrender.com`
-  - ⚠️ **Thay bằng Backend URL thực tế từ bước trước!**
+- [ ] `REACT_APP_SOCKET_URL` = cùng backend URL
 
 - [ ] Click **Create Static Site**
 - [ ] Wait for build (2-3 phút)

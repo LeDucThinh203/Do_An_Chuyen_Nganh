@@ -20,13 +20,12 @@ Mô hình khuyến nghị:
 
 ## 3) Cấu hình frontend cho production
 
-Trong Netlify, bạn sẽ set biến môi trường:
+Trong Netlify, cấu hình biến môi trường:
 - Key: `REACT_APP_API_URL`
-- Value: `https://your-backend-domain`
+- Value: `/api`
 
-Lưu ý:
-- Không thêm dấu `/` cuối URL (ví dụ đúng: `https://abc.onrender.com`)
-- Frontend sẽ gọi API kiểu: `https://abc.onrender.com/product`, `.../account/login`, v.v.
+`netlify.toml` chuyển tiếp `/api/*` tới backend. Cách này giữ cookie phiên cùng origin với frontend.
+Thêm domain Netlify vào `FRONTEND_ORIGINS` trên backend.
 
 ## 4) File cấu hình đã có sẵn
 
@@ -46,7 +45,7 @@ Dự án đã có file `netlify.toml` ở root để Netlify build đúng thư m
    - Build command: `npm run build`
    - Publish directory: `frontend/build`
 5. Mở phần Environment variables, thêm:
-   - `REACT_APP_API_URL=https://your-backend-domain`
+   - `REACT_APP_API_URL=/api`
 6. Bấm Deploy site.
 
 ## 6) Gắn domain và HTTPS
@@ -63,7 +62,7 @@ Dự án đã có file `netlify.toml` ở root để Netlify build đúng thư m
    - Đăng nhập
    - Tạo đơn hàng
 3. Nếu thấy lỗi CORS hoặc Network Error:
-   - Kiểm tra `REACT_APP_API_URL`
+   - Kiểm tra `REACT_APP_API_URL=/api` và proxy trong `netlify.toml`
    - Kiểm tra backend còn hoạt động
    - Kiểm tra cấu hình CORS backend
 

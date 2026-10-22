@@ -62,7 +62,7 @@ router.get('/history', history);
  *     summary: Xóa toàn bộ lịch sử chat AI của user hiện tại
  *     tags: [AI]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Đã xóa lịch sử

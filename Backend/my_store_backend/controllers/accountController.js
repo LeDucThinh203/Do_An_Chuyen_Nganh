@@ -2,7 +2,12 @@ import * as accountRepo from '../repositories/accountRepository.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import { generateToken } from '../middleware/auth.js';
+import {
+  clearAuthCookie,
+  generateSupportSocketTicket,
+  generateToken,
+  setAuthCookie,
+} from '../middleware/auth.js';
 import { decodeCursor, parseLimit } from '../utils/pagination.js';
 
 const getEmailAuthConfig = () => {
@@ -174,7 +179,7 @@ const sendMailWithFallback = async ({ emailAuth, mailOptions, context }) => {
 
 /** ================= Đăng ký tài khoản ================= */
 export const register = async (req, res) => {
-  const { email, username, password, role } = req.body;
+  const { email, username, password } = req.body;
   if (!email || !username || !password)
     return res.status(400).json({ error: 'Email, username và password là bắt buộc' });
 
@@ -183,18 +188,15 @@ export const register = async (req, res) => {
     if (existing) return res.status(400).json({ error: 'Email đã tồn tại' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const id = await accountRepo.createAccount({ email, username, password: hashedPassword, role: role || 'user' });
-
-    // Tạo JWT token
-    const userRole = role || 'user';
-    const token = generateToken({ id, email, username, role: userRole });
+    // Public sign-up must never accept a privilege level from the browser.
+    const userRole = 'user';
+    const id = await accountRepo.createAccount({ email, username, password: hashedPassword, role: userRole });
 
     res.status(201).json({ 
       id, 
       email, 
       username, 
-      role: userRole,
-      token 
+      role: userRole
     });
   } catch (err) {
     console.error(err);
@@ -223,17 +225,39 @@ export const login = async (req, res) => {
       role: account.role
     });
 
+    setAuthCookie(res, token);
+    res.set('Cache-Control', 'no-store');
     res.json({
       id: account.id,
       username: account.username,
       role: account.role,
-      email: account.email,
-      token
+      email: account.email
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+};
+
+export const getCurrentUser = (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  return res.json({
+    id: req.user.id,
+    username: req.user.username,
+    role: req.user.role,
+    email: req.user.email,
+  });
+};
+
+export const logout = (req, res) => {
+  clearAuthCookie(res);
+  res.set('Cache-Control', 'no-store');
+  return res.status(204).end();
+};
+
+export const createSupportSocketTicket = (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  return res.json({ ticket: generateSupportSocketTicket(req.user) });
 };
 
 /** ================= Lấy tất cả tài khoản ================= */

@@ -47,6 +47,8 @@ services:
         value: "123456"
       - key: JWT_SECRET
         generateValue: true
+      - key: FRONTEND_ORIGINS
+        value: https://webshop123.netlify.app,https://my-store-frontend.onrender.com
       - key: GEMINI_API_KEY
         sync: false
 
@@ -74,6 +76,8 @@ services:
         destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
+        value: https://my-store-backend-4fuu.onrender.com
+      - key: REACT_APP_SOCKET_URL
         value: https://my-store-backend-4fuu.onrender.com
       - key: REACT_APP_DEMO_ADMIN_EMAIL
         value: admin@admin.com

@@ -192,22 +192,22 @@
 └────┬────────────────────────────────┘
      │
      │ 2. Response
-     │    { token: "eyJhbGc..." }
+     │    Set-Cookie: coolshop_session (HttpOnly, Secure)
      │
      ▼
 ┌──────────┐
-│  Client  │ Stores token in Session
+│  Client  │ Keeps only the profile in memory; JWT stays in HttpOnly cookie
 └────┬─────┘
      │
      │ 3. Authenticated Request
      │    GET /api/orders
-     │    Headers: { Authorization: "Bearer eyJhbGc..." }
+     │    Cookie sent automatically; writes also include X-CSRF-Token
      │
      ▼
 ┌─────────────────────────────────────┐
 │   Backend Middleware                │
 │                                     │
-│   1. Extract token from header      │
+│   1. Extract JWT from HttpOnly cookie│
 │   2. Verify JWT signature           │
 │   3. Check expiry                   │
 │   4. Decode user info               │

@@ -2,6 +2,7 @@
 import React, { lazy, Suspense, useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Session from "../../Session/session";
+import { logout as logoutApi } from "../../api";
 import ThemeToggleBtn from "../common/ThemeToggleBtn";
 
 const UserInfo = lazy(() => import("./UserInfo"));
@@ -28,8 +29,9 @@ export default function UserDashboard() {
     }
   }, [location.state]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Bạn có chắc chắn muốn đăng xuất tài khoản?")) {
+      try { await logoutApi(); } catch (error) { console.error("Đăng xuất thất bại:", error); }
       Session.clearUser();
       navigate("/login");
     }

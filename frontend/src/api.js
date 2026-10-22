@@ -1,15 +1,13 @@
 // ================= Base =================
 import Session from './Session/session';
 
-// API Base URL - sử dụng biến môi trường hoặc empty string để dùng proxy
-// Khi REACT_APP_API_URL trống, requests sẽ đi qua proxy trong package.json
+// Production requests use a same-origin reverse proxy so the HttpOnly session
+// cookie remains first-party. CRA proxies root paths to localhost in development.
+const configuredApiUrl = (process.env.REACT_APP_API_URL || '').trim().replace(/\/$/, '');
+const isNetlifyHosted = typeof window !== 'undefined' && window.location.hostname.endsWith('.netlify.app');
 const API_BASE_URL = process.env.NODE_ENV === 'development'
-  ? ''
-  : (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
-
-if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
-  console.warn("[API] REACT_APP_API_URL is empty in production. Requests may hit the frontend domain instead of backend API.");
-}
+  ? (configuredApiUrl.startsWith('http') ? configuredApiUrl : '')
+  : (isNetlifyHosted ? '/api' : (configuredApiUrl || '/api'));
 
 const safeJson = async (res) => {
   try {
@@ -19,20 +17,56 @@ const safeJson = async (res) => {
   }
 };
 
-/**
- * Helper function để tạo headers với JWT token
- */
-const getAuthHeaders = () => {
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  
-  const token = Session.getToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+const getApiHeaders = () => ({ "Content-Type": "application/json" });
+
+let csrfRequest = null;
+let cachedCsrfToken = '';
+
+const readCsrfCookie = () => {
+  if (typeof document === 'undefined') return '';
+  const item = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith('coolshop_csrf='));
+  if (!item) return cachedCsrfToken;
+  try {
+    return decodeURIComponent(item.slice('coolshop_csrf='.length));
+  } catch {
+    return item.slice('coolshop_csrf='.length);
   }
-  
-  return headers;
+};
+
+const getCsrfToken = async () => {
+  const current = readCsrfCookie();
+  if (current) return current;
+  if (!csrfRequest) {
+    csrfRequest = (async () => {
+      const response = await window.fetch(`${API_BASE_URL}/account/csrf`, { credentials: 'include' });
+      const data = await safeJson(response);
+      if (!response.ok || !data.csrfToken) throw new Error('Không thể khởi tạo bảo vệ CSRF. Hãy tải lại trang.');
+      cachedCsrfToken = data.csrfToken;
+      return data.csrfToken;
+    })().finally(() => {
+      csrfRequest = null;
+    });
+  }
+  return csrfRequest;
+};
+
+const apiFetch = async (input, init = {}) => {
+  const method = String(init.method || 'GET').toUpperCase();
+  const headers = new Headers(init.headers || {});
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    headers.set('X-CSRF-Token', await getCsrfToken());
+  }
+
+  const response = await window.fetch(input, {
+    ...init,
+    headers,
+    credentials: 'include',
+  });
+
+  if (response.status === 401 && Session.isLoggedIn() && !String(input).includes('/account/me')) {
+    Session.clearUser();
+  }
+  return response;
 };
 
 const getErrorMessage = async (res, fallbackMessage) => {
@@ -44,7 +78,7 @@ const getErrorMessage = async (res, fallbackMessage) => {
 const PRODUCT_API_URL = `${API_BASE_URL}/product`;
 
 export const getAllProducts = async () => {
-  const res = await fetch(PRODUCT_API_URL);
+  const res = await apiFetch(PRODUCT_API_URL);
   if (!res.ok) throw new Error("Lấy sản phẩm thất bại");
   return await safeJson(res);
 };
@@ -54,7 +88,7 @@ export const getProductsPage = async ({ limit = 25, cursor = null, categoryId = 
   if (cursor) params.set("cursor", cursor);
   if (categoryId != null) params.set("category_id", String(categoryId));
   const endpoint = admin ? `${PRODUCT_API_URL}/admin/all` : PRODUCT_API_URL;
-  const res = await fetch(`${endpoint}?${params.toString()}`, admin ? { headers: getAuthHeaders() } : undefined);
+  const res = await apiFetch(`${endpoint}?${params.toString()}`, admin ? { headers: getApiHeaders() } : undefined);
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load products"));
   return await safeJson(res);
 };
@@ -63,7 +97,7 @@ export const getStorefrontPage = async ({ limit = 24, cursor = null, categoryId 
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
   if (categoryId != null) params.set("category_id", String(categoryId));
-  const res = await fetch(`${PRODUCT_API_URL}/storefront?${params.toString()}`);
+  const res = await apiFetch(`${PRODUCT_API_URL}/storefront?${params.toString()}`);
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load storefront"));
   return await safeJson(res);
 };
@@ -71,21 +105,21 @@ export const getStorefrontPage = async ({ limit = 24, cursor = null, categoryId 
 export const getProductRatingsPage = async (productId, { limit = 20, cursor = null } = {}) => {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
-  const res = await fetch(`${PRODUCT_API_URL}/${productId}/ratings?${params.toString()}`);
+  const res = await apiFetch(`${PRODUCT_API_URL}/${productId}/ratings?${params.toString()}`);
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load product reviews"));
   return await safeJson(res);
 };
 
 export const getProductRatingEligibility = async (productId) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${productId}/rating-eligibility`, { headers: getAuthHeaders() });
+  const res = await apiFetch(`${PRODUCT_API_URL}/${productId}/rating-eligibility`, { headers: getApiHeaders() });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to check review eligibility"));
   return await safeJson(res);
 };
 
 export const getAllProductsAdmin = async () => {
   try {
-    const res = await fetch(`${PRODUCT_API_URL}/admin/all`, {
-      headers: getAuthHeaders(),
+    const res = await apiFetch(`${PRODUCT_API_URL}/admin/all`, {
+      headers: getApiHeaders(),
     });
 
     if (res.ok) return await safeJson(res);
@@ -106,21 +140,21 @@ export const getAllProductsAdmin = async () => {
 };
 
 export const getProductById = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}`);
+  const res = await apiFetch(`${PRODUCT_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy sản phẩm thất bại");
   return await safeJson(res);
 };
 
 export const getProductDetails = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}/details`);
+  const res = await apiFetch(`${PRODUCT_API_URL}/${id}/details`);
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load product details"));
   return await safeJson(res);
 };
 
 export const createProduct = async (data) => {
-  const res = await fetch(PRODUCT_API_URL, {
+  const res = await apiFetch(PRODUCT_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -131,9 +165,9 @@ export const createProduct = async (data) => {
 };
 
 export const updateProduct = async (id, data) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}`, {
+  const res = await apiFetch(`${PRODUCT_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật sản phẩm thất bại");
@@ -141,18 +175,18 @@ export const updateProduct = async (id, data) => {
 };
 
 export const deleteProduct = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}`, { 
+  const res = await apiFetch(`${PRODUCT_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Ẩn sản phẩm thất bại"));
   return true;
 };
 
 export const hardDeleteProduct = async (id) => {
-  const res = await fetch(`${PRODUCT_API_URL}/${id}/hard-delete`, {
+  const res = await apiFetch(`${PRODUCT_API_URL}/${id}/hard-delete`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa sản phẩm thất bại"));
   return true;
@@ -160,9 +194,9 @@ export const hardDeleteProduct = async (id) => {
 
 export const restoreProduct = async (id) => {
   try {
-    const res = await fetch(`${PRODUCT_API_URL}/${id}/restore`, {
+    const res = await apiFetch(`${PRODUCT_API_URL}/${id}/restore`, {
       method: "PATCH",
-      headers: getAuthHeaders(),
+      headers: getApiHeaders(),
     });
     if (!res.ok) {
       const errorMessage = await getErrorMessage(res, "Khôi phục sản phẩm thất bại");
@@ -182,21 +216,21 @@ export const restoreProduct = async (id) => {
 const CATEGORY_API_URL = `${API_BASE_URL}/category`;
 
 export const getAllCategories = async () => {
-  const res = await fetch(CATEGORY_API_URL);
+  const res = await apiFetch(CATEGORY_API_URL);
   if (!res.ok) throw new Error("Lấy danh mục thất bại");
   return await safeJson(res);
 };
 
 export const getCategoryById = async (id) => {
-  const res = await fetch(`${CATEGORY_API_URL}/${id}`);
+  const res = await apiFetch(`${CATEGORY_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy danh mục thất bại");
   return await safeJson(res);
 };
 
 export const createCategory = async (data) => {
-  const res = await fetch(CATEGORY_API_URL, {
+  const res = await apiFetch(CATEGORY_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo danh mục thất bại");
@@ -204,9 +238,9 @@ export const createCategory = async (data) => {
 };
 
 export const updateCategory = async (id, data) => {
-  const res = await fetch(`${CATEGORY_API_URL}/${id}`, {
+  const res = await apiFetch(`${CATEGORY_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật danh mục thất bại");
@@ -214,9 +248,9 @@ export const updateCategory = async (id, data) => {
 };
 
 export const deleteCategory = async (id) => {
-  const res = await fetch(`${CATEGORY_API_URL}/${id}`, { 
+  const res = await apiFetch(`${CATEGORY_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Xóa danh mục thất bại");
   return true;
@@ -226,21 +260,21 @@ export const deleteCategory = async (id) => {
 const SIZE_API_URL = `${API_BASE_URL}/sizes`;
 
 export const getAllSizes = async () => {
-  const res = await fetch(SIZE_API_URL);
+  const res = await apiFetch(SIZE_API_URL);
   if (!res.ok) throw new Error("Lấy size thất bại");
   return await safeJson(res);
 };
 
 export const getSizeById = async (id) => {
-  const res = await fetch(`${SIZE_API_URL}/${id}`);
+  const res = await apiFetch(`${SIZE_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy size thất bại");
   return await safeJson(res);
 };
 
 export const createSize = async (data) => {
-  const res = await fetch(SIZE_API_URL, {
+  const res = await apiFetch(SIZE_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Tạo size thất bại"));
@@ -248,9 +282,9 @@ export const createSize = async (data) => {
 };
 
 export const updateSize = async (id, data) => {
-  const res = await fetch(`${SIZE_API_URL}/${id}`, {
+  const res = await apiFetch(`${SIZE_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Cập nhật size thất bại"));
@@ -258,9 +292,9 @@ export const updateSize = async (id, data) => {
 };
 
 export const deleteSize = async (id) => {
-  const res = await fetch(`${SIZE_API_URL}/${id}`, { 
+  const res = await apiFetch(`${SIZE_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa size thất bại"));
   return true;
@@ -270,7 +304,7 @@ export const deleteSize = async (id) => {
 const ACCOUNT_API_URL = `${API_BASE_URL}/account`;
 
 export const login = async ({ email, password }) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/login`, {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
@@ -280,8 +314,31 @@ export const login = async ({ email, password }) => {
   return data;
 };
 
+export const getCurrentUser = async () => {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/me`);
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Không thể khôi phục phiên đăng nhập'));
+  return await safeJson(res);
+};
+
+export const logout = async () => {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/logout`, { method: 'POST' });
+  if (!res.ok && res.status !== 401) {
+    throw new Error(await getErrorMessage(res, 'Đăng xuất thất bại'));
+  }
+  Session.clearUser();
+  return true;
+};
+
+export const getSupportSocketTicket = async () => {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/socket-ticket`, { method: 'POST' });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(await getErrorMessage(res, 'Không thể xác thực kết nối hỗ trợ'));
+  return await safeJson(res);
+};
+
 export const register = async ({ email, username, password, role = "user" }) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/register`, {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, username, password, role }),
@@ -292,8 +349,8 @@ export const register = async ({ email, username, password, role = "user" }) => 
 };
 
 export const getAllAccounts = async () => {
-  const res = await fetch(ACCOUNT_API_URL, {
-    headers: getAuthHeaders()
+  const res = await apiFetch(ACCOUNT_API_URL, {
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Lấy danh sách tài khoản thất bại");
   return await safeJson(res);
@@ -303,23 +360,23 @@ export const getAccountsPage = async ({ limit = 30, cursor = null, query = "" } 
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
   if (query.trim()) params.set("q", query.trim());
-  const res = await fetch(`${ACCOUNT_API_URL}?${params.toString()}`, { headers: getAuthHeaders() });
+  const res = await apiFetch(`${ACCOUNT_API_URL}?${params.toString()}`, { headers: getApiHeaders() });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load accounts"));
   return await safeJson(res);
 };
 
 export const getAccountById = async (id) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, {
-    headers: getAuthHeaders()
+  const res = await apiFetch(`${ACCOUNT_API_URL}/${id}`, {
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Lấy thông tin tài khoản thất bại");
   return await safeJson(res);
 };
 
 export const updateAccount = async (id, data) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật tài khoản thất bại");
@@ -327,16 +384,16 @@ export const updateAccount = async (id, data) => {
 };
 
 export const deleteAccount = async (id) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/${id}`, { 
+  const res = await apiFetch(`${ACCOUNT_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Xóa tài khoản thất bại");
   return true;
 };
 
 export const forgotPassword = async (email) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/forgot-password`, {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -347,7 +404,7 @@ export const forgotPassword = async (email) => {
 };
 
 export const resetPassword = async (token, newPassword) => {
-  const res = await fetch(`${ACCOUNT_API_URL}/reset-password/${token}`, {
+  const res = await apiFetch(`${ACCOUNT_API_URL}/reset-password/${token}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ newPassword }),
@@ -361,27 +418,27 @@ export const resetPassword = async (token, newPassword) => {
 const ADDRESS_API_URL = `${API_BASE_URL}/address`;
 
 export const getAllAddresses = async () => {
-  const res = await fetch(ADDRESS_API_URL);
+  const res = await apiFetch(ADDRESS_API_URL);
   if (!res.ok) throw new Error("Lấy danh sách địa chỉ thất bại");
   return await safeJson(res);
 };
 
 export const getMyAddresses = async () => {
-  const res = await fetch(`${ADDRESS_API_URL}/mine`, { headers: getAuthHeaders() });
+  const res = await apiFetch(`${ADDRESS_API_URL}/mine`, { headers: getApiHeaders() });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load your addresses"));
   return await safeJson(res);
 };
 
 export const getAddressById = async (id) => {
-  const res = await fetch(`${ADDRESS_API_URL}/${id}`);
+  const res = await apiFetch(`${ADDRESS_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy địa chỉ thất bại");
   return await safeJson(res);
 };
 
 export const createAddress = async (data) => {
-  const res = await fetch(ADDRESS_API_URL, {
+  const res = await apiFetch(ADDRESS_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo địa chỉ thất bại");
@@ -389,9 +446,9 @@ export const createAddress = async (data) => {
 };
 
 export const updateAddress = async (id, data) => {
-  const res = await fetch(`${ADDRESS_API_URL}/${id}`, {
+  const res = await apiFetch(`${ADDRESS_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật địa chỉ thất bại");
@@ -399,9 +456,9 @@ export const updateAddress = async (id, data) => {
 };
 
 export const deleteAddress = async (id) => {
-  const res = await fetch(`${ADDRESS_API_URL}/${id}`, { 
+  const res = await apiFetch(`${ADDRESS_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Xóa địa chỉ thất bại");
   return true;
@@ -412,7 +469,7 @@ export const deleteAddress = async (id) => {
 const AI_API_URL = `${API_BASE_URL}/ai`;
 
 export const aiChat = async ({ message, userId = null, sessionId = null, topK = 5, fast = false }) => {
-  const res = await fetch(`${AI_API_URL}/chat`, {
+  const res = await apiFetch(`${AI_API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, userId, sessionId, topK, fast })
@@ -425,15 +482,15 @@ export const aiChat = async ({ message, userId = null, sessionId = null, topK = 
 };
 
 export const aiHistory = async (sessionId) => {
-  const res = await fetch(`${AI_API_URL}/history?sessionId=${encodeURIComponent(sessionId)}`);
+  const res = await apiFetch(`${AI_API_URL}/history?sessionId=${encodeURIComponent(sessionId)}`);
   if (!res.ok) throw new Error('Lấy lịch sử chat thất bại');
   return await safeJson(res);
 };
 
 export const clearMyAiHistory = async () => {
-  const res = await fetch(`${AI_API_URL}/history/me`, {
+  const res = await apiFetch(`${AI_API_URL}/history/me`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
   });
   if (!res.ok) {
     const data = await safeJson(res);
@@ -453,15 +510,15 @@ export const getAllProductSizes = async (productIds = null) => {
   } else if (productIds != null) {
     endpoint = `${PRODUCT_SIZE_API_URL}?product_id=${encodeURIComponent(productIds)}`;
   }
-  const res = await fetch(endpoint);
+  const res = await apiFetch(endpoint);
   if (!res.ok) throw new Error("Lấy product sizes thất bại");
   return await safeJson(res);
 };
 
 export const createProductSize = async (data) => {
-  const res = await fetch(PRODUCT_SIZE_API_URL, {
+  const res = await apiFetch(PRODUCT_SIZE_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Tạo product size thất bại"));
@@ -469,9 +526,9 @@ export const createProductSize = async (data) => {
 };
 
 export const updateProductSize = async (id, data) => {
-  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, {
+  const res = await apiFetch(`${PRODUCT_SIZE_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Cập nhật product size thất bại"));
@@ -479,9 +536,9 @@ export const updateProductSize = async (id, data) => {
 };
 
 export const deleteProductSize = async (id) => {
-  const res = await fetch(`${PRODUCT_SIZE_API_URL}/${id}`, { 
+  const res = await apiFetch(`${PRODUCT_SIZE_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Xóa product size thất bại"));
   return true;
@@ -492,15 +549,15 @@ const ORDER_API_URL = `${API_BASE_URL}/orders`;
 
 export const createOrder = async (data) => {
   console.log("📤 createOrder API call with data:", data);
-  
-  const res = await fetch(ORDER_API_URL, {
+
+  const res = await apiFetch(ORDER_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  
+
   console.log("📥 createOrder response status:", res.status, res.statusText);
-  
+
   if (!res.ok) {
     let errorData;
     try {
@@ -513,14 +570,14 @@ export const createOrder = async (data) => {
     }
     throw new Error(errorData.error || errorData.message || "Tạo đơn hàng thất bại");
   }
-  
+
   const result = await safeJson(res);
   console.log("✅ createOrder success:", result);
   return result;
 };
 
 export const getAllOrders = async () => {
-  const res = await fetch(ORDER_API_URL);
+  const res = await apiFetch(ORDER_API_URL);
   if (!res.ok) throw new Error("Lấy danh sách đơn hàng thất bại");
   return await safeJson(res);
 };
@@ -530,7 +587,7 @@ export const getOrdersPage = async ({ limit = 25, cursor = null, from = null, to
   if (cursor) params.set("cursor", cursor);
   if (from) params.set("from", from);
   if (to) params.set("to", to);
-  const res = await fetch(`${ORDER_API_URL}?${params.toString()}`, { headers: getAuthHeaders() });
+  const res = await apiFetch(`${ORDER_API_URL}?${params.toString()}`, { headers: getApiHeaders() });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load orders"));
   return await safeJson(res);
 };
@@ -538,21 +595,21 @@ export const getOrdersPage = async ({ limit = 25, cursor = null, from = null, to
 export const getMyOrdersPage = async ({ limit = 25, cursor = null } = {}) => {
   const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) params.set("cursor", cursor);
-  const res = await fetch(`${ORDER_API_URL}/mine?${params.toString()}`, { headers: getAuthHeaders() });
+  const res = await apiFetch(`${ORDER_API_URL}/mine?${params.toString()}`, { headers: getApiHeaders() });
   if (!res.ok) throw new Error(await getErrorMessage(res, "Failed to load your orders"));
   return await safeJson(res);
 };
 
 export const getOrderById = async (id) => {
-  const res = await fetch(`${ORDER_API_URL}/${id}`);
+  const res = await apiFetch(`${ORDER_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy thông tin đơn hàng thất bại");
   return await safeJson(res);
 };
 
 export const updateOrderStatus = async (id, data) => {
-  const res = await fetch(`${ORDER_API_URL}/${id}`, {
+  const res = await apiFetch(`${ORDER_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật trạng thái đơn hàng thất bại");
@@ -563,29 +620,29 @@ export const updateOrderStatus = async (id, data) => {
 export const deleteOrder = async (id) => {
   try {
     console.log(`🔄 Bắt đầu xóa đơn hàng ID: ${id}`);
-    
+
     // Bước 1: Lấy thông tin đơn hàng để có danh sách order_details
     console.log(`📥 Lấy thông tin đơn hàng ${id}...`);
     const order = await getOrderById(id);
-    
+
     if (!order) {
       throw new Error("Đơn hàng không tồn tại");
     }
-    
+
     console.log(`📋 Đơn hàng có ${order.order_details?.length || 0} chi tiết`);
 
     // Bước 2: Xóa tất cả order_details của đơn hàng này
     if (order.order_details && order.order_details.length > 0) {
       console.log(`🗑️ Đang xóa ${order.order_details.length} chi tiết đơn hàng...`);
-      
+
       for (const detail of order.order_details) {
         try {
           // Xóa từng order_detail
-          const deleteDetailRes = await fetch(`${ORDER_DETAILS_API_URL}/${detail.order_detail_id}`, {
+          const deleteDetailRes = await apiFetch(`${ORDER_DETAILS_API_URL}/${detail.order_detail_id}`, {
             method: "DELETE",
-            headers: getAuthHeaders()
+            headers: getApiHeaders()
           });
-          
+
           if (!deleteDetailRes.ok) {
             console.warn(`⚠️ Không thể xóa order_detail ${detail.order_detail_id}`);
           } else {
@@ -599,13 +656,13 @@ export const deleteOrder = async (id) => {
 
     // Bước 3: Xóa đơn hàng chính
     console.log(`🗑️ Đang xóa đơn hàng chính ${id}...`);
-    const deleteOrderRes = await fetch(`${ORDER_API_URL}/${id}`, {
+    const deleteOrderRes = await apiFetch(`${ORDER_API_URL}/${id}`, {
       method: "DELETE",
-      headers: getAuthHeaders()
+      headers: getApiHeaders()
     });
-    
+
     console.log(`📊 Response status: ${deleteOrderRes.status} ${deleteOrderRes.statusText}`);
-    
+
     if (!deleteOrderRes.ok) {
       let errorData = {};
       try {
@@ -613,7 +670,7 @@ export const deleteOrder = async (id) => {
       } catch (jsonError) {
         // Ignore JSON parse error
       }
-      
+
       if (deleteOrderRes.status === 404) {
         throw new Error("Đơn hàng không tồn tại");
       } else if (deleteOrderRes.status === 500) {
@@ -622,10 +679,10 @@ export const deleteOrder = async (id) => {
         throw new Error(errorData.error || `Xóa đơn hàng thất bại (${deleteOrderRes.status})`);
       }
     }
-    
+
     console.log('✅ Xóa đơn hàng thành công');
     return true;
-    
+
   } catch (error) {
     console.error('❌ Lỗi trong hàm deleteOrder:', error);
     throw error;
@@ -636,21 +693,21 @@ export const deleteOrder = async (id) => {
 const ORDER_DETAILS_API_URL = `${API_BASE_URL}/order_details`;
 
 export const getAllOrderDetails = async () => {
-  const res = await fetch(ORDER_DETAILS_API_URL);
+  const res = await apiFetch(ORDER_DETAILS_API_URL);
   if (!res.ok) throw new Error("Lấy danh sách chi tiết đơn hàng thất bại");
   return await safeJson(res);
 };
 
 export const getOrderDetailById = async (id) => {
-  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`);
+  const res = await apiFetch(`${ORDER_DETAILS_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy thông tin chi tiết đơn hàng thất bại");
   return await safeJson(res);
 };
 
 export const createOrderDetail = async (data) => {
-  const res = await fetch(ORDER_DETAILS_API_URL, {
+  const res = await apiFetch(ORDER_DETAILS_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo chi tiết đơn hàng thất bại");
@@ -658,9 +715,9 @@ export const createOrderDetail = async (data) => {
 };
 
 export const updateOrderDetail = async (id, data) => {
-  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, {
+  const res = await apiFetch(`${ORDER_DETAILS_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật chi tiết đơn hàng thất bại");
@@ -668,9 +725,9 @@ export const updateOrderDetail = async (id, data) => {
 };
 
 export const deleteOrderDetail = async (id) => {
-  const res = await fetch(`${ORDER_DETAILS_API_URL}/${id}`, { 
+  const res = await apiFetch(`${ORDER_DETAILS_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Xóa chi tiết đơn hàng thất bại");
   return true;
@@ -680,21 +737,21 @@ export const deleteOrderDetail = async (id) => {
 const RATING_API_URL = `${API_BASE_URL}/rating`;
 
 export const getAllRatings = async () => {
-  const res = await fetch(RATING_API_URL);
+  const res = await apiFetch(RATING_API_URL);
   if (!res.ok) throw new Error("Lấy danh sách đánh giá thất bại");
   return await safeJson(res);
 };
 
 export const getRatingById = async (id) => {
-  const res = await fetch(`${RATING_API_URL}/${id}`);
+  const res = await apiFetch(`${RATING_API_URL}/${id}`);
   if (!res.ok) throw new Error("Lấy thông tin đánh giá thất bại");
   return await safeJson(res);
 };
 
 export const createRating = async (data) => {
-  const res = await fetch(RATING_API_URL, {
+  const res = await apiFetch(RATING_API_URL, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Tạo đánh giá thất bại");
@@ -702,9 +759,9 @@ export const createRating = async (data) => {
 };
 
 export const updateRating = async (id, data) => {
-  const res = await fetch(`${RATING_API_URL}/${id}`, {
+  const res = await apiFetch(`${RATING_API_URL}/${id}`, {
     method: "PUT",
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Cập nhật đánh giá thất bại");
@@ -712,9 +769,9 @@ export const updateRating = async (id, data) => {
 };
 
 export const deleteRating = async (id) => {
-  const res = await fetch(`${RATING_API_URL}/${id}`, { 
+  const res = await apiFetch(`${RATING_API_URL}/${id}`, {
     method: "DELETE",
-    headers: getAuthHeaders()
+    headers: getApiHeaders()
   });
   if (!res.ok) throw new Error("Xóa đánh giá thất bại");
   return true;
@@ -725,7 +782,7 @@ export const deleteRating = async (id) => {
 const VNPAY_API_URL = `${API_BASE_URL}/vnpay`;
 
 export const createVNPayPaymentUrl = async (data) => {
-  const res = await fetch(`${VNPAY_API_URL}/create_payment_url`, {
+  const res = await apiFetch(`${VNPAY_API_URL}/create_payment_url`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -736,13 +793,13 @@ export const createVNPayPaymentUrl = async (data) => {
 
 export const verifyVNPayReturn = async (queryParams) => {
   const queryString = new URLSearchParams(queryParams).toString();
-  const res = await fetch(`${VNPAY_API_URL}/vnpay_return?${queryString}`);
+  const res = await apiFetch(`${VNPAY_API_URL}/vnpay_return?${queryString}`);
   if (!res.ok) throw new Error("Xác thực thanh toán VNPay thất bại");
   return await safeJson(res);
 };
 
 export const updateOrderPaymentStatus = async (orderId, isPaid, paymentInfo) => {
-  const res = await fetch(`${VNPAY_API_URL}/update_payment_status`, {
+  const res = await apiFetch(`${VNPAY_API_URL}/update_payment_status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -759,9 +816,9 @@ export const updateOrderPaymentStatus = async (orderId, isPaid, paymentInfo) => 
 const SUPPORT_CHAT_API_URL = `${API_BASE_URL}/support-chat`;
 
 export const ensureSupportRoom = async ({ userId = null, guestId = null, username = 'Khach hang' }) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/ensure`, {
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/rooms/ensure`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify({ userId, guestId, username })
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Tạo phòng chat thất bại'));
@@ -769,25 +826,25 @@ export const ensureSupportRoom = async ({ userId = null, guestId = null, usernam
 };
 
 export const getSupportRooms = async () => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms`, {
-    headers: getAuthHeaders(),
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/rooms`, {
+    headers: getApiHeaders(),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Lấy danh sách phòng chat thất bại'));
   return await safeJson(res);
 };
 
 export const getSupportMessages = async (roomId, limit = 200) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/messages/${encodeURIComponent(roomId)}?limit=${limit}`, {
-    headers: getAuthHeaders(),
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/messages/${encodeURIComponent(roomId)}?limit=${limit}`, {
+    headers: getApiHeaders(),
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Lấy tin nhắn hỗ trợ thất bại'));
   return await safeJson(res);
 };
 
 export const sendSupportMessage = async ({ roomId, senderRole, senderId = null, senderName = '', message }) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/messages`, {
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/messages`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify({ roomId, senderRole, senderId, senderName, message })
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Gửi tin nhắn thất bại'));
@@ -795,9 +852,9 @@ export const sendSupportMessage = async ({ roomId, senderRole, senderId = null, 
 };
 
 export const acknowledgeSupportRoom = async ({ roomId }) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/acknowledge`, {
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/rooms/acknowledge`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify({ roomId })
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Xác nhận phòng chat thất bại'));
@@ -805,9 +862,9 @@ export const acknowledgeSupportRoom = async ({ roomId }) => {
 };
 
 export const resumeSupportRoomNotifications = async ({ roomId }) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/resume-notifications`, {
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/rooms/resume-notifications`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify({ roomId })
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Bật lại thông báo thất bại'));
@@ -815,9 +872,9 @@ export const resumeSupportRoomNotifications = async ({ roomId }) => {
 };
 
 export const markSupportRoomRead = async ({ roomId, readerRole }) => {
-  const res = await fetch(`${SUPPORT_CHAT_API_URL}/rooms/mark-read`, {
+  const res = await apiFetch(`${SUPPORT_CHAT_API_URL}/rooms/mark-read`, {
     method: 'POST',
-    headers: getAuthHeaders(),
+    headers: getApiHeaders(),
     body: JSON.stringify({ roomId, readerRole })
   });
   if (!res.ok) throw new Error(await getErrorMessage(res, 'Đánh dấu đã đọc thất bại'));

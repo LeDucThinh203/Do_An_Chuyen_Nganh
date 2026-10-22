@@ -49,7 +49,7 @@ router.get('/:id', sizeController.getSizeById);
  *     summary: Tạo size mới (Admin only)
  *     tags: [Sizes]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -76,7 +76,7 @@ router.post('/', authenticate, requireAdmin, sizeController.createSize);
  *     summary: Cập nhật size (Admin only)
  *     tags: [Sizes]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -110,7 +110,7 @@ router.put('/:id', authenticate, requireAdmin, sizeController.updateSize);
  *     summary: Xóa size (Admin only)
  *     tags: [Sizes]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id

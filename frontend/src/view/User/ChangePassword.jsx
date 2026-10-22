@@ -4,7 +4,7 @@ import Session from "../../Session/session";
 import * as api from "../../api";
 
 export default function ChangePassword() {
-  const user = Session.isLoggedIn() ? JSON.parse(localStorage.getItem("user")) : null;
+  const user = Session.isLoggedIn() ? Session.getUser() : null;
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

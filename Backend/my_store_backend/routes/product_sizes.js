@@ -49,7 +49,7 @@ router.get('/:id', productSizesController.getProductSizeById);
  *     summary: Tạo product_size mới (Admin only)
  *     tags: [ProductSize]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -81,7 +81,7 @@ router.post('/', authenticate, requireAdmin, productSizesController.createProduc
  *     summary: Cập nhật product_size (Admin only)
  *     tags: [ProductSize]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -119,7 +119,7 @@ router.put('/:id', authenticate, requireAdmin, productSizesController.updateProd
  *     summary: Xóa product_size (Admin only)
  *     tags: [ProductSize]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     parameters:
  *       - in: path
  *         name: id
