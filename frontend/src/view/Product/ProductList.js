@@ -382,15 +382,15 @@ export default function ProductList() {
             )}
 
             {/* CATEGORY PILLS BAR */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-3">
+            <div className="store-category-filter mb-8">
+              <div className="store-category-filter__heading flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Danh mục sản phẩm</h3>
                 <span className="text-xs text-slate-500 font-medium">Chọn nhanh danh mục yêu thích</span>
               </div>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="store-category-filter__list flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 <button
                   onClick={() => setSelectedCategory("all")}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`store-category-filter__pill px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     selectedCategory === "all"
                       ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-102"
                       : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80"
@@ -409,7 +409,7 @@ export default function ProductList() {
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(String(cat.id))}
-                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      className={`store-category-filter__pill px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                         isSelected
                           ? "bg-blue-600 text-white shadow-md shadow-blue-600/25 scale-102"
                           : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80"

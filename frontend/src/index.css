@@ -1099,6 +1099,19 @@ body.theme-dark .store-benefits b { color: #f1f7fc; }
 body.theme-dark .store-benefits > div + div { border-color: #35506b; }
 body.theme-dark .sale-section { border-color: #35506b; background: linear-gradient(135deg, #1b3650, #1d3e36); }
 
+.store-category-filter__list {
+  min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.store-category-filter__pill {
+  flex: 0 0 auto;
+  width: max-content;
+  min-height: 42px;
+}
+
 @media (max-width: 900px) {
   .store-header__inner {
     min-height: 0;
@@ -1128,6 +1141,17 @@ body.theme-dark .sale-section { border-color: #35506b; background: linear-gradie
   .store-header__mark { width: 40px; height: 40px; }
   .store-header__actions > a[title] { width: 40px; height: 40px; }
   .store-header__input { min-height: 44px; }
+
+  .store-category-filter__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .store-category-filter__heading h3,
+  .store-category-filter__heading > span {
+    line-height: 1.4;
+  }
 }
 
 .home-video-banner {
