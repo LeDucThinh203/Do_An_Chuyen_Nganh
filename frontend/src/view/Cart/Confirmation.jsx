@@ -187,7 +187,7 @@ export default function Confirmation() {
     <div className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Stepper Header */}
-        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+        <div className="checkout-stepper bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-xs sm:text-sm font-bold">
             <Link to="/cart" className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition">
               <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs">

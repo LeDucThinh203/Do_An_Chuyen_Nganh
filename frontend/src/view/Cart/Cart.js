@@ -167,7 +167,7 @@ export default function Cart() {
               return (
                 <div
                   key={`${item.id}-${item.size || "no-size"}`}
-                  className={`bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-5 relative ${
+                  className={`cart-item-card bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-center gap-5 relative ${
                     out ? "opacity-60 bg-slate-50/50" : ""
                   }`}
                 >

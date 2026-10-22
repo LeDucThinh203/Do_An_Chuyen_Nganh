@@ -57,7 +57,7 @@ export default function AdminSupportChatWidget({ forceAdmin = false }) {
     <>
       {open && (
         <div
-          className="rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+          className="admin-support-chat-panel rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
           style={{
             position: 'fixed',
             right: '24px',
@@ -90,7 +90,7 @@ export default function AdminSupportChatWidget({ forceAdmin = false }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="relative transition"
+        className="admin-support-chat-toggle relative transition"
         style={{
           position: 'fixed',
           right: '24px',

@@ -126,7 +126,7 @@ function AppContent() {
       {showHeader && <Header user={user} handleLogout={handleLogout} />}
 
       {/* Main content */}
-      <div className={`relative z-10 min-w-0 w-full flex-grow ${showHeader ? "pt-28 sm:pt-32 px-4 sm:px-6 lg:px-8" : "p-0"}`}>
+      <div className={`relative z-10 min-w-0 w-full flex-grow ${showHeader ? "pt-32" : "p-0"}`}>
         <Suspense fallback={<RouteFallbackSkeleton />}>
           <Routes>
             {/* Public */}

@@ -139,7 +139,7 @@ export default function SupportChatWidget({ onModeChange }) {
   };
 
   return (
-    <div className="fixed right-3 md:right-24 bottom-6 z-[1200]">
+    <div className="support-chat-widget fixed right-3 md:right-24 bottom-6 z-[1200]">
       {!open && onModeChange && (
         <div className="absolute right-16 bottom-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 p-1 shadow-lg backdrop-blur">
           <button
@@ -161,7 +161,7 @@ export default function SupportChatWidget({ onModeChange }) {
 
       {open && (
         <div
-          className="absolute right-0 bottom-16 w-[min(340px,calc(100vw-16px))] max-w-[calc(100vw-16px)] h-[min(480px,calc(100vh-96px))] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
+          className="support-chat-window absolute right-0 bottom-16 w-[min(340px,calc(100vw-16px))] max-w-[calc(100vw-16px)] h-[min(480px,calc(100vh-96px))] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden"
         >
           <div className="bg-blue-600 text-white px-4 py-3 flex items-center justify-between">
             <div>
