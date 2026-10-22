@@ -75,6 +75,8 @@ export default function LuxuryCursor() {
       mouseY = e.clientY;
 
       dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+      dot.style.opacity = "1";
+      ring.style.opacity = "1";
 
       // Check if hovering interactive elements
       const target = e.target;
@@ -206,15 +208,16 @@ export default function LuxuryCursor() {
       {/* Interactive Bubble Sparkles Canvas */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 pointer-events-none z-[99998]"
+        className="luxury-cursor fixed inset-0 pointer-events-none z-[99998]"
         aria-hidden="true"
       />
 
       {/* Luxury Center Precision Dot */}
       <div
         ref={cursorDotRef}
-        className="fixed top-0 left-0 w-2.5 h-2.5 -ml-1.25 -mt-1.25 rounded-full pointer-events-none z-[999999] transition-opacity duration-200 hidden md:block"
+        className="luxury-cursor fixed top-0 left-0 w-2.5 h-2.5 -ml-1.25 -mt-1.25 rounded-full pointer-events-none z-[999999] transition-opacity duration-200"
         style={{
+          opacity: 0,
           backgroundColor: "#38bdf8",
           boxShadow: "0 0 8px #38bdf8, 0 0 16px rgba(56, 189, 248, 0.8), 0 0 2px #ffffff",
           willChange: "transform",
@@ -224,8 +227,9 @@ export default function LuxuryCursor() {
       {/* Luxury Trailing Ring */}
       <div
         ref={cursorRingRef}
-        className="fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full pointer-events-none z-[999998] transition-all duration-150 ease-out hidden md:block"
+        className="luxury-cursor fixed top-0 left-0 w-8 h-8 -ml-4 -mt-4 rounded-full pointer-events-none z-[999998] transition-all duration-150 ease-out"
         style={{
+          opacity: 0,
           border: "1.5px solid rgba(56, 189, 248, 0.45)",
           backgroundColor: "rgba(56, 189, 248, 0.04)",
           boxShadow: "0 0 12px rgba(56, 189, 248, 0.2)",

@@ -21,6 +21,26 @@ body {
   overflow-x: clip;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body,
+  body * {
+    cursor: none !important;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"] {
+    cursor: text !important;
+  }
+}
+
+@media (hover: none) {
+  .luxury-cursor {
+    display: none !important;
+  }
+}
+
 :focus-visible {
   outline: 3px solid rgba(37, 99, 235, 0.8);
   outline-offset: 2px;

@@ -9,6 +9,7 @@ import { RouteFallbackSkeleton } from "./view/common/Skeletons";
 import { ThemeProvider } from "./context/ThemeContext";
 import { CartProvider } from "./context/CartContext";
 import ThemeBackground from "./view/common/ThemeBackground";
+import LuxuryCursor from "./view/common/LuxuryCursor";
 
 // Split route screens so the initial storefront bundle does not include admin,
 // checkout, account, and product-management code.
@@ -315,6 +316,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <Router>
+        <LuxuryCursor />
         <CartProvider>
           <ScrollToTop />
           <AppContent />
