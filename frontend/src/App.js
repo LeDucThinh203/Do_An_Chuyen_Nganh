@@ -284,7 +284,7 @@ function AppContent() {
         </Suspense>
       )}
 
-      {!isAdminPage && (
+      {!isAdminPage && authReady && !isAdminUser && (
         <Suspense fallback={null}>
           <ChatWidget
             active={chatMode === "ai"}
